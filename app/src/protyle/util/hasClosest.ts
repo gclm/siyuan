@@ -72,7 +72,7 @@ export const hasClosestByAttribute = (element: Node, attr: string, value: string
     let e = element as HTMLElement;
     let isClosest = false;
     while (e && !isClosest && (top ? e.tagName !== "BODY" : !e.classList.contains("protyle-wysiwyg"))) {
-        if (typeof value === "string" && e.getAttribute(attr) === value) {
+        if (typeof value === "string" && e.getAttribute(attr)?.split(" ").includes(value)) {
             isClosest = true;
         } else if (typeof value !== "string" && e.hasAttribute(attr)) {
             isClosest = true;
@@ -120,7 +120,7 @@ export const hasClosestByClassName = (element: Node, className: string, top = fa
     let e = element as HTMLElement;
     let isClosest = false;
     while (e && !isClosest && (top ? e.tagName !== "BODY" : !e.classList.contains("protyle-wysiwyg"))) {
-        if (e.classList.contains(className)) {
+        if (e.classList?.contains(className)) {
             isClosest = true;
         } else {
             e = e.parentElement;

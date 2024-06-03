@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,11 @@ package model
 
 import (
 	"bytes"
+	"github.com/88250/lute/editor"
+	"regexp"
 	"strings"
 
+	"github.com/88250/gulu"
 	"github.com/88250/lute"
 	"github.com/88250/lute/ast"
 	"github.com/88250/lute/html"
@@ -27,36 +30,58 @@ import (
 	"github.com/88250/lute/render"
 	"github.com/siyuan-note/siyuan/kernel/sql"
 	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
-func renderOutline(node *ast.Node, luteEngine *lute.Lute) (ret string) {
-	if nil == node {
+func renderOutline(heading *ast.Node, luteEngine *lute.Lute) (ret string) {
+	if nil == heading {
 		return ""
 	}
 
-	if ast.NodeDocument == node.Type {
-		return node.IALAttr("title")
+	if ast.NodeDocument == heading.Type {
+		return heading.IALAttr("title")
 	}
 
 	buf := bytes.Buffer{}
 	buf.Grow(4096)
-	ast.Walk(node, func(n *ast.Node, entering bool) ast.WalkStatus {
+	ast.Walk(heading, func(n *ast.Node, entering bool) ast.WalkStatus {
 		if !entering {
+			switch n.Type {
+			case ast.NodeHeading:
+				// Show heading block appearance style in the Outline Panel https://github.com/siyuan-note/siyuan/issues/7872
+				if style := n.IALAttr("style"); "" != style {
+					buf.WriteString("</span>")
+				}
+			}
 			return ast.WalkContinue
 		}
+
+		if style := n.IALAttr("style"); "" != style {
+			if strings.Contains(style, "font-size") { // 大纲字号不应该跟随字体设置 https://github.com/siyuan-note/siyuan/issues/7202
+				style = regexp.MustCompile("font-size:.*?;").ReplaceAllString(style, "font-size: inherit;")
+				n.SetIALAttr("style", style)
+			}
+		}
+
 		switch n.Type {
-		case ast.NodeTagOpenMarker, ast.NodeTagCloseMarker:
-			buf.WriteByte('#')
-		case ast.NodeBlockRef:
-			buf.WriteString(html.EscapeString(treenode.GetDynamicBlockRefText(n)))
-			return ast.WalkSkipChildren
-		case ast.NodeText, ast.NodeLinkText, ast.NodeFileAnnotationRefText, ast.NodeFootnotesRef, ast.NodeCodeBlockCode, ast.NodeMathBlockContent:
+		case ast.NodeHeading:
+			// Show heading block appearance style in the Outline Panel https://github.com/siyuan-note/siyuan/issues/7872
+			if style := n.IALAttr("style"); "" != style {
+				buf.WriteString("<span style=\"")
+				buf.WriteString(style)
+				buf.WriteString("\">")
+			}
+		case ast.NodeText, ast.NodeLinkText, ast.NodeCodeBlockCode, ast.NodeMathBlockContent:
 			tokens := html.EscapeHTML(n.Tokens)
 			tokens = bytes.ReplaceAll(tokens, []byte(" "), []byte("&nbsp;")) // 大纲面板条目中无法显示多个空格 https://github.com/siyuan-note/siyuan/issues/4370
 			buf.Write(tokens)
-		case ast.NodeInlineMath, ast.NodeStrong, ast.NodeEmphasis, ast.NodeCodeSpan:
-			dom := lute.RenderNodeBlockDOM(n, luteEngine.ParseOptions, luteEngine.RenderOptions)
+		case ast.NodeBackslashContent:
+			buf.Write(n.Tokens)
+		case ast.NodeTextMark:
+			dom := luteEngine.RenderNodeBlockDOM(n)
 			buf.WriteString(dom)
+			return ast.WalkSkipChildren
+		case ast.NodeImage:
 			return ast.WalkSkipChildren
 		}
 		return ast.WalkContinue
@@ -67,11 +92,15 @@ func renderOutline(node *ast.Node, luteEngine *lute.Lute) (ret string) {
 	return
 }
 
-func renderBlockText(node *ast.Node) (ret string) {
-	ret = treenode.NodeStaticContent(node)
+func renderBlockText(node *ast.Node, excludeTypes []string) (ret string) {
+	if nil == node {
+		return
+	}
+
+	ret = sql.NodeStaticContent(node, excludeTypes, false, false, false, GetBlockAttrsWithoutWaitWriting)
 	ret = strings.TrimSpace(ret)
 	ret = strings.ReplaceAll(ret, "\n", "")
-	ret = html.EscapeString(ret)
+	ret = util.EscapeHTML(ret)
 	ret = strings.TrimSpace(ret)
 	if "" == ret {
 		// 复制内容为空的块作为块引用时粘贴无效 https://github.com/siyuan-note/siyuan/issues/4962
@@ -103,7 +132,7 @@ func renderBlockText(node *ast.Node) (ret string) {
 
 func renderBlockDOMByNodes(nodes []*ast.Node, luteEngine *lute.Lute) string {
 	tree := &parse.Tree{Root: &ast.Node{Type: ast.NodeDocument}, Context: &parse.Context{ParseOption: luteEngine.ParseOptions}}
-	blockRenderer := render.NewBlockRenderer(tree, luteEngine.RenderOptions)
+	blockRenderer := render.NewProtyleRenderer(tree, luteEngine.RenderOptions)
 	for _, n := range nodes {
 		ast.Walk(n, func(node *ast.Node, entering bool) ast.WalkStatus {
 			rendererFunc := blockRenderer.RendererFuncs[node.Type]
@@ -117,9 +146,28 @@ func renderBlockDOMByNodes(nodes []*ast.Node, luteEngine *lute.Lute) string {
 	return h
 }
 
+func renderBlockContentByNodes(nodes []*ast.Node) string {
+	var subNodes []*ast.Node
+	for _, n := range nodes {
+		if ast.NodeDocument == n.Type {
+			for c := n.FirstChild; nil != c; c = c.Next {
+				subNodes = append(subNodes, c)
+			}
+		} else {
+			subNodes = append(subNodes, n)
+		}
+	}
+
+	buf := bytes.Buffer{}
+	for _, n := range subNodes {
+		buf.WriteString(sql.NodeStaticContent(n, nil, false, false, false, GetBlockAttrsWithoutWaitWriting))
+	}
+	return buf.String()
+}
+
 func renderBlockMarkdownR(id string) string {
-	depth := 0
-	nodes := renderBlockMarkdownR0(id, &depth)
+	var rendered []string
+	nodes := renderBlockMarkdownR0(id, &rendered)
 	buf := bytes.Buffer{}
 	buf.Grow(4096)
 	luteEngine := NewLute()
@@ -131,11 +179,12 @@ func renderBlockMarkdownR(id string) string {
 	return buf.String()
 }
 
-func renderBlockMarkdownR0(id string, depth *int) (ret []*ast.Node) {
-	*depth++
-	if 7 < *depth {
+func renderBlockMarkdownR0(id string, rendered *[]string) (ret []*ast.Node) {
+	if gulu.Str.Contains(id, *rendered) {
 		return
 	}
+	*rendered = append(*rendered, id)
+
 	b := treenode.GetBlockTree(id)
 	if nil == b {
 		return
@@ -143,7 +192,7 @@ func renderBlockMarkdownR0(id string, depth *int) (ret []*ast.Node) {
 
 	var err error
 	var t *parse.Tree
-	if t, err = loadTreeByBlockID(b.ID); nil != err {
+	if t, err = LoadTreeByBlockID(b.ID); nil != err {
 		return
 	}
 	node := treenode.GetNodeInTree(t, b.ID)
@@ -173,9 +222,10 @@ func renderBlockMarkdownR0(id string, depth *int) (ret []*ast.Node) {
 			if ast.NodeBlockQueryEmbed == n.Type {
 				stmt := n.ChildByType(ast.NodeBlockQueryEmbedScript).TokensStr()
 				stmt = html.UnescapeString(stmt)
-				sqlBlocks := sql.SelectBlocksRawStmt(stmt, Conf.Search.Limit)
+				stmt = strings.ReplaceAll(stmt, editor.IALValEscNewLine, "\n")
+				sqlBlocks := sql.SelectBlocksRawStmt(stmt, 1, Conf.Search.Limit)
 				for _, sqlBlock := range sqlBlocks {
-					subNodes := renderBlockMarkdownR0(sqlBlock.ID, depth)
+					subNodes := renderBlockMarkdownR0(sqlBlock.ID, rendered)
 					for _, subNode := range subNodes {
 						inserts = append(inserts, subNode)
 					}
@@ -199,36 +249,4 @@ func renderBlockMarkdownR0(id string, depth *int) (ret []*ast.Node) {
 
 	}
 	return
-}
-
-func renderBlockMarkdown(node *ast.Node) string {
-	var nodes []*ast.Node
-	ast.Walk(node, func(n *ast.Node, entering bool) ast.WalkStatus {
-		if entering {
-			nodes = append(nodes, n)
-			if ast.NodeHeading == node.Type {
-				// 支持“标题块”引用
-				children := treenode.HeadingChildren(n)
-				nodes = append(nodes, children...)
-			}
-		}
-		return ast.WalkSkipChildren
-	})
-
-	root := &ast.Node{Type: ast.NodeDocument}
-	luteEngine := NewLute()
-	luteEngine.SetKramdownIAL(false)
-	luteEngine.SetSuperBlock(false)
-	tree := &parse.Tree{Root: root, Context: &parse.Context{ParseOption: luteEngine.ParseOptions}}
-	renderer := render.NewFormatRenderer(tree, luteEngine.RenderOptions)
-	renderer.Writer = &bytes.Buffer{}
-	renderer.Writer.Grow(4096)
-	renderer.NodeWriterStack = append(renderer.NodeWriterStack, renderer.Writer) // 因为有可能不是从 root 开始渲染，所以需要初始化
-	for _, node := range nodes {
-		ast.Walk(node, func(n *ast.Node, entering bool) ast.WalkStatus {
-			rendererFunc := renderer.RendererFuncs[n.Type]
-			return rendererFunc(n, entering)
-		})
-	}
-	return strings.TrimSpace(renderer.Writer.String())
 }

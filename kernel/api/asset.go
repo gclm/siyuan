@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,16 +17,139 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/88250/go-humanize"
 	"github.com/88250/gulu"
+	"github.com/djherbis/times"
 	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/filelock"
 	"github.com/siyuan-note/siyuan/kernel/model"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
+
+func statAsset(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	path := arg["path"].(string)
+	var p string
+	if strings.HasPrefix(path, "assets/") {
+		var err error
+		p, err = model.GetAssetAbsPath(path)
+		if nil != err {
+			ret.Code = 1
+			return
+		}
+
+	} else if strings.HasPrefix(path, "file://") {
+		p = strings.TrimPrefix(path, "file://")
+	} else {
+		ret.Code = 1
+		return
+	}
+
+	info, err := os.Stat(p)
+	if nil != err {
+		ret.Code = 1
+		return
+	}
+
+	t, err := times.Stat(p)
+	if nil != err {
+		ret.Code = 1
+		return
+	}
+
+	updated := t.ModTime().UnixMilli()
+	hUpdated := t.ModTime().Format("2006-01-02 15:04:05")
+	created := updated
+	hCreated := hUpdated
+	// Check birthtime before use
+	if t.HasBirthTime() {
+		created = t.BirthTime().UnixMilli()
+		hCreated = t.BirthTime().Format("2006-01-02 15:04:05")
+	}
+
+	ret.Data = map[string]interface{}{
+		"size":     info.Size(),
+		"hSize":    humanize.BytesCustomCeil(uint64(info.Size()), 2),
+		"created":  created,
+		"hCreated": hCreated,
+		"updated":  updated,
+		"hUpdated": hUpdated,
+	}
+}
+
+func fullReindexAssetContent(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	model.ReindexAssetContent()
+}
+
+func getImageOCRText(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	path := arg["path"].(string)
+	force := false
+	if forceArg := arg["force"]; nil != forceArg {
+		force = forceArg.(bool)
+	}
+
+	ret.Data = map[string]interface{}{
+		"text": util.GetAssetText(path, force),
+	}
+}
+
+func setImageOCRText(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	path := arg["path"].(string)
+	text := arg["text"].(string)
+	util.SetAssetText(path, text)
+}
+
+func renameAsset(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	oldPath := arg["oldPath"].(string)
+	newName := arg["newName"].(string)
+	err := model.RenameAsset(oldPath, newName)
+	if nil != err {
+		ret.Code = -1
+		ret.Msg = err.Error()
+		ret.Data = map[string]interface{}{"closeTimeout": 5000}
+		return
+	}
+}
 
 func getDocImageAssets(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
@@ -65,12 +188,12 @@ func setFileAnnotation(c *gin.Context) {
 		ret.Msg = err.Error()
 		return
 	}
-	if err := gulu.File.WriteFileSafer(writePath, []byte(data), 0644); nil != err {
+	if err := filelock.WriteFile(writePath, []byte(data)); nil != err {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		return
 	}
-	model.IncWorkspaceDataVer()
+	model.IncSync()
 }
 
 func getFileAnnotation(c *gin.Context) {
@@ -91,12 +214,12 @@ func getFileAnnotation(c *gin.Context) {
 		ret.Data = map[string]interface{}{"closeTimeout": 5000}
 		return
 	}
-	if !gulu.File.IsExist(readPath) {
+	if !filelock.IsExist(readPath) {
 		ret.Code = 1
 		return
 	}
 
-	data, err := os.ReadFile(readPath)
+	data, err := filelock.ReadFile(readPath)
 	if nil != err {
 		ret.Code = -1
 		ret.Msg = err.Error()
@@ -155,6 +278,16 @@ func getUnusedAssets(c *gin.Context) {
 	}
 }
 
+func getMissingAssets(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	missingAssets := model.MissingAssets()
+	ret.Data = map[string]interface{}{
+		"missingAssets": missingAssets,
+	}
+}
+
 func resolveAssetPath(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
 	defer c.JSON(http.StatusOK, ret)
@@ -186,14 +319,15 @@ func uploadCloud(c *gin.Context) {
 	}
 
 	rootID := arg["id"].(string)
-	err := model.UploadAssets2Cloud(rootID)
+	count, err := model.UploadAssets2Cloud(rootID)
 	if nil != err {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 3000}
-	} else {
-		util.PushMsg(model.Conf.Language(41), 3000)
+		return
 	}
+
+	util.PushMsg(fmt.Sprintf(model.Conf.Language(41), count), 3000)
 }
 
 func insertLocalAssets(c *gin.Context) {
@@ -210,8 +344,13 @@ func insertLocalAssets(c *gin.Context) {
 	for _, pathArg := range assetPathsArg {
 		assetPaths = append(assetPaths, pathArg.(string))
 	}
+	isUpload := true
+	isUploadArg := arg["isUpload"]
+	if nil != isUploadArg {
+		isUpload = isUploadArg.(bool)
+	}
 	id := arg["id"].(string)
-	succMap, err := model.InsertLocalAssets(id, assetPaths)
+	succMap, err := model.InsertLocalAssets(id, assetPaths, isUpload)
 	if nil != err {
 		ret.Code = -1
 		ret.Msg = err.Error()

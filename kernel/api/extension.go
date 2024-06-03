@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -27,8 +27,13 @@ import (
 	"strings"
 
 	"github.com/88250/gulu"
+	"github.com/88250/lute"
 	"github.com/88250/lute/ast"
+	"github.com/88250/lute/parse"
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/model"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
@@ -48,16 +53,9 @@ func extensionCopy(c *gin.Context) {
 	}
 
 	if err := os.MkdirAll(assets, 0755); nil != err {
-		util.LogErrorf("create assets folder [%s] failed: %s", assets, err)
+		logging.LogErrorf("create assets folder [%s] failed: %s", assets, err)
 		ret.Msg = err.Error()
 		return
-	}
-
-	luteEngine := model.NewLute()
-	md := luteEngine.HTML2Md(dom)
-	md = strings.TrimSpace(md)
-	ret.Data = map[string]interface{}{
-		"md": md,
 	}
 
 	uploaded := map[string]string{}
@@ -83,7 +81,7 @@ func extensionCopy(c *gin.Context) {
 			continue
 		}
 		fName := path.Base(u.Path)
-		fName = util.FilterUploadFileName(fName)
+
 		f, err := file[0].Open()
 		if nil != err {
 			ret.Code = -1
@@ -99,13 +97,22 @@ func extensionCopy(c *gin.Context) {
 		}
 
 		ext := path.Ext(fName)
-		fName = fName[0 : len(fName)-len(ext)]
+		originalExt := ext
+		if "" == ext || strings.Contains(ext, "!") {
+			// 改进浏览器剪藏扩展转换本地图片后缀 https://github.com/siyuan-note/siyuan/issues/7467
+			if mtype := mimetype.Detect(data); nil != mtype {
+				ext = mtype.Extension()
+			}
+		}
 		if "" == ext && bytes.HasPrefix(data, []byte("<svg ")) && bytes.HasSuffix(data, []byte("</svg>")) {
 			ext = ".svg"
 		}
+
+		fName = fName[0 : len(fName)-len(originalExt)]
+		fName = util.FilterUploadFileName(fName)
 		fName = fName + "-" + ast.NewNodeID() + ext
 		writePath := filepath.Join(assets, fName)
-		if err = gulu.File.WriteFileSafer(writePath, data, 0644); nil != err {
+		if err = filelock.WriteFile(writePath, data); nil != err {
 			ret.Code = -1
 			ret.Msg = err.Error()
 			break
@@ -114,22 +121,44 @@ func extensionCopy(c *gin.Context) {
 		uploaded[oName] = "assets/" + fName
 	}
 
-	for k, v := range uploaded {
-		if "" == md {
-			// 复制单个图片的情况
-			md = "![](" + v + ")"
-			break
+	md, withMath, _ := model.HTML2Markdown(dom)
+	md = strings.TrimSpace(md)
+	luteEngine := util.NewLute()
+	if withMath {
+		luteEngine.SetInlineMath(true)
+	}
+	var unlinks []*ast.Node
+	tree := parse.Parse("", []byte(md), luteEngine.ParseOptions)
+	ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
+		if !entering {
+			return ast.WalkContinue
 		}
-		md = strings.ReplaceAll(md, "]("+k+")", "]("+v+")")
-		p, err := url.Parse(k)
-		if nil != err {
-			continue
+
+		if ast.NodeText == n.Type {
+			// 剔除行首空白
+			if ast.NodeParagraph == n.Parent.Type && n.Parent.FirstChild == n {
+				n.Tokens = bytes.TrimLeft(n.Tokens, " \t\n")
+			}
+		} else if ast.NodeImage == n.Type {
+			if dest := n.ChildByType(ast.NodeLinkDest); nil != dest {
+				assetPath := uploaded[string(dest.Tokens)]
+				if "" != assetPath {
+					dest.Tokens = []byte(assetPath)
+				}
+			}
 		}
-		md = strings.ReplaceAll(md, "]("+p.Path+")", "]("+v+")")
+		return ast.WalkContinue
+	})
+	for _, unlink := range unlinks {
+		unlink.Unlink()
 	}
 
+	parse.NestedInlines2FlattedSpans(tree, false)
+
+	md, _ = lute.FormatNodeSync(tree.Root, luteEngine.ParseOptions, luteEngine.RenderOptions)
 	ret.Data = map[string]interface{}{
-		"md": md,
+		"md":       md,
+		"withMath": withMath,
 	}
 	ret.Msg = model.Conf.Language(72)
 }

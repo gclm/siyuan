@@ -1,16 +1,5 @@
 import {hasClosestBlock, hasClosestByAttribute} from "../util/hasClosest";
-
-export const getPreviousHeading = (element: Element) => {
-    let previous = getPreviousBlock(element);
-    while (previous) {
-        if (previous.getAttribute("data-type") === "NodeHeading") {
-            break;
-        } else {
-            previous = getPreviousBlock(previous);
-        }
-    }
-    return previous;
-};
+import {Constants} from "../../constants";
 
 export const getPreviousBlock = (element: Element) => {
     let parentElement = element;
@@ -41,7 +30,8 @@ export const getLastBlock = (element: Element) => {
 export const getFirstBlock = (element: Element) => {
     let firstElement;
     Array.from(element.querySelectorAll("[data-node-id]")).find(item => {
-        if (!hasClosestByAttribute(item.parentElement, "data-type", "NodeBlockQueryEmbed") && !item.classList.contains("li")) {
+        if (!hasClosestByAttribute(item.parentElement, "data-type", "NodeBlockQueryEmbed") &&
+            !item.classList.contains("li") && !item.classList.contains("sb")) {
             firstElement = item;
             return true;
         }
@@ -68,7 +58,7 @@ export const getNextBlock = (element: Element) => {
 export const getNoContainerElement = (element: Element) => {
     let childElement = element;
     while (childElement) {
-        if (childElement.classList.contains("list") || childElement.classList.contains("li")|| childElement.classList.contains("bq")|| childElement.classList.contains("sb")) {
+        if (childElement.classList.contains("list") || childElement.classList.contains("li") || childElement.classList.contains("bq") || childElement.classList.contains("sb")) {
             childElement = childElement.querySelector("[data-node-id]");
         } else {
             return childElement;
@@ -78,7 +68,7 @@ export const getNoContainerElement = (element: Element) => {
 };
 
 export const getContenteditableElement = (element: Element) => {
-    if (!element || element.getAttribute("contenteditable") === "true") {
+    if (!element || (element.getAttribute("contenteditable") === "true") && !element.classList.contains("protyle-wysiwyg")) {
         return element;
     }
     return element.querySelector('[contenteditable="true"]');
@@ -94,10 +84,20 @@ export const getTopEmptyElement = (element: Element) => {
     while (topElement.parentElement && !topElement.parentElement.classList.contains("protyle-wysiwyg")) {
         if (!topElement.parentElement.getAttribute("data-node-id")) {
             topElement = topElement.parentElement;
-        } else if (topElement.parentElement.textContent !== "" || topElement.previousElementSibling?.getAttribute("data-node-id")) {
-            break;
         } else {
-            topElement = topElement.parentElement;
+            let hasText = false;
+            Array.from(topElement.parentElement.querySelectorAll('[contenteditable="true"]')).find(item => {
+                if (item.textContent.replace(Constants.ZWSP, "").replace("\n", "") !== "") {
+                    hasText = true;
+                    return true;
+                }
+            });
+            if (hasText || topElement.previousElementSibling?.getAttribute("data-node-id") ||
+                topElement.nextElementSibling?.getAttribute("data-node-id")) {
+                break;
+            } else {
+                topElement = topElement.parentElement;
+            }
         }
     }
     return topElement;
@@ -109,6 +109,7 @@ export const getTopAloneElement = (topSourceElement: Element) => {
             if (topSourceElement.parentElement.getAttribute("data-type") === "NodeBlockquote" && topSourceElement.parentElement.childElementCount === 2) {
                 topSourceElement = topSourceElement.parentElement;
             } else {
+                topSourceElement = getTopAloneElement(topSourceElement);
                 break;
             }
         }
@@ -150,7 +151,7 @@ export const getTopAloneElement = (topSourceElement: Element) => {
 export const hasNextSibling = (element: Node) => {
     let nextSibling = element.nextSibling;
     while (nextSibling) {
-        if (nextSibling.textContent === "") {
+        if (nextSibling.textContent === "" && nextSibling.nodeType === 3) {
             nextSibling = nextSibling.nextSibling;
         } else {
             return nextSibling;
@@ -166,6 +167,53 @@ export const hasPreviousSibling = (element: Node) => {
             previousSibling = previousSibling.previousSibling;
         } else {
             return previousSibling;
+        }
+    }
+    return false;
+};
+
+export const getNextFileLi = (current: Element) => {
+    let nextElement = current.nextElementSibling;
+    if (nextElement) {
+        if (nextElement.tagName === "LI") {
+            return nextElement;
+        } else if (nextElement.tagName === "UL") {
+            return nextElement.firstElementChild;
+        }
+        return false;
+    }
+    nextElement = current.parentElement;
+    while (nextElement.tagName === "UL") {
+        if (!nextElement.nextElementSibling) {
+            nextElement = nextElement.parentElement;
+        } else if (nextElement.nextElementSibling.tagName === "LI") {
+            return nextElement.nextElementSibling;
+        } else if (nextElement.nextElementSibling.tagName === "UL") {
+            return nextElement.nextElementSibling.firstElementChild;
+        }
+    }
+    return false;
+};
+
+export const getPreviousFileLi = (current: Element) => {
+    let previousElement = current.previousElementSibling;
+    if (previousElement) {
+        if (previousElement.tagName === "LI") {
+            return previousElement;
+        } else if (previousElement.tagName === "UL") {
+            return previousElement.lastElementChild;
+        }
+        return false;
+    }
+    previousElement = current.parentElement;
+    while (previousElement.tagName === "UL") {
+        if (!previousElement.previousElementSibling) {
+            previousElement = previousElement.parentElement;
+        } else if (previousElement.previousElementSibling.tagName === "LI") {
+            return previousElement.previousElementSibling;
+        } else if (previousElement.previousElementSibling.tagName === "UL") {
+            const liElements = previousElement.previousElementSibling.querySelectorAll(".b3-list-item");
+            return liElements[liElements.length - 1];
         }
     }
     return false;

@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,13 +19,13 @@ package cache
 import (
 	"strings"
 
-	"github.com/88250/lute/util"
+	"github.com/88250/lute/editor"
 	"github.com/dgraph-io/ristretto"
 )
 
 var docIALCache, _ = ristretto.NewCache(&ristretto.Config{
-	NumCounters: 100000,           // 10W
-	MaxCost:     1024 * 1024 * 10, // 10MB
+	NumCounters: 102400,
+	MaxCost:     10240,
 	BufferItems: 64,
 })
 
@@ -41,7 +41,7 @@ func GetDocIAL(p string) (ret map[string]string) {
 
 	ret = map[string]string{}
 	for k, v := range ial.(map[string]string) {
-		ret[k] = strings.ReplaceAll(v, util.IALValEscNewLine, "\n")
+		ret[k] = strings.ReplaceAll(v, editor.IALValEscNewLine, "\n")
 	}
 	return
 }
@@ -55,8 +55,8 @@ func ClearDocsIAL() {
 }
 
 var blockIALCache, _ = ristretto.NewCache(&ristretto.Config{
-	NumCounters: 100000,           // 10W
-	MaxCost:     1024 * 1024 * 10, // 10MB
+	NumCounters: 102400,
+	MaxCost:     10240,
 	BufferItems: 64,
 })
 
@@ -74,4 +74,8 @@ func GetBlockIAL(id string) (ret map[string]string) {
 
 func RemoveBlockIAL(id string) {
 	blockIALCache.Del(id)
+}
+
+func ClearBlocksIAL() {
+	blockIALCache.Clear()
 }

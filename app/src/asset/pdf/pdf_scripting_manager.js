@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+/** @typedef {import("./event_utils").EventBus} EventBus */
+
 import { apiPageLayoutToViewerModes, RenderingStates } from "./ui_utils.js";
 import { createPromiseCapability, shadow } from "./pdfjs";
 
@@ -33,18 +35,17 @@ class PDFScriptingManager {
    * @param {PDFScriptingManagerOptions} options
    */
   constructor({
-                eventBus,
-                sandboxBundleSrc = null,
-                scriptingFactory = null,
-                docPropertiesLookup = null,
-              }) {
+    eventBus,
+    sandboxBundleSrc = null,
+    scriptingFactory = null,
+    docPropertiesLookup = null,
+  }) {
     this._pdfDocument = null;
     this._pdfViewer = null;
     this._closeCapability = null;
     this._destroyCapability = null;
 
     this._scripting = null;
-    this._mouseState = Object.create(null);
     this._ready = false;
 
     this._eventBus = eventBus;
@@ -141,18 +142,8 @@ class PDFScriptingManager {
       this._closeCapability?.resolve();
     });
 
-    this._domEvents.set("mousedown", event => {
-      this._mouseState.isDown = true;
-    });
-    this._domEvents.set("mouseup", event => {
-      this._mouseState.isDown = false;
-    });
-
     for (const [name, listener] of this._internalEvents) {
       this._eventBus._on(name, listener);
-    }
-    for (const [name, listener] of this._domEvents) {
-      window.addEventListener(name, listener);
     }
 
     try {
@@ -227,10 +218,6 @@ class PDFScriptingManager {
     });
   }
 
-  get mouseState() {
-    return this._mouseState;
-  }
-
   get destroyPromise() {
     return this._destroyCapability?.promise || null;
   }
@@ -244,13 +231,6 @@ class PDFScriptingManager {
    */
   get _internalEvents() {
     return shadow(this, "_internalEvents", new Map());
-  }
-
-  /**
-   * @private
-   */
-  get _domEvents() {
-    return shadow(this, "_domEvents", new Map());
   }
 
   /**
@@ -285,13 +265,21 @@ class PDFScriptingManager {
         case "error":
           console.error(value);
           break;
-        case "layout":
-          if (isInPresentationMode) {
+        case "layout": {
+          // NOTE: Always ignore the pageLayout in GeckoView since there's
+          // no UI available to change Scroll/Spread modes for the user.
+          if (
+            (typeof PDFJSDev === "undefined"
+              ? window.isGECKOVIEW
+              : PDFJSDev.test("GECKOVIEW")) ||
+            isInPresentationMode
+          ) {
             return;
           }
           const modes = apiPageLayoutToViewerModes(value);
           this._pdfViewer.spreadMode = modes.spreadMode;
           break;
+        }
         case "page-num":
           this._pdfViewer.currentPageNumber = value + 1;
           break;
@@ -309,7 +297,7 @@ class PDFScriptingManager {
           this._pdfViewer.currentScaleValue = value;
           break;
         case "SaveAs":
-          this._eventBus.dispatch("save", { source: this });
+          this._eventBus.dispatch("download", { source: this });
           break;
         case "FirstPage":
           this._pdfViewer.currentPageNumber = 1;
@@ -349,7 +337,9 @@ class PDFScriptingManager {
 
     const ids = siblings ? [id, ...siblings] : [id];
     for (const elementId of ids) {
-      const element = document.getElementById(elementId);
+      const element = document.querySelector(
+        `[data-element-id="${elementId}"]`
+      );
       if (element) {
         element.dispatchEvent(new CustomEvent("updatefromsandbox", { detail }));
       } else {
@@ -504,16 +494,10 @@ class PDFScriptingManager {
     }
     this._internalEvents.clear();
 
-    for (const [name, listener] of this._domEvents) {
-      window.removeEventListener(name, listener);
-    }
-    this._domEvents.clear();
-
     this._pageOpenPending.clear();
     this._visitedPages.clear();
 
     this._scripting = null;
-    delete this._mouseState.isDown;
     this._ready = false;
 
     this._destroyCapability?.resolve();

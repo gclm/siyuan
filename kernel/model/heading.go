@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -26,6 +26,7 @@ import (
 	"github.com/88250/gulu"
 	"github.com/88250/lute/ast"
 	"github.com/88250/lute/parse"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/cache"
 	"github.com/siyuan-note/siyuan/kernel/sql"
 	"github.com/siyuan-note/siyuan/kernel/treenode"
@@ -34,7 +35,7 @@ import (
 
 func (tx *Transaction) doFoldHeading(operation *Operation) (ret *TxErr) {
 	headingID := operation.ID
-	tree, err := loadTreeByBlockID(headingID)
+	tree, err := tx.loadTree(headingID)
 	if nil != err {
 		return &TxErr{code: TxErrCodeBlockNotFound, id: headingID}
 	}
@@ -48,14 +49,20 @@ func (tx *Transaction) doFoldHeading(operation *Operation) (ret *TxErr) {
 	children := treenode.HeadingChildren(heading)
 	for _, child := range children {
 		childrenIDs = append(childrenIDs, child.ID)
-		child.SetIALAttr("fold", "1")
-		child.SetIALAttr("heading-fold", "1")
+		ast.Walk(child, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering || !n.IsBlock() {
+				return ast.WalkContinue
+			}
+
+			n.SetIALAttr("heading-fold", "1")
+			return ast.WalkContinue
+		})
 	}
 	heading.SetIALAttr("fold", "1")
 	if err = tx.writeTree(tree); nil != err {
 		return &TxErr{code: TxErrCodeWriteTree, msg: err.Error(), id: headingID}
 	}
-	IncWorkspaceDataVer()
+	IncSync()
 
 	cache.PutBlockIAL(headingID, parse.IAL2Map(heading.KramdownIAL))
 	for _, child := range children {
@@ -69,7 +76,7 @@ func (tx *Transaction) doFoldHeading(operation *Operation) (ret *TxErr) {
 func (tx *Transaction) doUnfoldHeading(operation *Operation) (ret *TxErr) {
 	headingID := operation.ID
 
-	tree, err := loadTreeByBlockID(headingID)
+	tree, err := tx.loadTree(headingID)
 	if nil != err {
 		return &TxErr{code: TxErrCodeBlockNotFound, id: headingID}
 	}
@@ -81,15 +88,22 @@ func (tx *Transaction) doUnfoldHeading(operation *Operation) (ret *TxErr) {
 
 	children := treenode.HeadingChildren(heading)
 	for _, child := range children {
-		child.RemoveIALAttr("heading-fold")
-		child.RemoveIALAttr("fold")
+		ast.Walk(child, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering {
+				return ast.WalkContinue
+			}
+
+			n.RemoveIALAttr("heading-fold")
+			n.RemoveIALAttr("fold")
+			return ast.WalkContinue
+		})
 	}
 	heading.RemoveIALAttr("fold")
 	heading.RemoveIALAttr("heading-fold")
 	if err = tx.writeTree(tree); nil != err {
 		return &TxErr{code: TxErrCodeWriteTree, msg: err.Error(), id: headingID}
 	}
-	IncWorkspaceDataVer()
+	IncSync()
 
 	cache.PutBlockIAL(headingID, parse.IAL2Map(heading.KramdownIAL))
 	for _, child := range children {
@@ -103,9 +117,7 @@ func (tx *Transaction) doUnfoldHeading(operation *Operation) (ret *TxErr) {
 }
 
 func Doc2Heading(srcID, targetID string, after bool) (srcTreeBox, srcTreePath string, err error) {
-	WaitForWritingFiles()
-
-	srcTree, _ := loadTreeByBlockID(srcID)
+	srcTree, _ := LoadTreeByBlockID(srcID)
 	if nil == srcTree {
 		err = ErrBlockNotFound
 		return
@@ -116,12 +128,14 @@ func Doc2Heading(srcID, targetID string, after bool) (srcTreeBox, srcTreePath st
 		if !util.IsEmptyDir(subDir) {
 			err = errors.New(Conf.Language(20))
 			return
-		} else {
-			os.Remove(subDir) // 移除空文件夹不会有副作用
+		}
+
+		if removeErr := os.Remove(subDir); nil != removeErr { // 移除空文件夹不会有副作用
+			logging.LogWarnf("remove empty dir [%s] failed: %s", subDir, removeErr)
 		}
 	}
 
-	targetTree, _ := loadTreeByBlockID(targetID)
+	targetTree, _ := LoadTreeByBlockID(targetID)
 	if nil == targetTree {
 		err = ErrBlockNotFound
 		return
@@ -132,6 +146,10 @@ func Doc2Heading(srcID, targetID string, after bool) (srcTreeBox, srcTreePath st
 		err = ErrBlockNotFound
 		return
 	}
+
+	// 移动前先删除引用 https://github.com/siyuan-note/siyuan/issues/7819
+	sql.DeleteRefsTreeQueue(srcTree)
+	sql.DeleteRefsTreeQueue(targetTree)
 
 	if ast.NodeListItem == pivot.Type {
 		pivot = pivot.LastChild
@@ -155,11 +173,33 @@ func Doc2Heading(srcID, targetID string, after bool) (srcTreeBox, srcTreePath st
 		headingLevel = 6
 	}
 
+	srcTree.Root.RemoveIALAttr("scroll") // Remove `scroll` attribute when converting the document to a heading https://github.com/siyuan-note/siyuan/issues/9297
 	srcTree.Root.RemoveIALAttr("type")
+	tagIAL := srcTree.Root.IALAttr("tags")
+	tags := strings.Split(tagIAL, ",")
+	srcTree.Root.RemoveIALAttr("tags")
 	heading := &ast.Node{ID: srcTree.Root.ID, Type: ast.NodeHeading, HeadingLevel: headingLevel, KramdownIAL: srcTree.Root.KramdownIAL}
+	heading.SetIALAttr("updated", util.CurrentTimeSecondsStr())
 	heading.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte(srcTree.Root.IALAttr("title"))})
-	heading.Box = targetTree.Box
-	heading.Path = targetTree.Path
+	heading.Box, heading.Path = targetTree.Box, targetTree.Path
+	if "" != tagIAL && 0 < len(tags) {
+		// 带标签的文档块转换为标题块时将标签移动到标题块下方 https://github.com/siyuan-note/siyuan/issues/6550
+
+		tagPara := treenode.NewParagraph()
+		for i, tag := range tags {
+			if "" == tag {
+				continue
+			}
+
+			tagPara.AppendChild(&ast.Node{Type: ast.NodeTextMark, TextMarkType: "tag", TextMarkTextContent: tag})
+			if i < len(tags)-1 {
+				tagPara.AppendChild(&ast.Node{Type: ast.NodeText, Tokens: []byte(" ")})
+			}
+		}
+		if nil != tagPara.FirstChild {
+			srcTree.Root.PrependChild(tagPara)
+		}
+	}
 
 	var nodes []*ast.Node
 	if after {
@@ -200,31 +240,38 @@ func Doc2Heading(srcID, targetID string, after bool) (srcTreeBox, srcTreePath st
 		contentPivot.Unlink()
 	}
 
-	srcTreeBox, srcTreePath = srcTree.Box, srcTree.Path
-	srcTree.Root.SetIALAttr("updated", util.CurrentTimeSecondsStr())
-	if err = indexWriteJSONQueue(srcTree); nil != err {
-		return
+	box := Conf.Box(srcTree.Box)
+	if removeErr := box.Remove(srcTree.Path); nil != removeErr {
+		logging.LogWarnf("remove tree [%s] failed: %s", srcTree.Path, removeErr)
 	}
+	box.removeSort([]string{srcTree.ID})
+	RemoveRecentDoc([]string{srcTree.ID})
+	evt := util.NewCmdResult("removeDoc", 0, util.PushModeBroadcast)
+	evt.Data = map[string]interface{}{
+		"ids": []string{srcTree.ID},
+	}
+	util.PushEvent(evt)
 
+	srcTreeBox, srcTreePath = srcTree.Box, srcTree.Path // 返回旧的文档块位置，前端后续会删除旧的文档块
 	targetTree.Root.SetIALAttr("updated", util.CurrentTimeSecondsStr())
-	err = indexWriteJSONQueue(targetTree)
-	IncWorkspaceDataVer()
+	treenode.RemoveBlockTreesByRootID(srcTree.ID)
+	treenode.RemoveBlockTreesByRootID(targetTree.ID)
+	err = indexWriteTreeUpsertQueue(targetTree)
+	IncSync()
 	RefreshBacklink(srcTree.ID)
 	RefreshBacklink(targetTree.ID)
 	return
 }
 
 func Heading2Doc(srcHeadingID, targetBoxID, targetPath string) (srcRootBlockID, newTargetPath string, err error) {
-	WaitForWritingFiles()
-
-	srcTree, _ := loadTreeByBlockID(srcHeadingID)
+	srcTree, _ := LoadTreeByBlockID(srcHeadingID)
 	if nil == srcTree {
 		err = ErrBlockNotFound
 		return
 	}
 	srcRootBlockID = srcTree.Root.ID
 
-	headingBlock, err := getBlock(srcHeadingID)
+	headingBlock, err := getBlock(srcHeadingID, srcTree)
 	if nil != err {
 		return
 	}
@@ -239,8 +286,11 @@ func Heading2Doc(srcHeadingID, targetBoxID, targetPath string) (srcRootBlockID, 
 	}
 
 	box := Conf.Box(targetBoxID)
-	headingText := sql.GetRefText(headingNode.ID)
-	headingText = util.FilterFileName(headingText)
+	headingText := getNodeRefText0(headingNode)
+	if strings.Contains(headingText, "/") {
+		headingText = strings.ReplaceAll(headingText, "/", "_")
+		util.PushMsg(Conf.language(246), 7000)
+	}
 
 	moveToRoot := "/" == targetPath
 	toHP := path.Join("/", headingText)
@@ -266,14 +316,21 @@ func Heading2Doc(srcHeadingID, targetBoxID, targetPath string) (srcRootBlockID, 
 	// 折叠标题转换为文档时需要自动展开下方块 https://github.com/siyuan-note/siyuan/issues/2947
 	children := treenode.HeadingChildren(headingNode)
 	for _, child := range children {
-		child.RemoveIALAttr("heading-fold")
-		child.RemoveIALAttr("fold")
+		ast.Walk(child, func(n *ast.Node, entering bool) ast.WalkStatus {
+			if !entering {
+				return ast.WalkContinue
+			}
+
+			n.RemoveIALAttr("heading-fold")
+			n.RemoveIALAttr("fold")
+			return ast.WalkContinue
+		})
 	}
 	headingNode.RemoveIALAttr("fold")
+	headingNode.RemoveIALAttr("heading-fold")
 
-	luteEngine := NewLute()
+	luteEngine := util.NewLute()
 	newTree := &parse.Tree{Root: &ast.Node{Type: ast.NodeDocument, ID: srcHeadingID}, Context: &parse.Context{ParseOption: luteEngine.ParseOptions}}
-	children = treenode.HeadingChildren(headingNode)
 	for _, c := range children {
 		newTree.Root.AppendChild(c)
 	}
@@ -288,7 +345,7 @@ func Heading2Doc(srcHeadingID, targetBoxID, targetPath string) (srcRootBlockID, 
 	topLevel := treenode.TopHeadingLevel(newTree)
 	for c := newTree.Root.FirstChild; nil != c; c = c.Next {
 		if ast.NodeHeading == c.Type {
-			c.HeadingLevel = c.HeadingLevel - topLevel + 1
+			c.HeadingLevel = c.HeadingLevel - topLevel + 2
 			if 6 < c.HeadingLevel {
 				c.HeadingLevel = 6
 			}
@@ -297,16 +354,22 @@ func Heading2Doc(srcHeadingID, targetBoxID, targetPath string) (srcRootBlockID, 
 
 	headingNode.Unlink()
 	srcTree.Root.SetIALAttr("updated", util.CurrentTimeSecondsStr())
-	if err = indexWriteJSONQueue(srcTree); nil != err {
+	if nil == srcTree.Root.FirstChild {
+		srcTree.Root.AppendChild(treenode.NewParagraph())
+	}
+	treenode.RemoveBlockTreesByRootID(srcTree.ID)
+	if err = indexWriteTreeUpsertQueue(srcTree); nil != err {
 		return "", "", err
 	}
 
 	newTree.Box, newTree.Path = targetBoxID, newTargetPath
 	newTree.Root.SetIALAttr("updated", util.CurrentTimeSecondsStr())
-	if err = indexWriteJSONQueue(newTree); nil != err {
+	newTree.Root.Spec = "1"
+	box.addMinSort(path.Dir(newTargetPath), newTree.ID)
+	if err = indexWriteTreeUpsertQueue(newTree); nil != err {
 		return "", "", err
 	}
-	IncWorkspaceDataVer()
+	IncSync()
 	RefreshBacklink(srcTree.ID)
 	RefreshBacklink(newTree.ID)
 	return
