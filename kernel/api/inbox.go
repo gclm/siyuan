@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -46,6 +46,25 @@ func removeShorthands(c *gin.Context) {
 		ret.Msg = err.Error()
 		return
 	}
+}
+
+func getShorthand(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	id := arg["id"].(string)
+	data, err := model.GetCloudShorthand(id)
+	if nil != err {
+		ret.Code = 1
+		ret.Msg = err.Error()
+		return
+	}
+	ret.Data = data
 }
 
 func getShorthands(c *gin.Context) {

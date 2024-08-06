@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -26,27 +26,84 @@ import (
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
+func searchHistory(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	notebook := ""
+	if nil != arg["notebook"] {
+		notebook = arg["notebook"].(string)
+	}
+	typ := model.HistoryTypeDoc
+	if nil != arg["type"] {
+		typ = int(arg["type"].(float64))
+	}
+
+	query := arg["query"].(string)
+	page := 1
+	if nil != arg["page"] {
+		page = int(arg["page"].(float64))
+	}
+	op := "all"
+	if nil != arg["op"] {
+		op = arg["op"].(string)
+	}
+	histories, pageCount, totalCount := model.FullTextSearchHistory(query, notebook, op, typ, page)
+	ret.Data = map[string]interface{}{
+		"histories":  histories,
+		"pageCount":  pageCount,
+		"totalCount": totalCount,
+	}
+}
+
+func getHistoryItems(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	created := arg["created"].(string)
+
+	notebook := ""
+	if nil != arg["notebook"] {
+		notebook = arg["notebook"].(string)
+	}
+	typ := model.HistoryTypeDoc
+	if nil != arg["type"] {
+		typ = int(arg["type"].(float64))
+	}
+
+	query := arg["query"].(string)
+	op := "all"
+	if nil != arg["op"] {
+		op = arg["op"].(string)
+	}
+	histories := model.FullTextSearchHistoryItems(created, query, notebook, op, typ)
+	ret.Data = map[string]interface{}{
+		"items": histories,
+	}
+}
+
+func reindexHistory(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	model.ReindexHistory()
+}
+
 func getNotebookHistory(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
 	defer c.JSON(http.StatusOK, ret)
 
 	histories, err := model.GetNotebookHistory()
-	if nil != err {
-		ret.Code = -1
-		ret.Msg = err.Error()
-		return
-	}
-
-	ret.Data = map[string]interface{}{
-		"histories": histories,
-	}
-}
-
-func getAssetsHistory(c *gin.Context) {
-	ret := gulu.Ret.NewResult()
-	defer c.JSON(http.StatusOK, ret)
-
-	histories, err := model.GetAssetsHistory()
 	if nil != err {
 		ret.Code = -1
 		ret.Msg = err.Error()
@@ -71,30 +128,8 @@ func clearWorkspaceHistory(c *gin.Context) {
 		return
 	}
 	util.PushClearMsg(msgId)
+	time.Sleep(500 * time.Millisecond)
 	util.PushMsg(model.Conf.Language(99), 1000*5)
-}
-
-func getDocHistory(c *gin.Context) {
-	ret := gulu.Ret.NewResult()
-	defer c.JSON(http.StatusOK, ret)
-
-	arg, ok := util.JsonArg(c, ret)
-	if !ok {
-		return
-	}
-
-	notebook := arg["notebook"].(string)
-	histories, err := model.GetDocHistory(notebook)
-	if nil != err {
-		ret.Code = -1
-		ret.Msg = err.Error()
-		return
-	}
-
-	ret.Data = map[string]interface{}{
-		"box":       notebook,
-		"histories": histories,
-	}
 }
 
 func getDocHistoryContent(c *gin.Context) {
@@ -107,7 +142,12 @@ func getDocHistoryContent(c *gin.Context) {
 	}
 
 	historyPath := arg["historyPath"].(string)
-	content, err := model.GetDocHistoryContent(historyPath)
+	k := arg["k"]
+	var keyword string
+	if nil != k {
+		keyword = k.(string)
+	}
+	id, rootID, content, isLargeDoc, err := model.GetDocHistoryContent(historyPath, keyword)
 	if nil != err {
 		ret.Code = -1
 		ret.Msg = err.Error()
@@ -115,7 +155,10 @@ func getDocHistoryContent(c *gin.Context) {
 	}
 
 	ret.Data = map[string]interface{}{
-		"content": content,
+		"id":         id,
+		"rootID":     rootID,
+		"content":    content,
+		"isLargeDoc": isLargeDoc,
 	}
 }
 

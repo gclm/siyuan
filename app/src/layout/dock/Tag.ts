@@ -1,23 +1,24 @@
 import {Tab} from "../Tab";
 import {Model} from "../Model";
 import {Tree} from "../../util/Tree";
-import {getDockByType, setPanelFocus} from "../util";
+import {setPanelFocus} from "../util";
+import {getDockByType} from "../tabUtil";
 import {fetchPost} from "../../util/fetch";
 import {updateHotkeyTip} from "../../protyle/util/compatibility";
 import {openGlobalSearch} from "../../search/util";
 import {MenuItem} from "../../menus/Menu";
-import {Dialog} from "../../dialog";
-import {isMobile} from "../../util/functions";
-import {confirmDialog} from "../../dialog/confirmDialog";
-import {escapeHtml} from "../../util/escape";
+import {App} from "../../index";
+import {openTagMenu} from "../../menus/tag";
+import {hasClosestByClassName} from "../../protyle/util/hasClosest";
 
 export class Tag extends Model {
     private openNodes: string[];
-    private tree: Tree;
+    public tree: Tree;
     private element: Element;
 
-    constructor(tab: Tab) {
+    constructor(app: App, tab: Tab) {
         super({
+            app,
             id: tab.id,
             msgCallback(data) {
                 if (data) {
@@ -36,7 +37,7 @@ export class Tag extends Model {
                             });
                             break;
                         case "unmount":
-                        case "remove":
+                        case "removeDoc":
                         case "mount":
                             if (data.cmd !== "mount" || data.code !== 1) {
                                 this.update();
@@ -52,80 +53,47 @@ export class Tag extends Model {
 
         this.element.innerHTML = `<div class="block__icons">
     <div class="block__logo">
-        <svg><use xlink:href="#iconTags"></use></svg>
-        ${window.siyuan.languages.tag}
+        <svg class="block__logoicon"><use xlink:href="#iconTags"></use></svg>${window.siyuan.languages.tag}
     </div>
     <span class="fn__flex-1"></span>
     <span class="fn__space"></span>
     <span data-type="refresh" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.refresh}"><svg><use xlink:href='#iconRefresh'></use></svg></span>
     <span class="fn__space"></span>
-    <span data-type="expand" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.expandAll} ${updateHotkeyTip("⌘↓")}">
-        <svg><use xlink:href="#iconFullscreen"></use></svg>
-    </span>
-    <span class="fn__space"></span>
-    <span data-type="collapse" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.collapseAll} ${updateHotkeyTip("⌘↑")}">
-        <svg><use xlink:href="#iconContract"></use></svg>
-    </span>
-    <span class="fn__space"></span>
-    <span data-type="sort" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.sort}">
+    <span data-type="sort" class="block__icon b3-tooltips b3-tooltips__sw${window.siyuan.config.readonly ? " fn__none" : ""}" aria-label="${window.siyuan.languages.sort}">
         <svg><use xlink:href="#iconSort"></use></svg>
+    </span>
+    <span class="fn__space${window.siyuan.config.readonly ? " fn__none" : ""}"></span>
+    <span data-type="expand" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.expand} ${updateHotkeyTip(window.siyuan.config.keymap.editor.general.expand.custom)}">
+        <svg><use xlink:href="#iconExpand"></use></svg>
+    </span>
+    <span class="fn__space"></span>
+    <span data-type="collapse" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.collapse} ${updateHotkeyTip(window.siyuan.config.keymap.editor.general.collapse.custom)}">
+        <svg><use xlink:href="#iconContract"></use></svg>
     </span>
     <span class="fn__space"></span>
     <span data-type="min" class="block__icon b3-tooltips b3-tooltips__sw" aria-label="${window.siyuan.languages.min} ${updateHotkeyTip(window.siyuan.config.keymap.general.closeTab.custom)}"><svg><use xlink:href='#iconMin'></use></svg></span>
 </div>
-<div class="fn__flex-1"></div>`;
+<div class="fn__flex-1" style="margin-bottom: 8px"></div>`;
 
         this.tree = new Tree({
             element: this.element.lastElementChild as HTMLElement,
             data: null,
-            click(element: HTMLElement) {
-                openGlobalSearch(`#${element.getAttribute("data-label")}#`, !window.siyuan.ctrlIsPressed);
+            click(element: HTMLElement, event?: MouseEvent) {
+                const labelName = element.getAttribute("data-label");
+                if (event) {
+                    const actionElement = hasClosestByClassName(event.target as HTMLElement, "b3-list-item__action");
+                    if (actionElement) {
+                        openTagMenu(actionElement.parentElement, event, labelName);
+                        return;
+                    }
+                }
+                openGlobalSearch(app, `#${element.getAttribute("data-label")}#`, !window.siyuan.ctrlIsPressed);
             },
             rightClick: (element: HTMLElement, event: MouseEvent) => {
-                const labelName = element.getAttribute("data-label");
-                window.siyuan.menus.menu.remove();
-                window.siyuan.menus.menu.append(new MenuItem({
-                    label: window.siyuan.languages.rename,
-                    click() {
-                        const dialog = new Dialog({
-                            title: window.siyuan.languages.rename,
-                            content: `<div class="b3-dialog__content"><input class="b3-text-field fn__block" value="${labelName}"></div>
-<div class="b3-dialog__action">
-    <button class="b3-button b3-button--cancel">${window.siyuan.languages.cancel}</button><div class="fn__space"></div>
-    <button class="b3-button b3-button--text">${window.siyuan.languages.confirm}</button>
-</div>`,
-                            width: isMobile() ? "80vw" : "520px",
-                        });
-                        const btnsElement = dialog.element.querySelectorAll(".b3-button");
-                        btnsElement[0].addEventListener("click", () => {
-                            dialog.destroy();
-                        });
-                        const inputElement = dialog.element.querySelector("input");
-                        dialog.bindInput(inputElement, () => {
-                            (btnsElement[1] as HTMLButtonElement).click();
-                        });
-                        inputElement.focus();
-                        inputElement.select();
-                        btnsElement[1].addEventListener("click", () => {
-                            fetchPost("/api/tag/renameTag", {oldLabel: labelName, newLabel: inputElement.value}, () => {
-                                dialog.destroy();
-                            });
-                        });
-                    }
-                }).element);
-                window.siyuan.menus.menu.append(new MenuItem({
-                    icon: "iconTrashcan",
-                    label: window.siyuan.languages.remove,
-                    click: () => {
-                        confirmDialog(window.siyuan.languages.delete, `${window.siyuan.languages.confirmDelete} <b>${escapeHtml(labelName)}</b>?`, () => {
-                            fetchPost("/api/tag/removeTag", {label: labelName}, () => {
-                                this.update();
-                            });
-                        });
-                    },
-                }).element);
-                window.siyuan.menus.menu.popup({x: event.clientX, y: event.clientY});
+                openTagMenu(element, event, element.getAttribute("data-label"));
             },
+            blockExtHTML: window.siyuan.config.readonly ? undefined : '<span class="b3-list-item__action"><svg><use xlink:href="#iconMore"></use></svg></span>',
+            topExtHTML: window.siyuan.config.readonly ? undefined : '<span class="b3-list-item__action"><svg><use xlink:href="#iconMore"></use></svg></span>'
         });
         // 为了快捷键的 dispatch
         this.element.querySelector('[data-type="collapse"]').addEventListener("click", () => {
@@ -135,7 +103,7 @@ export class Tag extends Model {
             this.tree.expandAll();
         });
         this.element.addEventListener("click", (event: MouseEvent) => {
-            setPanelFocus(this.element.firstElementChild);
+            setPanelFocus(this.element);
             let target = event.target as HTMLElement;
             while (target && !target.isEqualNode(this.element)) {
                 if (target.classList.contains("block__icon")) {
@@ -207,10 +175,9 @@ export class Tag extends Model {
             }
         });
         this.update();
-        setPanelFocus(this.element.firstElementChild);
     }
 
-    private update() {
+    public update() {
         const element = this.element.querySelector('.block__icon[data-type="refresh"] svg');
         if (element.classList.contains("fn__rotate")) {
             return;

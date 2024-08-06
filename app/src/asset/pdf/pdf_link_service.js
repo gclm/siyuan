@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+/** @typedef {import("./event_utils").EventBus} EventBus */
+/** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
+
 import { parseQueryString, removeNullCharacters } from "./ui_utils.js";
 
 const DEFAULT_LINK_REL = "noopener noreferrer nofollow";
@@ -104,11 +107,11 @@ class PDFLinkService {
    * @param {PDFLinkServiceOptions} options
    */
   constructor({
-                eventBus,
-                externalLinkTarget = null,
-                externalLinkRel = null,
-                ignoreDestinationZoom = false,
-              } = {}) {
+    eventBus,
+    externalLinkTarget = null,
+    externalLinkRel = null,
+    ignoreDestinationZoom = false,
+  } = {}) {
     this.eventBus = eventBus;
     this.externalLinkTarget = externalLinkTarget;
     this.externalLinkRel = externalLinkRel;
@@ -170,6 +173,13 @@ class PDFLinkService {
     this.pdfViewer.pagesRotation = value;
   }
 
+  /**
+   * @type {boolean}
+   */
+  get isInPresentationMode() {
+    return this.pdfViewer.isInPresentationMode;
+  }
+
   #goToDestinationHelper(rawDest, namedDest = null, explicitDest) {
     // Dest array looks like that: <page-ref> </XYZ|/FitXXX> <args..>
     const destRef = explicitDest[0];
@@ -182,17 +192,17 @@ class PDFLinkService {
         // Fetch the page reference if it's not yet available. This could
         // only occur during loading, before all pages have been resolved.
         this.pdfDocument
-        .getPageIndex(destRef)
-        .then(pageIndex => {
-          this.cachePageRef(pageIndex + 1, destRef);
-          this.#goToDestinationHelper(rawDest, namedDest, explicitDest);
-        })
-        .catch(() => {
-          console.error(
-            `PDFLinkService.#goToDestinationHelper: "${destRef}" is not ` +
-            `a valid page reference, for dest="${rawDest}".`
-          );
-        });
+          .getPageIndex(destRef)
+          .then(pageIndex => {
+            this.cachePageRef(pageIndex + 1, destRef);
+            this.#goToDestinationHelper(rawDest, namedDest, explicitDest);
+          })
+          .catch(() => {
+            console.error(
+              `PDFLinkService.#goToDestinationHelper: "${destRef}" is not ` +
+                `a valid page reference, for dest="${rawDest}".`
+            );
+          });
         return;
       }
     } else if (Number.isInteger(destRef)) {
@@ -200,14 +210,14 @@ class PDFLinkService {
     } else {
       console.error(
         `PDFLinkService.#goToDestinationHelper: "${destRef}" is not ` +
-        `a valid destination reference, for dest="${rawDest}".`
+          `a valid destination reference, for dest="${rawDest}".`
       );
       return;
     }
     if (!pageNumber || pageNumber < 1 || pageNumber > this.pagesCount) {
       console.error(
         `PDFLinkService.#goToDestinationHelper: "${pageNumber}" is not ` +
-        `a valid page number, for dest="${rawDest}".`
+          `a valid page number, for dest="${rawDest}".`
       );
       return;
     }
@@ -246,7 +256,7 @@ class PDFLinkService {
     if (!Array.isArray(explicitDest)) {
       console.error(
         `PDFLinkService.goToDestination: "${explicitDest}" is not ` +
-        `a valid destination array, for dest="${dest}".`
+          `a valid destination array, for dest="${dest}".`
       );
       return;
     }
@@ -326,7 +336,7 @@ class PDFLinkService {
    * @returns {string} The hyperlink to the PDF object.
    */
   getAnchorUrl(anchor) {
-    return (this.baseUrl || "") + anchor;
+    return this.baseUrl ? this.baseUrl + anchor : anchor;
   }
 
   /**
@@ -342,7 +352,7 @@ class PDFLinkService {
       if (params.has("search")) {
         this.eventBus.dispatch("findfromurlhash", {
           source: this,
-          query: params.get("search").replace(/"/g, ""),
+          query: params.get("search").replaceAll('"', ""),
           phraseSearch: params.get("phrase") === "true",
         });
       }
@@ -491,6 +501,48 @@ class PDFLinkService {
   }
 
   /**
+   * @param {Object} action
+   */
+  async executeSetOCGState(action) {
+    const pdfDocument = this.pdfDocument;
+    const optionalContentConfig = await this.pdfViewer
+      .optionalContentConfigPromise;
+
+    if (pdfDocument !== this.pdfDocument) {
+      return; // The document was closed while the optional content resolved.
+    }
+    let operator;
+
+    for (const elem of action.state) {
+      switch (elem) {
+        case "ON":
+        case "OFF":
+        case "Toggle":
+          operator = elem;
+          continue;
+      }
+      switch (operator) {
+        case "ON":
+          optionalContentConfig.setVisibility(elem, true);
+          break;
+        case "OFF":
+          optionalContentConfig.setVisibility(elem, false);
+          break;
+        case "Toggle":
+          const group = optionalContentConfig.getGroup(elem);
+          if (group) {
+            optionalContentConfig.setVisibility(elem, !group.visible);
+          }
+          break;
+      }
+    }
+
+    this.pdfViewer.optionalContentConfigPromise = Promise.resolve(
+      optionalContentConfig
+    );
+  }
+
+  /**
    * @param {number} pageNum - page number.
    * @param {Object} pageRef - reference to the page.
    */
@@ -629,6 +681,13 @@ class SimpleLinkService {
   set rotation(value) {}
 
   /**
+   * @type {boolean}
+   */
+  get isInPresentationMode() {
+    return false;
+  }
+
+  /**
    * @param {string|Array} dest - The named, or explicit, PDF destination.
    */
   async goToDestination(dest) {}
@@ -672,6 +731,11 @@ class SimpleLinkService {
    * @param {string} action
    */
   executeNamedAction(action) {}
+
+  /**
+   * @param {Object} action
+   */
+  executeSetOCGState(action) {}
 
   /**
    * @param {number} pageNum - page number.

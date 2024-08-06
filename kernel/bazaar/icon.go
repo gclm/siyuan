@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,95 +17,81 @@
 package bazaar
 
 import (
-	"errors"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 
-	"github.com/dustin/go-humanize"
+	"github.com/88250/go-humanize"
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 type Icon struct {
-	Author  string `json:"author"`
-	URL     string `json:"url"`
-	Version string `json:"version"`
-
-	Name            string `json:"name"`
-	RepoURL         string `json:"repoURL"`
-	RepoHash        string `json:"repoHash"`
-	PreviewURL      string `json:"previewURL"`
-	PreviewURLThumb string `json:"previewURLThumb"`
-
-	README string `json:"readme"`
-
-	Installed  bool   `json:"installed"`
-	Outdated   bool   `json:"outdated"`
-	Current    bool   `json:"current"`
-	Updated    string `json:"updated"`
-	Stars      int    `json:"stars"`
-	OpenIssues int    `json:"openIssues"`
-	Size       int64  `json:"size"`
-	HSize      string `json:"hSize"`
-	HUpdated   string `json:"hUpdated"`
-	Downloads  int    `json:"downloads"`
+	*Package
 }
 
-func Icons(proxyURL string) (icons []*Icon) {
+func Icons() (icons []*Icon) {
 	icons = []*Icon{}
-	result, err := util.GetRhyResult(false, proxyURL)
-	if nil != err {
-		return
-	}
 
-	bazaarIndex := getBazaarIndex(proxyURL)
-	bazaarHash := result["bazaar"].(string)
-	result = map[string]interface{}{}
-	request := httpclient.NewBrowserRequest(proxyURL)
-	u := util.BazaarOSSServer + "/bazaar@" + bazaarHash + "/stage/icons.json"
-	resp, err := request.SetResult(&result).Get(u)
+	stageIndex, err := getStageIndex("icons")
 	if nil != err {
-		util.LogErrorf("get community stage index [%s] failed: %s", u, err)
 		return
 	}
-	if 200 != resp.StatusCode {
-		util.LogErrorf("get community stage index [%s] failed: %d", u, resp.StatusCode)
-		return
-	}
-	repos := result["repos"].([]interface{})
+	bazaarIndex := getBazaarIndex()
 	waitGroup := &sync.WaitGroup{}
 	lock := &sync.Mutex{}
 	p, _ := ants.NewPoolWithFunc(2, func(arg interface{}) {
 		defer waitGroup.Done()
 
-		repo := arg.(map[string]interface{})
-		repoURL := repo["url"].(string)
+		repo := arg.(*StageRepo)
+		repoURL := repo.URL
+
+		if pkg, found := packageCache.Get(repoURL); found {
+			lock.Lock()
+			icons = append(icons, pkg.(*Icon))
+			lock.Unlock()
+			return
+		}
 
 		icon := &Icon{}
 		innerU := util.BazaarOSSServer + "/package/" + repoURL + "/icon.json"
-		innerResp, innerErr := httpclient.NewBrowserRequest(proxyURL).SetResult(icon).Get(innerU)
+		innerResp, innerErr := httpclient.NewBrowserRequest().SetSuccessResult(icon).Get(innerU)
 		if nil != innerErr {
-			util.LogErrorf("get bazaar package [%s] failed: %s", repoURL, innerErr)
+			logging.LogErrorf("get bazaar package [%s] failed: %s", repoURL, innerErr)
 			return
 		}
 		if 200 != innerResp.StatusCode {
-			util.LogErrorf("get bazaar package [%s] failed: %d", innerU, innerResp.StatusCode)
+			logging.LogErrorf("get bazaar package [%s] failed: %d", innerU, innerResp.StatusCode)
 			return
 		}
 
+		if disallowDisplayBazaarPackage(icon.Package) {
+			return
+		}
+
+		icon.URL = strings.TrimSuffix(icon.URL, "/")
 		repoURLHash := strings.Split(repoURL, "@")
 		icon.RepoURL = "https://github.com/" + repoURLHash[0]
 		icon.RepoHash = repoURLHash[1]
 		icon.PreviewURL = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageslim"
 		icon.PreviewURLThumb = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageView2/2/w/436/h/232"
-		icon.Updated = repo["updated"].(string)
-		icon.Stars = int(repo["stars"].(float64))
-		icon.OpenIssues = int(repo["openIssues"].(float64))
-		icon.Size = int64(repo["size"].(float64))
-		icon.HSize = humanize.Bytes(uint64(icon.Size))
+		icon.IconURL = util.BazaarOSSServer + "/package/" + repoURL + "/icon.png"
+		icon.Funding = repo.Package.Funding
+		icon.PreferredFunding = getPreferredFunding(icon.Funding)
+		icon.PreferredName = GetPreferredName(icon.Package)
+		icon.PreferredDesc = getPreferredDesc(icon.Description)
+		icon.Updated = repo.Updated
+		icon.Stars = repo.Stars
+		icon.OpenIssues = repo.OpenIssues
+		icon.Size = repo.Size
+		icon.HSize = humanize.BytesCustomCeil(uint64(icon.Size), 2)
+		icon.InstallSize = repo.InstallSize
+		icon.HInstallSize = humanize.BytesCustomCeil(uint64(icon.InstallSize), 2)
+		packageInstallSizeCache.SetDefault(icon.RepoURL, icon.InstallSize)
 		icon.HUpdated = formatUpdated(icon.Updated)
 		pkg := bazaarIndex[strings.Split(repoURL, "@")[0]]
 		if nil != pkg {
@@ -114,8 +100,10 @@ func Icons(proxyURL string) (icons []*Icon) {
 		lock.Lock()
 		icons = append(icons, icon)
 		lock.Unlock()
+
+		packageCache.SetDefault(repoURL, icon)
 	})
-	for _, repo := range repos {
+	for _, repo := range stageIndex.Repos {
 		waitGroup.Add(1)
 		p.Invoke(repo)
 	}
@@ -126,20 +114,86 @@ func Icons(proxyURL string) (icons []*Icon) {
 	return
 }
 
-func InstallIcon(repoURL, repoHash, installPath, proxyURL string, chinaCDN bool, systemID string) error {
+func InstalledIcons() (ret []*Icon) {
+	ret = []*Icon{}
+
+	if !util.IsPathRegularDirOrSymlinkDir(util.IconsPath) {
+		return
+	}
+
+	iconDirs, err := os.ReadDir(util.IconsPath)
+	if nil != err {
+		logging.LogWarnf("read icons folder failed: %s", err)
+		return
+	}
+
+	bazaarIcons := Icons()
+
+	for _, iconDir := range iconDirs {
+		if !util.IsDirRegularOrSymlink(iconDir) {
+			continue
+		}
+		dirName := iconDir.Name()
+		if isBuiltInIcon(dirName) {
+			continue
+		}
+
+		icon, parseErr := IconJSON(dirName)
+		if nil != parseErr || nil == icon {
+			continue
+		}
+
+		installPath := filepath.Join(util.IconsPath, dirName)
+
+		icon.Installed = true
+		icon.RepoURL = icon.URL
+		icon.PreviewURL = "/appearance/icons/" + dirName + "/preview.png"
+		icon.PreviewURLThumb = "/appearance/icons/" + dirName + "/preview.png"
+		icon.IconURL = "/appearance/icons/" + dirName + "/icon.png"
+		icon.PreferredFunding = getPreferredFunding(icon.Funding)
+		icon.PreferredName = GetPreferredName(icon.Package)
+		icon.PreferredDesc = getPreferredDesc(icon.Description)
+		info, statErr := os.Stat(filepath.Join(installPath, "README.md"))
+		if nil != statErr {
+			logging.LogWarnf("stat install theme README.md failed: %s", statErr)
+			continue
+		}
+		icon.HInstallDate = info.ModTime().Format("2006-01-02")
+		if installSize, ok := packageInstallSizeCache.Get(icon.RepoURL); ok {
+			icon.InstallSize = installSize.(int64)
+		} else {
+			is, _ := util.SizeOfDirectory(installPath)
+			icon.InstallSize = is
+			packageInstallSizeCache.SetDefault(icon.RepoURL, is)
+		}
+		icon.HInstallSize = humanize.BytesCustomCeil(uint64(icon.InstallSize), 2)
+		readmeFilename := getPreferredReadme(icon.Readme)
+		readme, readErr := os.ReadFile(filepath.Join(installPath, readmeFilename))
+		if nil != readErr {
+			logging.LogWarnf("read installed README.md failed: %s", readErr)
+			continue
+		}
+
+		icon.PreferredReadme, _ = renderREADME(icon.URL, readme)
+		icon.Outdated = isOutdatedIcon(icon, bazaarIcons)
+		ret = append(ret, icon)
+	}
+	return
+}
+
+func isBuiltInIcon(dirName string) bool {
+	return "ant" == dirName || "material" == dirName
+}
+
+func InstallIcon(repoURL, repoHash, installPath string, systemID string) error {
 	repoURLHash := repoURL + "@" + repoHash
-	data, err := downloadPackage(repoURLHash, proxyURL, chinaCDN, true, systemID)
+	data, err := downloadPackage(repoURLHash, true, systemID)
 	if nil != err {
 		return err
 	}
-	return installPackage(data, installPath)
+	return installPackage(data, installPath, repoURLHash)
 }
 
 func UninstallIcon(installPath string) error {
-	if err := os.RemoveAll(installPath); nil != err {
-		util.LogErrorf("remove icon [%s] failed: %s", installPath, err)
-		return errors.New("remove community icon failed")
-	}
-	//util.Logger.Infof("uninstalled icon [%s]", installPath)
-	return nil
+	return uninstallPackage(installPath)
 }

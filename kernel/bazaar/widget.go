@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,96 +17,82 @@
 package bazaar
 
 import (
-	"errors"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 
-	"github.com/dustin/go-humanize"
+	"github.com/88250/go-humanize"
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 type Widget struct {
-	Author  string `json:"author"`
-	URL     string `json:"url"`
-	Version string `json:"version"`
-
-	Name            string `json:"name"`
-	RepoURL         string `json:"repoURL"`
-	RepoHash        string `json:"repoHash"`
-	PreviewURL      string `json:"previewURL"`
-	PreviewURLThumb string `json:"previewURLThumb"`
-
-	README string `json:"readme"`
-
-	Installed  bool   `json:"installed"`
-	Outdated   bool   `json:"outdated"`
-	Current    bool   `json:"current"`
-	Updated    string `json:"updated"`
-	Stars      int    `json:"stars"`
-	OpenIssues int    `json:"openIssues"`
-	Size       int64  `json:"size"`
-	HSize      string `json:"hSize"`
-	HUpdated   string `json:"hUpdated"`
-	Downloads  int    `json:"downloads"`
+	*Package
 }
 
-func Widgets(proxyURL string) (widgets []*Widget) {
+func Widgets() (widgets []*Widget) {
 	widgets = []*Widget{}
-	result, err := util.GetRhyResult(false, proxyURL)
+
+	stageIndex, err := getStageIndex("widgets")
 	if nil != err {
 		return
 	}
+	bazaarIndex := getBazaarIndex()
 
-	bazaarIndex := getBazaarIndex(proxyURL)
-	bazaarHash := result["bazaar"].(string)
-	result = map[string]interface{}{}
-	request := httpclient.NewBrowserRequest(proxyURL)
-	u := util.BazaarOSSServer + "/bazaar@" + bazaarHash + "/stage/widgets.json"
-	resp, err := request.SetResult(&result).Get(u)
-	if nil != err {
-		util.LogErrorf("get community stage index [%s] failed: %s", u, err)
-		return
-	}
-	if 200 != resp.StatusCode {
-		util.LogErrorf("get community stage index [%s] failed: %d", u, resp.StatusCode)
-		return
-	}
-
-	repos := result["repos"].([]interface{})
 	waitGroup := &sync.WaitGroup{}
 	lock := &sync.Mutex{}
 	p, _ := ants.NewPoolWithFunc(8, func(arg interface{}) {
 		defer waitGroup.Done()
 
-		repo := arg.(map[string]interface{})
-		repoURL := repo["url"].(string)
+		repo := arg.(*StageRepo)
+		repoURL := repo.URL
+
+		if pkg, found := packageCache.Get(repoURL); found {
+			lock.Lock()
+			widgets = append(widgets, pkg.(*Widget))
+			lock.Unlock()
+			return
+		}
 
 		widget := &Widget{}
 		innerU := util.BazaarOSSServer + "/package/" + repoURL + "/widget.json"
-		innerResp, innerErr := httpclient.NewBrowserRequest(proxyURL).SetResult(widget).Get(innerU)
+		innerResp, innerErr := httpclient.NewBrowserRequest().SetSuccessResult(widget).Get(innerU)
 		if nil != innerErr {
-			util.LogErrorf("get bazaar package [%s] failed: %s", repoURL, innerErr)
+			logging.LogErrorf("get bazaar package [%s] failed: %s", repoURL, innerErr)
 			return
 		}
 		if 200 != innerResp.StatusCode {
-			util.LogErrorf("get bazaar package [%s] failed: %d", innerU, innerResp.StatusCode)
+			logging.LogErrorf("get bazaar package [%s] failed: %d", innerU, innerResp.StatusCode)
 			return
 		}
 
+		if disallowDisplayBazaarPackage(widget.Package) {
+			return
+		}
+
+		widget.URL = strings.TrimSuffix(widget.URL, "/")
 		repoURLHash := strings.Split(repoURL, "@")
 		widget.RepoURL = "https://github.com/" + repoURLHash[0]
 		widget.RepoHash = repoURLHash[1]
 		widget.PreviewURL = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageslim"
 		widget.PreviewURLThumb = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageView2/2/w/436/h/232"
-		widget.Updated = repo["updated"].(string)
-		widget.Stars = int(repo["stars"].(float64))
-		widget.OpenIssues = int(repo["openIssues"].(float64))
-		widget.Size = int64(repo["size"].(float64))
-		widget.HSize = humanize.Bytes(uint64(widget.Size))
+		widget.IconURL = util.BazaarOSSServer + "/package/" + repoURL + "/icon.png"
+		widget.Funding = repo.Package.Funding
+		widget.PreferredFunding = getPreferredFunding(widget.Funding)
+		widget.PreferredName = GetPreferredName(widget.Package)
+		widget.PreferredDesc = getPreferredDesc(widget.Description)
+		widget.Updated = repo.Updated
+		widget.Stars = repo.Stars
+		widget.OpenIssues = repo.OpenIssues
+		widget.Size = repo.Size
+		widget.HSize = humanize.BytesCustomCeil(uint64(widget.Size), 2)
+		widget.InstallSize = repo.InstallSize
+		widget.HInstallSize = humanize.BytesCustomCeil(uint64(widget.InstallSize), 2)
+		packageInstallSizeCache.SetDefault(widget.RepoURL, widget.InstallSize)
 		widget.HUpdated = formatUpdated(widget.Updated)
 		pkg := bazaarIndex[strings.Split(repoURL, "@")[0]]
 		if nil != pkg {
@@ -115,8 +101,10 @@ func Widgets(proxyURL string) (widgets []*Widget) {
 		lock.Lock()
 		widgets = append(widgets, widget)
 		lock.Unlock()
+
+		packageCache.SetDefault(repoURL, widget)
 	})
-	for _, repo := range repos {
+	for _, repo := range stageIndex.Repos {
 		waitGroup.Add(1)
 		p.Invoke(repo)
 	}
@@ -127,20 +115,80 @@ func Widgets(proxyURL string) (widgets []*Widget) {
 	return
 }
 
-func InstallWidget(repoURL, repoHash, installPath, proxyURL string, chinaCDN bool, systemID string) error {
+func InstalledWidgets() (ret []*Widget) {
+	ret = []*Widget{}
+
+	widgetsPath := filepath.Join(util.DataDir, "widgets")
+	if !util.IsPathRegularDirOrSymlinkDir(widgetsPath) {
+		return
+	}
+
+	widgetDirs, err := os.ReadDir(widgetsPath)
+	if nil != err {
+		logging.LogWarnf("read widgets folder failed: %s", err)
+		return
+	}
+
+	bazaarWidgets := Widgets()
+
+	for _, widgetDir := range widgetDirs {
+		if !util.IsDirRegularOrSymlink(widgetDir) {
+			continue
+		}
+		dirName := widgetDir.Name()
+
+		widget, parseErr := WidgetJSON(dirName)
+		if nil != parseErr || nil == widget {
+			continue
+		}
+
+		installPath := filepath.Join(util.DataDir, "widgets", dirName)
+
+		widget.Installed = true
+		widget.RepoURL = widget.URL
+		widget.PreviewURL = "/widgets/" + dirName + "/preview.png"
+		widget.PreviewURLThumb = "/widgets/" + dirName + "/preview.png"
+		widget.IconURL = "/widgets/" + dirName + "/icon.png"
+		widget.PreferredFunding = getPreferredFunding(widget.Funding)
+		widget.PreferredName = GetPreferredName(widget.Package)
+		widget.PreferredDesc = getPreferredDesc(widget.Description)
+		info, statErr := os.Stat(filepath.Join(installPath, "README.md"))
+		if nil != statErr {
+			logging.LogWarnf("stat install theme README.md failed: %s", statErr)
+			continue
+		}
+		widget.HInstallDate = info.ModTime().Format("2006-01-02")
+		if installSize, ok := packageInstallSizeCache.Get(widget.RepoURL); ok {
+			widget.InstallSize = installSize.(int64)
+		} else {
+			is, _ := util.SizeOfDirectory(installPath)
+			widget.InstallSize = is
+			packageInstallSizeCache.SetDefault(widget.RepoURL, is)
+		}
+		widget.HInstallSize = humanize.BytesCustomCeil(uint64(widget.InstallSize), 2)
+		readmeFilename := getPreferredReadme(widget.Readme)
+		readme, readErr := os.ReadFile(filepath.Join(installPath, readmeFilename))
+		if nil != readErr {
+			logging.LogWarnf("read installed README.md failed: %s", readErr)
+			continue
+		}
+
+		widget.PreferredReadme, _ = renderREADME(widget.URL, readme)
+		widget.Outdated = isOutdatedWidget(widget, bazaarWidgets)
+		ret = append(ret, widget)
+	}
+	return
+}
+
+func InstallWidget(repoURL, repoHash, installPath string, systemID string) error {
 	repoURLHash := repoURL + "@" + repoHash
-	data, err := downloadPackage(repoURLHash, proxyURL, chinaCDN, true, systemID)
+	data, err := downloadPackage(repoURLHash, true, systemID)
 	if nil != err {
 		return err
 	}
-	return installPackage(data, installPath)
+	return installPackage(data, installPath, repoURLHash)
 }
 
 func UninstallWidget(installPath string) error {
-	if err := os.RemoveAll(installPath); nil != err {
-		util.LogErrorf("remove widget [%s] failed: %s", installPath, err)
-		return errors.New("remove community widget failed")
-	}
-	//util.Logger.Infof("uninstalled widget [%s]", installPath)
-	return nil
+	return uninstallPackage(installPath)
 }
