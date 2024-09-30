@@ -13,9 +13,10 @@ export class Options {
             title: false,
             gutter: true,
             scroll: false,
+            breadcrumb: true,
             breadcrumbDocName: false,
-            breadcrumbContext: false
         },
+        action: [],
         after: undefined,
         classes: {
             preview: "",
@@ -53,6 +54,15 @@ export class Options {
                 key: "「「",
                 hint: hintEmbed,
             }, {
+                key: "「『",
+                hint: hintEmbed,
+            }, {
+                key: "『「",
+                hint: hintEmbed,
+            }, {
+                key: "『『",
+                hint: hintEmbed,
+            }, {
                 key: "#", // 需在 / 之前，否则 #abc/ 会显示菜单
                 hint: hintTag,
             }, {
@@ -68,7 +78,7 @@ export class Options {
         lang: window.siyuan.config.appearance.lang,
         preview: {
             actions: ["desktop", "tablet", "mobile", "mp-wechat", "zhihu", "yuque"],
-            delay: 1000,
+            delay: 0,
             markdown: {
                 paragraphBeginningSpace: window.siyuan.config.export.paragraphBeginningSpace,
                 listStyle: false,
@@ -77,39 +87,38 @@ export class Options {
             mode: "both",
         },
         toolbar: isMobile() ? [
-            "blockRef",
-            "link",
+            "block-ref",
+            "a",
             "|",
-            "bold",
-            "italic",
-            "underline",
-            "strike",
-            "mark",
+            "text",
+            "strong",
+            "em",
+            "u",
+            "clear",
             "|",
+            "code",
             "tag",
-            "inline-code",
             "inline-math",
-            "|",
-            "font",
+            "inline-memo",
         ] : [
-            "blockRef",
-            "link",
+            "block-ref",
+            "a",
             "|",
-            "bold",
-            "italic",
-            "underline",
-            "strike",
+            "text",
+            "strong",
+            "em",
+            "u",
+            "s",
             "mark",
-            "|",
             "sup",
             "sub",
+            "clear",
+            "|",
+            "code",
             "kbd",
-            "|",
             "tag",
-            "inline-code",
             "inline-math",
-            "|",
-            "font",
+            "inline-memo",
         ],
         typewriterMode: false,
         upload: {
@@ -117,10 +126,10 @@ export class Options {
             url: Constants.UPLOAD_ADDRESS,
             extraData: {},
             fieldName: "file[]",
-            filename: (name: string) => name.replace(/[\\/:*?"'<>|]/g, ""),
+            filename: (name: string) => name.replace(/[\\/:*?"'<>|\[\]\(\)~!`&{}=#%$]/g, ""),
             linkToImgUrl: "",
             withCredentials: false,
-        },
+        }
     };
 
     constructor(options: IOptions) {
@@ -144,79 +153,104 @@ export class Options {
 
     private mergeToolbar(toolbar: Array<string | IMenuItem>) {
         const toolbarItem: IMenuItem [] = [{
-            name: "blockRef",
-            hotkey: window.siyuan.config.keymap.editor.insert.blockRef.custom,
-            icon: "iconGraph",
+            name: "block-ref",
+            hotkey: window.siyuan.config.keymap.editor.insert.ref.custom,
+            lang: "ref",
+            icon: "iconRef",
             tipPosition: "ne",
         }, {
-            name: "link",
+            name: "a",
             hotkey: window.siyuan.config.keymap.editor.insert.link.custom,
+            lang: "link",
             icon: "iconLink",
             tipPosition: "n",
         }, {
-            name: "bold",
+            name: "strong",
+            lang: "bold",
             hotkey: window.siyuan.config.keymap.editor.insert.bold.custom,
             icon: "iconBold",
             tipPosition: "n",
         }, {
-            name: "italic",
+            name: "em",
+            lang: "italic",
             hotkey: window.siyuan.config.keymap.editor.insert.italic.custom,
             icon: "iconItalic",
             tipPosition: "n",
         }, {
-            name: "underline",
+            name: "u",
+            lang: "underline",
             hotkey: window.siyuan.config.keymap.editor.insert.underline.custom,
             icon: "iconUnderline",
             tipPosition: "n",
         }, {
-            name: "strike",
+            name: "s",
+            lang: "strike",
             hotkey: window.siyuan.config.keymap.editor.insert.strike.custom,
             icon: "iconStrike",
             tipPosition: "n",
         }, {
             name: "mark",
+            lang: "mark",
             hotkey: window.siyuan.config.keymap.editor.insert.mark.custom,
             icon: "iconMark",
             tipPosition: "n",
         }, {
             name: "sup",
+            lang: "sup",
             hotkey: window.siyuan.config.keymap.editor.insert.sup.custom,
             icon: "iconSup",
             tipPosition: "n",
         }, {
             name: "sub",
+            lang: "sub",
             hotkey: window.siyuan.config.keymap.editor.insert.sub.custom,
             icon: "iconSub",
             tipPosition: "n",
         }, {
             name: "kbd",
+            lang: "kbd",
             hotkey: window.siyuan.config.keymap.editor.insert.kbd.custom,
             icon: "iconKeymap",
             tipPosition: "n",
         }, {
             name: "tag",
+            lang: "tag",
             hotkey: window.siyuan.config.keymap.editor.insert.tag.custom,
             icon: "iconTags",
             tipPosition: "n",
         }, {
-            name: "inline-code",
+            name: "code",
+            lang: "inline-code",
             hotkey: window.siyuan.config.keymap.editor.insert["inline-code"].custom,
             icon: "iconInlineCode",
             tipPosition: "n",
         }, {
             name: "inline-math",
+            lang: "inline-math",
             hotkey: window.siyuan.config.keymap.editor.insert["inline-math"].custom,
             icon: "iconMath",
             tipPosition: "n",
         }, {
-            name: "font",
-            hotkey: window.siyuan.config.keymap.editor.insert.font.custom,
+            name: "inline-memo",
+            lang: "memo",
+            hotkey: window.siyuan.config.keymap.editor.insert.memo.custom,
+            icon: "iconM",
+            tipPosition: "n",
+        }, {
+            name: "text",
+            lang: "appearance",
+            hotkey: window.siyuan.config.keymap.editor.insert.appearance.custom,
             icon: "iconFont",
             tipPosition: "n",
         }, {
+            name: "clear",
+            lang: "clearInline",
+            hotkey: window.siyuan.config.keymap.editor.insert.clearInline.custom,
+            icon: "iconClear",
+            tipPosition: "n",
+        }, {
             name: "|",
-        }
-        ];
+        }];
         const toolbarResult: IMenuItem[] = [];
         toolbar.forEach((menuItem: IMenuItem) => {
             let currentMenuItem = menuItem;

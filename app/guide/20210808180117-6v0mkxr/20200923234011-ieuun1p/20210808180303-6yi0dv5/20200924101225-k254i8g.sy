@@ -1,11 +1,12 @@
 {
 	"ID": "20200924101225-k254i8g",
+	"Spec": "1",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20200924101225-k254i8g",
 		"title": "Content Block Type",
 		"type": "doc",
-		"updated": "20220623201527"
+		"updated": "20240818180008"
 	},
 	"Children": [
 		{
@@ -39,32 +40,11 @@
 					"Data": "Hover the mouse over the content block and the corresponding icon will appear on the left side of the content block. For format usage, please refer to "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200924093441-ft2rhps"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "Markdown Complete Demo"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200924093441-ft2rhps",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "Markdown Complete Demo"
 				},
 				{
 					"Type": "NodeText",
@@ -119,33 +99,11 @@
 									"Data": "th",
 									"Children": [
 										{
-											"Type": "NodeBlockRef",
-											"Data": "span",
-											"Children": [
-												{
-													"Type": "NodeOpenParen"
-												},
-												{
-													"Type": "NodeOpenParen"
-												},
-												{
-													"Type": "NodeBlockRefID",
-													"Data": "20200925102736-x94e40g"
-												},
-												{
-													"Type": "NodeBlockRefSpace"
-												},
-												{
-													"Type": "NodeBlockRefText",
-													"Data": "Meta Type"
-												},
-												{
-													"Type": "NodeCloseParen"
-												},
-												{
-													"Type": "NodeCloseParen"
-												}
-											]
+											"Type": "NodeTextMark",
+											"TextMarkType": "block-ref",
+											"TextMarkBlockRefID": "20200925102736-x94e40g",
+											"TextMarkBlockRefSubtype": "s",
+											"TextMarkTextContent": "Meta Type"
 										}
 									]
 								}
@@ -979,20 +937,9 @@
 					"Data": "Below we introduce the details of these content block types. "
 				},
 				{
-					"Type": "NodeTag",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeTagOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "Content Block/Type"
-						},
-						{
-							"Type": "NodeTagCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Content Block/Type"
 				}
 			]
 		},
@@ -1148,12 +1095,77 @@
 			"ID": "20210104091538-o0ti5xd",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091538-o0ti5xd"
+				"id": "20210104091538-o0ti5xd",
+				"updated": "20210104091538"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
 					"Data": "The above is the heading block, which supports level one to six."
+				}
+			]
+		},
+		{
+			"ID": "20240513101855-fukkugx",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240513101855-fukkugx",
+				"updated": "20240513101900"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​:"
+				}
+			]
+		},
+		{
+			"ID": "20240513101855-sh0lm1f",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240513101855-sh0lm1f",
+				"updated": "20240513102037"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "It is not recommended to use first-level headings in the text. It is recommended to use second-level heading as top-level headings. In this way, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Export"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Add document title"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, the overall heading hierarchy will comply with normal logic when exported."
 				}
 			]
 		},
@@ -1344,7 +1356,8 @@
 			"Type": "NodeHeading",
 			"HeadingLevel": 3,
 			"Properties": {
-				"id": "20210104091538-38bsz5r"
+				"id": "20210104091538-38bsz5r",
+				"updated": "20240818180008"
 			},
 			"Children": [
 				{
@@ -1497,11 +1510,11 @@
 			]
 		},
 		{
-			"ID": "20210104091538-ok40ct8",
+			"ID": "20240818174819-qu6xbk1",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091538-ok40ct8",
-				"updated": "20210104091538"
+				"id": "20240818174819-qu6xbk1",
+				"updated": "20240818180003"
 			},
 			"Children": [
 				{
@@ -1509,64 +1522,54 @@
 					"Data": "If you need to use "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "|"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "|"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " in the form, please use "
+					"Data": "​ in a table block, please use "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "\\"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\\"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " to escape, that is, you need to enter "
+					"Data": "​ to escape it, that is, you need to enter "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "\\|"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\\|"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "."
+					"Data": "​."
+				}
+			]
+		},
+		{
+			"ID": "20240818174819-rfu3puw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240818174819-rfu3puw",
+				"updated": "20240818180008"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If you need to wrap a line in a table block, use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift+Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ ."
 				}
 			]
 		},
@@ -1638,28 +1641,124 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20220429115221-suekrrv",
-				"updated": "20220429115221"
+				"updated": "20240427231027"
 			},
 			"Children": [
 				{
-					"Type": "NodeTag",
-					"Data": "span",
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​:"
+				}
+			]
+		},
+		{
+			"ID": "20240427231112-lcwev4m",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20240427231112-lcwev4m",
+				"updated": "20240427231144"
+			},
+			"Children": [
+				{
+					"ID": "20240427231112-q60pwo8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240427231112-q60pwo8",
+						"updated": "20240427231144"
+					},
 					"Children": [
 						{
-							"Type": "NodeTagOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "Note"
-						},
-						{
-							"Type": "NodeTagCloseMarker"
+							"ID": "20240427231112-e7j3mqt",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240427231112-e7j3mqt",
+								"updated": "20240427231144"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "When using HTML blocks, the code in them will be security filtered by default. If filtering is not required, please enable "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Editor"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Allow execution of scripts within HTML blocks"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​, but please confirm that the code is safe before opening it to avoid cross-site scripting attacks (XSS)."
+								}
+							]
 						}
 					]
 				},
 				{
-					"Type": "NodeText",
-					"Data": ": The code in the HTML block will not be safely filtered when using it. Please confirm the code is safe before using it to avoid cross-site scripting (XSS)."
+					"ID": "20240427231112-o1imtjo",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20240427231112-o1imtjo",
+						"updated": "20240427231112"
+					},
+					"Children": [
+						{
+							"ID": "20240427231112-3txbq9w",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20240427231112-3txbq9w",
+								"updated": "20240427231112"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Because the Markdown specification has complicated parsing rules for HTML blocks, it is recommended to use "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "\u0026lt;div\u0026gt;\u0026lt;/div\u0026gt;"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ to wrap HTML code and remove blank lines."
+								}
+							]
+						}
+					]
 				}
 			]
 		},
@@ -1804,7 +1903,8 @@
 			"ID": "20210104091538-9zkv22k",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091538-9zkv22k"
+				"id": "20210104091538-9zkv22k",
+				"updated": "20210104091538"
 			},
 			"Children": [
 				{
@@ -1812,32 +1912,11 @@
 					"Data": "The unordered list block is a type "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200925102736-x94e40g"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "container block"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200925102736-x94e40g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "container block"
 				},
 				{
 					"Type": "NodeText",
@@ -1846,34 +1925,16 @@
 			]
 		},
 		{
-			"ID": "20210104091538-lb00enw",
+			"ID": "20240510235622-zfu6ujw",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091538-lb00enw"
+				"id": "20240510235622-zfu6ujw",
+				"updated": "20240510235721"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "If you need to wrap a line in a list item, use "
-				},
-				{
-					"Type": "NodeKbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "Shift Enter"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
-				},
-				{
-					"Type": "NodeText",
-					"Data": "."
+					"Data": "The unordered list block can only contain list item blocks, and neighboring unordered list blocks are widely spaced."
 				}
 			]
 		},
@@ -2024,44 +2085,38 @@
 			"ID": "20210104091538-1ix6ueu",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091538-1ix6ueu"
+				"id": "20210104091538-1ix6ueu",
+				"updated": "20240510235637"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "An ordered list block is a type "
+					"Data": "The ordered list block is a type "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200925102736-x94e40g"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "container block"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200925102736-x94e40g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "container block"
 				},
 				{
 					"Type": "NodeText",
 					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20240510235620-trltkc3",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240510235620-trltkc3",
+				"updated": "20240510235659"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The ordered list block can only contain list item blocks, and neighboring ordered list blocks are widely spaced."
 				}
 			]
 		},
@@ -2230,32 +2285,11 @@
 					"Data": "The task list block is a type "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200925102736-x94e40g"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "container block"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200925102736-x94e40g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "container block"
 				},
 				{
 					"Type": "NodeText",
@@ -2264,11 +2298,26 @@
 			]
 		},
 		{
+			"ID": "20240510235512-za4depm",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240510235512-za4depm",
+				"updated": "20240510235706"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "The task list block can only contain list item blocks, and neighboring task list blocks are widely spaced."
+				}
+			]
+		},
+		{
 			"ID": "20210104091538-wqiaxdu",
 			"Type": "NodeHeading",
 			"HeadingLevel": 3,
 			"Properties": {
-				"id": "20210104091538-wqiaxdu"
+				"id": "20210104091538-wqiaxdu",
+				"updated": "20240818174739"
 			},
 			"Children": [
 				{
@@ -2328,7 +2377,8 @@
 			"ID": "20210104091538-lbf2al4",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091538-lbf2al4"
+				"id": "20210104091538-lbf2al4",
+				"updated": "20210104091538"
 			},
 			"Children": [
 				{
@@ -2336,36 +2386,52 @@
 					"Data": "The basic usage of outline notes can be realized through the list item block. The list item block is a type "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200925102736-x94e40g"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "container block"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200925102736-x94e40g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "container block"
 				},
 				{
 					"Type": "NodeText",
 					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20240510235301-s4nj22e",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240510235301-s4nj22e",
+				"updated": "20240510235356"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "List item blocks are contained within a list block, and neighboring list item blocks are less widely spaced."
+				}
+			]
+		},
+		{
+			"ID": "20210104091538-lb00enw",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20210104091538-lb00enw",
+				"updated": "20240818174739"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "If you need to wrap a line in a list item, use "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift+Enter"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​."
 				}
 			]
 		},
@@ -2468,32 +2534,11 @@
 					"Data": "The block reference block is a type "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200925102736-x94e40g"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "container block"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200925102736-x94e40g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "container block"
 				},
 				{
 					"Type": "NodeText",
@@ -2575,32 +2620,11 @@
 					"Data": "The super block is a type "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200925102736-x94e40g"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "container block"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200925102736-x94e40g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "container block"
 				},
 				{
 					"Type": "NodeText",
@@ -2681,32 +2705,11 @@
 					"Data": "The entire document is a block, and the document block is a type "
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20200925102736-x94e40g"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "container block"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200925102736-x94e40g",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "container block"
 				},
 				{
 					"Type": "NodeText",

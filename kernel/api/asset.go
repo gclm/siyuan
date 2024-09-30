@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,16 +17,168 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/88250/go-humanize"
 	"github.com/88250/gulu"
+	"github.com/djherbis/times"
 	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/filelock"
 	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/sql"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
+
+func statAsset(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	path := arg["path"].(string)
+	var p string
+	if strings.HasPrefix(path, "assets/") {
+		var err error
+		p, err = model.GetAssetAbsPath(path)
+		if err != nil {
+			ret.Code = 1
+			return
+		}
+
+	} else if strings.HasPrefix(path, "file://") {
+		p = strings.TrimPrefix(path, "file://")
+		if strings.Contains(p, ":") {
+			p = strings.TrimPrefix(p, "/")
+		}
+	} else {
+		ret.Code = 1
+		return
+	}
+
+	info, err := os.Stat(p)
+	if err != nil {
+		ret.Code = 1
+		return
+	}
+
+	t, err := times.Stat(p)
+	if err != nil {
+		ret.Code = 1
+		return
+	}
+
+	updated := t.ModTime().UnixMilli()
+	hUpdated := t.ModTime().Format("2006-01-02 15:04:05")
+	created := updated
+	hCreated := hUpdated
+	// Check birthtime before use
+	if t.HasBirthTime() {
+		created = t.BirthTime().UnixMilli()
+		hCreated = t.BirthTime().Format("2006-01-02 15:04:05")
+	}
+
+	ret.Data = map[string]interface{}{
+		"size":     info.Size(),
+		"hSize":    humanize.BytesCustomCeil(uint64(info.Size()), 2),
+		"created":  created,
+		"hCreated": hCreated,
+		"updated":  updated,
+		"hUpdated": hUpdated,
+	}
+}
+
+func fullReindexAssetContent(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	model.ReindexAssetContent()
+}
+
+func getImageOCRText(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	path := arg["path"].(string)
+
+	ret.Data = map[string]interface{}{
+		"text": util.GetAssetText(path),
+	}
+}
+
+func setImageOCRText(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	path := arg["path"].(string)
+	text := arg["text"].(string)
+	util.SetAssetText(path, text)
+
+	// 刷新 OCR 结果到数据库
+	util.NodeOCRQueueLock.Lock()
+	defer util.NodeOCRQueueLock.Unlock()
+	for _, id := range util.NodeOCRQueue {
+		sql.IndexNodeQueue(id)
+	}
+	util.NodeOCRQueue = nil
+}
+
+func ocr(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	path := arg["path"].(string)
+
+	ocrJSON := util.OcrAsset(path)
+	ret.Data = map[string]interface{}{
+		"text":    util.GetOcrJsonText(ocrJSON),
+		"ocrJSON": ocrJSON,
+	}
+}
+
+func renameAsset(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	oldPath := arg["oldPath"].(string)
+	newName := arg["newName"].(string)
+	newPath, err := model.RenameAsset(oldPath, newName)
+	if err != nil {
+		ret.Code = -1
+		ret.Msg = err.Error()
+		ret.Data = map[string]interface{}{"closeTimeout": 5000}
+		return
+	}
+	ret.Data = map[string]interface{}{
+		"newPath": newPath,
+	}
+}
 
 func getDocImageAssets(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
@@ -39,7 +191,7 @@ func getDocImageAssets(c *gin.Context) {
 
 	id := arg["id"].(string)
 	assets, err := model.DocImageAssets(id)
-	if nil != err {
+	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		return
@@ -60,17 +212,17 @@ func setFileAnnotation(c *gin.Context) {
 	p = strings.ReplaceAll(p, "%23", "#")
 	data := arg["data"].(string)
 	writePath, err := resolveFileAnnotationAbsPath(p)
-	if nil != err {
+	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		return
 	}
-	if err := gulu.File.WriteFileSafer(writePath, []byte(data), 0644); nil != err {
+	if err := filelock.WriteFile(writePath, []byte(data)); err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		return
 	}
-	model.IncWorkspaceDataVer()
+	model.IncSync()
 }
 
 func getFileAnnotation(c *gin.Context) {
@@ -85,19 +237,19 @@ func getFileAnnotation(c *gin.Context) {
 	p := arg["path"].(string)
 	p = strings.ReplaceAll(p, "%23", "#")
 	readPath, err := resolveFileAnnotationAbsPath(p)
-	if nil != err {
+	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 5000}
 		return
 	}
-	if !gulu.File.IsExist(readPath) {
+	if !filelock.IsExist(readPath) {
 		ret.Code = 1
 		return
 	}
 
-	data, err := os.ReadFile(readPath)
-	if nil != err {
+	data, err := filelock.ReadFile(readPath)
+	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		return
@@ -110,7 +262,7 @@ func getFileAnnotation(c *gin.Context) {
 func resolveFileAnnotationAbsPath(assetRelPath string) (ret string, err error) {
 	filePath := strings.TrimSuffix(assetRelPath, ".sya")
 	absPath, err := model.GetAssetAbsPath(filePath)
-	if nil != err {
+	if err != nil {
 		return
 	}
 	dir := filepath.Dir(absPath)
@@ -155,6 +307,16 @@ func getUnusedAssets(c *gin.Context) {
 	}
 }
 
+func getMissingAssets(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	missingAssets := model.MissingAssets()
+	ret.Data = map[string]interface{}{
+		"missingAssets": missingAssets,
+	}
+}
+
 func resolveAssetPath(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
 	defer c.JSON(http.StatusOK, ret)
@@ -166,7 +328,7 @@ func resolveAssetPath(c *gin.Context) {
 
 	path := arg["path"].(string)
 	p, err := model.GetAssetAbsPath(path)
-	if nil != err {
+	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 3000}
@@ -186,14 +348,15 @@ func uploadCloud(c *gin.Context) {
 	}
 
 	rootID := arg["id"].(string)
-	err := model.UploadAssets2Cloud(rootID)
-	if nil != err {
+	count, err := model.UploadAssets2Cloud(rootID)
+	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 3000}
-	} else {
-		util.PushMsg(model.Conf.Language(41), 3000)
+		return
 	}
+
+	util.PushMsg(fmt.Sprintf(model.Conf.Language(41), count), 3000)
 }
 
 func insertLocalAssets(c *gin.Context) {
@@ -210,9 +373,14 @@ func insertLocalAssets(c *gin.Context) {
 	for _, pathArg := range assetPathsArg {
 		assetPaths = append(assetPaths, pathArg.(string))
 	}
+	isUpload := true
+	isUploadArg := arg["isUpload"]
+	if nil != isUploadArg {
+		isUpload = isUploadArg.(bool)
+	}
 	id := arg["id"].(string)
-	succMap, err := model.InsertLocalAssets(id, assetPaths)
-	if nil != err {
+	succMap, err := model.InsertLocalAssets(id, assetPaths, isUpload)
+	if err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		return

@@ -1,10 +1,11 @@
 {
 	"ID": "20210613191509-cbkxcbz",
+	"Spec": "1",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20210613191509-cbkxcbz",
 		"title": "Content Block Attribute",
-		"updated": "20211223192555"
+		"updated": "20210613191548"
 	},
 	"Children": [
 		{
@@ -234,100 +235,45 @@
 					"Data": "The user-defined attributes are set by the user through the "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "Block icon menu"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Block icon menu"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " -"
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "Attribute"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "Attribute"
 				},
 				{
 					"Type": "NodeText",
 					"Data": ", and only English letters and Arabic numerals are allowed in the attribute name (such as "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "doing"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "doing"
 				},
 				{
 					"Type": "NodeText",
 					"Data": ", "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "7days"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "7days"
 				},
 				{
 					"Type": "NodeText",
 					"Data": "). After setting, SiYuan will automatically prefix the attribute name with "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "custom-"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "custom-"
 				},
 				{
 					"Type": "NodeText",
@@ -336,38 +282,9 @@
 			]
 		},
 		{
-			"ID": "20210613191548-5m1tlai",
-			"Type": "NodeHeading",
-			"HeadingLevel": 2,
-			"Properties": {
-				"id": "20210613191548-5m1tlai",
-				"updated": "20210613191548"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "Using attributes"
-				}
-			]
-		},
-		{
-			"ID": "20210613191548-r7r6xw4",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20210613191548-r7r6xw4",
-				"updated": "20210824200848"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "There are two main usage scenarios for attributes: querying content blocks based on attributes and storing widget data."
-				}
-			]
-		},
-		{
 			"ID": "20210613191548-ihlwok9",
 			"Type": "NodeHeading",
-			"HeadingLevel": 3,
+			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20210613191548-ihlwok9",
 				"updated": "20210613191548"
@@ -392,40 +309,18 @@
 					"Data": "For example, when we set the properties of "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "progress=30"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "progress=30"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " and "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "priority=2"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "priority=2"
 				},
 				{
 					"Type": "NodeText",
@@ -461,35 +356,6 @@
 				{
 					"Type": "NodeCodeBlockFenceCloseMarker",
 					"Data": "```"
-				}
-			]
-		},
-		{
-			"ID": "20210613191548-cc68rcy",
-			"Type": "NodeHeading",
-			"HeadingLevel": 3,
-			"Properties": {
-				"id": "20210613191548-cc68rcy",
-				"updated": "20210824200759"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "Store widget data"
-				}
-			]
-		},
-		{
-			"ID": "20210613191548-54xjeo6",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20210613191548-54xjeo6",
-				"updated": "20210824200805"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "The widget can set the attributes through the interface, please refer to the development document for details."
 				}
 			]
 		}

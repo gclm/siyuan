@@ -13,74 +13,86 @@
  * limitations under the License.
  */
 
-import { BasePreferences } from './preferences.js'
-import { DownloadManager } from './download_manager.js'
-import { GenericScripting } from './generic_scripting.js'
-import { shadow } from './pdfjs'
+import { BasePreferences } from "./preferences.js";
+import { GenericScripting } from "./generic_scripting.js";
+import {shadow} from "./pdfjs";
 
-if (typeof PDFJSDev !== 'undefined' && !PDFJSDev.test('GENERIC')) {
+if (typeof PDFJSDev !== "undefined" && !PDFJSDev.test("GENERIC")) {
   throw new Error(
-    'Module "pdfjs-web/genericcom" shall not be used outside GENERIC build.',
-  )
+    'Module "pdfjs-web/genericcom" shall not be used outside GENERIC build.'
+  );
 }
 
-const GenericCom = {}
+const GenericCom = {};
 
 class GenericPreferences extends BasePreferences {
-  async _writeToStorage (prefObj) {
-    localStorage.setItem('pdfjs.preferences', JSON.stringify(prefObj))
+  async _writeToStorage(prefObj) {
+    localStorage.setItem("pdfjs.preferences", JSON.stringify(prefObj));
   }
 
-  async _readFromStorage (prefObj) {
-    return JSON.parse(localStorage.getItem('pdfjs.preferences'))
+  async _readFromStorage(prefObj) {
+    return JSON.parse(localStorage.getItem("pdfjs.preferences"));
   }
 }
 
-class GenericExternalServices {
-  constructor () {
-    throw new Error('Cannot initialize DefaultExternalServices.')
+class DefaultExternalServices {
+  constructor() {
+    throw new Error("Cannot initialize DefaultExternalServices.");
   }
 
-  static updateFindControlState (data) {}
+  static updateFindControlState(data) {}
 
-  static updateFindMatchesCount (data) {}
+  static updateFindMatchesCount(data) {}
 
-  static initPassiveLoading (callbacks) {}
+  static initPassiveLoading(callbacks) {}
 
-  static async fallback (data) {}
+  static reportTelemetry(data) {}
 
-  static reportTelemetry (data) {}
-
-  static get supportsIntegratedFind () {
-    return shadow(this, 'supportsIntegratedFind', false)
+  static get supportsPinchToZoom() {
+    return shadow(this, "supportsPinchToZoom", true);
   }
 
-  static get supportsDocumentFonts () {
-    return shadow(this, 'supportsDocumentFonts', true)
+  static get supportsIntegratedFind() {
+    return shadow(this, "supportsIntegratedFind", false);
   }
 
-  static get supportedMouseWheelZoomModifierKeys () {
-    return shadow(this, 'supportedMouseWheelZoomModifierKeys', {
+  static get supportsDocumentFonts() {
+    return shadow(this, "supportsDocumentFonts", true);
+  }
+
+  static get supportedMouseWheelZoomModifierKeys() {
+    return shadow(this, "supportedMouseWheelZoomModifierKeys", {
       ctrlKey: true,
       metaKey: true,
-    })
+    });
   }
 
-  static get isInAutomation () {
-    return shadow(this, 'isInAutomation', false)
+  static get isInAutomation() {
+    return shadow(this, "isInAutomation", false);
   }
 
-  static createDownloadManager (options) {
-    return new DownloadManager()
+  static updateEditorStates(data) {
+    throw new Error("Not implemented: updateEditorStates");
   }
 
-  static createPreferences () {
-    return new GenericPreferences()
+  static createDownloadManager() {
+    // NOTE return new DownloadManager();
   }
 
-  static createScripting ({sandboxBundleSrc}) {
-    return new GenericScripting(sandboxBundleSrc)
+  static createPreferences() {
+    return new GenericPreferences();
+  }
+
+  static createL10n({ locale = "en-US" }) {
+    // NOTE return new GenericL10n(locale);
+  }
+
+  static createScripting({ sandboxBundleSrc }) {
+    return new GenericScripting(sandboxBundleSrc);
   }
 }
 
-export { GenericCom, GenericExternalServices }
+// NOTE
+// PDFViewerApplication.externalServices = GenericExternalServices;
+
+export { GenericCom, DefaultExternalServices };

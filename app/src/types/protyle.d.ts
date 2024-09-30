@@ -1,24 +1,4 @@
-declare const echarts: {
-    init(element: HTMLElement, theme?: string, options?: { width: number }): IEChart;
-    dispose(element: Element): void;
-};
-
-declare const hljs: {
-    highlight(text: string, options: { language?: string, ignoreIllegals: boolean }): { value: string };
-    getLanguage(text: string): { name: string };
-};
-
-interface IEChart {
-    setOption(option: any): void;
-
-    getZr(): any;
-
-    on(name: string, event: (e: any) => void): any;
-
-    containPixel(name: string, position: number[]): any;
-
-    resize(): void;
-}
+import IUILayoutTabSearchConfigTypes = Config.IUILayoutTabSearchConfigTypes;
 
 interface ILuteNode {
     TokensStr: () => string;
@@ -29,6 +9,12 @@ interface ILuteNode {
         HeadingLevel: string,
     };
 }
+
+type TTurnIntoOne = "BlocksMergeSuperBlock" | "Blocks2ULs" | "Blocks2OLs" | "Blocks2TLs" | "Blocks2Blockquote"
+
+type TTurnIntoOneSub = "row" | "col"
+
+type TTurnInto = "Blocks2Ps" | "Blocks2Hs"
 
 type ILuteRenderCallback = (node: ILuteNode, entering: boolean) => [string, number];
 
@@ -104,11 +90,55 @@ interface ILuteRender {
     renderBackslashContent?: ILuteRenderCallback;
 }
 
+interface IBreadcrumb {
+    id: string,
+    name: string,
+    type: string,
+    subType: string,
+    children: []
+}
+
 interface ILuteOptions extends IMarkdownConfig {
     emojis: IObject;
     emojiSite: string;
     headingAnchor: boolean;
     lazyLoadImage?: string;
+}
+
+declare class Viz {
+    constructor(worker: { worker: Worker });
+
+    renderSVGElement: (code: string) => Promise<any>;
+}
+
+declare class Viewer {
+    public destroyed: boolean;
+
+    constructor(element: Element, options: {
+        title: [number, (image: HTMLImageElement, imageData: IObject) => string],
+        button: boolean,
+        initialViewIndex?: number,
+        transition: boolean,
+        hidden: () => void,
+        toolbar: {
+            zoomIn: boolean,
+            zoomOut: boolean,
+            oneToOne: boolean,
+            reset: boolean,
+            prev: boolean,
+            play: boolean,
+            next: boolean,
+            rotateLeft: boolean,
+            rotateRight: boolean,
+            flipHorizontal: boolean,
+            flipVertical: boolean,
+            close: () => void
+        }
+    })
+
+    public destroy(): void
+
+    public show(): void
 }
 
 declare class Lute {
@@ -136,9 +166,21 @@ declare class Lute {
 
     private constructor();
 
+    public BlockDOM2Content(text: string): string;
+
+    public BlockDOM2EscapeMarkerContent(text: string): string;
+
+    public SetSpin(enable: boolean): void;
+
+    public SetTextMark(enable: boolean): void;
+
+    public SetHTMLTag2TextMark(enable: boolean): void;
+
     public SetHeadingID(enable: boolean): void;
 
     public SetProtyleMarkNetImg(enable: boolean): void;
+
+    public SetSpellcheck(enable: boolean): void;
 
     public SetFileAnnotationRef(enable: boolean): void;
 
@@ -154,19 +196,27 @@ declare class Lute {
 
     public SetKramdownIAL(enable: boolean): void;
 
-    public BlockDOM2StdMd(html: string): string;
+    public BlockDOM2Md(html: string): string;
 
-    public SetGitConflict(enable: boolean): void;
+    public BlockDOM2StdMd(html: string): string;
 
     public SetSuperBlock(enable: boolean): void;
 
     public SetTag(enable: boolean): void;
+
+    public SetInlineMath(enable: boolean): void;
+
+    public SetGFMStrikethrough1(enable: boolean): void;
 
     public SetMark(enable: boolean): void;
 
     public SetSub(enable: boolean): void;
 
     public SetSup(enable: boolean): void;
+
+    public SetInlineAsterisk(enable: boolean): void;
+
+    public SetInlineUnderscore(enable: boolean): void;
 
     public SetBlockRef(enable: boolean): void;
 
@@ -186,13 +236,11 @@ declare class Lute {
 
     public SetFootnotes(enable: boolean): void;
 
-    public SetLinkRef(enalbe: boolean): void;
+    public SetLinkRef(enable: boolean): void;
 
     public SetEmojiSite(emojiSite: string): void;
 
     public PutEmojis(emojis: IObject): void;
-
-    public BlockDOM2Md(html: string): string;
 
     public SpinBlockDOM(html: string): string;
 
@@ -202,9 +250,11 @@ declare class Lute {
 
     public MarkdownStr(name: string, md: string): string;
 
-    public IsValidLinkDest(text: string): boolean;
+    public GetLinkDest(text: string): string;
 
     public BlockDOM2InlineBlockDOM(html: string): string;
+
+    public BlockDOM2HTML(html: string): string;
 }
 
 declare const webkitAudioContext: {
@@ -265,14 +315,18 @@ interface IUpload {
 interface IMenuItem {
     /** 唯一标示 */
     name: string;
-    /** svg 图标 */
-    icon?: string;
     /** 提示 */
     tip?: string;
+    /** 语言 key */
+    lang?: string;
+    /** svg 图标 */
+    icon?: string;
     /** 快捷键 */
     hotkey?: string;
-    /** 插入编辑器中的后缀 */
+    /** 提示的位置 */
     tipPosition?: string;
+
+    click?(protyle: import("../protyle").Protyle): void;
 }
 
 /** @link https://ld246.com/article/1549638745630#options-preview-markdown */
@@ -316,15 +370,17 @@ interface IPreviewActionCustom {
 }
 
 interface IHintData {
+    id?: string;
     html: string;
     value: string;
     filter?: string[]
+    focus?: boolean
 }
 
 interface IHintExtend {
     key: string;
 
-    hint?(value: string, protyle: IProtyle): IHintData[];
+    hint?(value: string, protyle: IProtyle, source: THintSource): IHintData[];
 }
 
 /** @link https://ld246.com/article/1549638745630#options-hint */
@@ -341,10 +397,19 @@ interface IHint {
 
 /** @link https://ld246.com/article/1549638745630#options */
 interface IOptions {
+    history?: {
+        created?: string
+        snapshot?: string
+    },
+    backlinkData?: {
+        blockPaths: IBreadcrumb[],
+        dom: string
+        expand: boolean
+    }[],
     action?: string[],
     mode?: TEditorMode,
     blockId: string
-    hasContext?: boolean
+    rootId?: string
     key?: string
     defId?: string
     render?: {
@@ -352,8 +417,8 @@ interface IOptions {
         title?: boolean
         gutter?: boolean
         scroll?: boolean
+        breadcrumb?: boolean
         breadcrumbDocName?: boolean
-        breadcrumbContext?: boolean
     }
     /** 内部调试时使用 */
     _lutePath?: string;
@@ -377,20 +442,31 @@ interface IOptions {
     };
 
     /** 编辑器异步渲染完成后的回调方法 */
-    after?(protyle: import("../protyle/index").default): void;
+    after?(protyle: import("../protyle").Protyle): void;
 }
 
 interface IProtyle {
+    getInstance: () => import("../protyle").Protyle,
+    observerLoad?: ResizeObserver,
+    observer?: ResizeObserver,
+    app: import("../index").App,
     transactionTime: number,
     id: string,
+    query?: {
+        key: string,
+        method: number
+        types: IUILayoutTabSearchConfigTypes
+    },
     block: {
         id?: string,
+        scroll?: boolean
         parentID?: string,
         parent2ID?: string,
         rootID?: string,
         showAll?: boolean
         mode?: number
         blockCount?: number
+        action?: string[]
     },
     disabled: boolean,
     selectElement?: HTMLElement,

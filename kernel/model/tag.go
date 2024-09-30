@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,17 +17,14 @@
 package model
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"sort"
 	"strings"
 
-	"github.com/88250/gulu"
 	"github.com/88250/lute/ast"
-	"github.com/88250/lute/html"
 	"github.com/emirpasic/gods/sets/hashset"
-	"github.com/facette/natsort"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/search"
 	"github.com/siyuan-note/siyuan/kernel/sql"
 	"github.com/siyuan-note/siyuan/kernel/treenode"
@@ -42,7 +39,7 @@ func RemoveTag(label string) (err error) {
 	util.PushEndlessProgress(Conf.Language(116))
 	util.RandomSleep(1000, 2000)
 
-	tags := sql.QueryTagSpansByKeyword(label, 102400)
+	tags := sql.QueryTagSpansByLabel(label)
 	treeBlocks := map[string][]string{}
 	for _, tag := range tags {
 		if blocks, ok := treeBlocks[tag.RootID]; !ok {
@@ -54,7 +51,7 @@ func RemoveTag(label string) (err error) {
 
 	for treeID, blocks := range treeBlocks {
 		util.PushEndlessProgress("[" + treeID + "]")
-		tree, e := loadTreeByBlockID(treeID)
+		tree, e := LoadTreeByBlockID(treeID)
 		if nil != e {
 			util.ClearPushProgress(100)
 			return e
@@ -82,11 +79,10 @@ func RemoveTag(label string) (err error) {
 				continue
 			}
 
-			nodeTags := node.ChildrenByType(ast.NodeTag)
+			nodeTags := node.ChildrenByType(ast.NodeTextMark)
 			for _, nodeTag := range nodeTags {
-				nodeLabels := nodeTag.ChildrenByType(ast.NodeText)
-				for _, nodeLabel := range nodeLabels {
-					if bytes.Equal(nodeLabel.Tokens, []byte(label)) {
+				if nodeTag.IsTextMarkType("tag") {
+					if label == nodeTag.TextMarkTextContent {
 						unlinks = append(unlinks, nodeTag)
 					}
 				}
@@ -95,23 +91,21 @@ func RemoveTag(label string) (err error) {
 		for _, n := range unlinks {
 			n.Unlink()
 		}
-		util.PushEndlessProgress(fmt.Sprintf(Conf.Language(111), tree.Root.IALAttr("title")))
-		if err = writeJSONQueue(tree); nil != err {
+		util.PushEndlessProgress(fmt.Sprintf(Conf.Language(111), util.EscapeHTML(tree.Root.IALAttr("title"))))
+		if err = writeTreeUpsertQueue(tree); err != nil {
 			util.ClearPushProgress(100)
 			return
 		}
 		util.RandomSleep(50, 150)
 	}
 
-	util.PushEndlessProgress(Conf.Language(113))
-	sql.WaitForWritingDatabase()
 	util.ReloadUI()
 	return
 }
 
 func RenameTag(oldLabel, newLabel string) (err error) {
-	if treenode.ContainsMarker(newLabel) {
-		return errors.New(Conf.Language(112))
+	if invalidChar := treenode.ContainsMarker(newLabel); "" != invalidChar {
+		return errors.New(fmt.Sprintf(Conf.Language(112), invalidChar))
 	}
 
 	newLabel = strings.TrimSpace(newLabel)
@@ -128,9 +122,9 @@ func RenameTag(oldLabel, newLabel string) (err error) {
 	}
 
 	util.PushEndlessProgress(Conf.Language(110))
-	util.RandomSleep(1000, 2000)
+	util.RandomSleep(500, 1000)
 
-	tags := sql.QueryTagSpansByKeyword(oldLabel, 102400)
+	tags := sql.QueryTagSpansByLabel(oldLabel)
 	treeBlocks := map[string][]string{}
 	for _, tag := range tags {
 		if blocks, ok := treeBlocks[tag.RootID]; !ok {
@@ -142,7 +136,7 @@ func RenameTag(oldLabel, newLabel string) (err error) {
 
 	for treeID, blocks := range treeBlocks {
 		util.PushEndlessProgress("[" + treeID + "]")
-		tree, e := loadTreeByBlockID(treeID)
+		tree, e := LoadTreeByBlockID(treeID)
 		if nil != e {
 			util.ClearPushProgress(100)
 			return e
@@ -157,17 +151,13 @@ func RenameTag(oldLabel, newLabel string) (err error) {
 			if ast.NodeDocument == node.Type {
 				if docTagsVal := node.IALAttr("tags"); strings.Contains(docTagsVal, oldLabel) {
 					docTags := strings.Split(docTagsVal, ",")
-					if gulu.Str.Contains(newLabel, docTags) {
-						continue
-					}
 					var tmp []string
-					for i, docTag := range docTags {
-						if !strings.Contains(docTag, oldLabel) {
+					for _, docTag := range docTags {
+						if strings.HasPrefix(docTag, oldLabel+"/") || docTag == oldLabel {
+							docTag = strings.Replace(docTag, oldLabel, newLabel, 1)
 							tmp = append(tmp, docTag)
-							continue
-						}
-						if newTag := strings.ReplaceAll(docTags[i], oldLabel, newLabel); !gulu.Str.Contains(newTag, tmp) {
-							tmp = append(tmp, newTag)
+						} else {
+							tmp = append(tmp, docTag)
 						}
 					}
 					node.SetIALAttr("tags", strings.Join(tmp, ","))
@@ -175,26 +165,23 @@ func RenameTag(oldLabel, newLabel string) (err error) {
 				continue
 			}
 
-			nodeTags := node.ChildrenByType(ast.NodeTag)
+			nodeTags := node.ChildrenByType(ast.NodeTextMark)
 			for _, nodeTag := range nodeTags {
-				nodeLabels := nodeTag.ChildrenByType(ast.NodeText)
-				for _, nodeLabel := range nodeLabels {
-					if bytes.Contains(nodeLabel.Tokens, []byte(oldLabel)) {
-						nodeLabel.Tokens = bytes.ReplaceAll(nodeLabel.Tokens, []byte(oldLabel), []byte(newLabel))
+				if nodeTag.IsTextMarkType("tag") {
+					if strings.HasPrefix(nodeTag.TextMarkTextContent, oldLabel+"/") || nodeTag.TextMarkTextContent == oldLabel {
+						nodeTag.TextMarkTextContent = strings.Replace(nodeTag.TextMarkTextContent, oldLabel, newLabel, 1)
 					}
 				}
 			}
 		}
-		util.PushEndlessProgress(fmt.Sprintf(Conf.Language(111), tree.Root.IALAttr("title")))
-		if err = writeJSONQueue(tree); nil != err {
+		util.PushEndlessProgress(fmt.Sprintf(Conf.Language(111), util.EscapeHTML(tree.Root.IALAttr("title"))))
+		if err = writeTreeUpsertQueue(tree); err != nil {
 			util.ClearPushProgress(100)
 			return
 		}
 		util.RandomSleep(50, 150)
 	}
 
-	util.PushEndlessProgress(Conf.Language(113))
-	sql.WaitForWritingDatabase()
 	util.ReloadUI()
 	return
 }
@@ -220,37 +207,59 @@ type Tags []*Tag
 
 func BuildTags() (ret *Tags) {
 	WaitForWritingFiles()
-	sql.WaitForWritingDatabase()
+
+	if !sql.IsEmptyQueue() {
+		sql.WaitForWritingDatabase()
+	}
 
 	ret = &Tags{}
 	labels := labelTags()
 	tags := Tags{}
-	for label, _ := range labels {
+	for label := range labels {
 		tags = buildTags(tags, strings.Split(label, "/"), 0)
 	}
 	appendTagChildren(&tags, labels)
 	sortTags(tags)
-	ret = &tags
+
+	var total int
+	tmp := &Tags{}
+	for _, tag := range tags {
+		*tmp = append(*tmp, tag)
+		countTag(tag, &total)
+		if Conf.FileTree.MaxListCount < total {
+			util.PushMsg(fmt.Sprintf(Conf.Language(243), Conf.FileTree.MaxListCount), 7000)
+			break
+		}
+	}
+
+	ret = tmp
 	return
+}
+
+func countTag(tag *Tag, total *int) {
+	*total += 1
+	for _, child := range tag.tags {
+		countTag(child, total)
+	}
 }
 
 func sortTags(tags Tags) {
 	switch Conf.Tag.Sort {
 	case util.SortModeNameASC:
 		sort.Slice(tags, func(i, j int) bool {
-			return util.PinYinCompare(util.RemoveEmoji(tags[i].Name), util.RemoveEmoji(tags[j].Name))
+			return util.PinYinCompare(tags[i].Name, tags[j].Name)
 		})
 	case util.SortModeNameDESC:
 		sort.Slice(tags, func(j, i int) bool {
-			return util.PinYinCompare(util.RemoveEmoji(tags[i].Name), util.RemoveEmoji(tags[j].Name))
+			return util.PinYinCompare(tags[i].Name, tags[j].Name)
 		})
 	case util.SortModeAlphanumASC:
 		sort.Slice(tags, func(i, j int) bool {
-			return natsort.Compare(util.RemoveEmoji((tags)[i].Name), util.RemoveEmoji((tags)[j].Name))
+			return util.NaturalCompare((tags)[i].Name, (tags)[j].Name)
 		})
 	case util.SortModeAlphanumDESC:
 		sort.Slice(tags, func(i, j int) bool {
-			return natsort.Compare(util.RemoveEmoji((tags)[j].Name), util.RemoveEmoji((tags)[i].Name))
+			return util.NaturalCompare((tags)[j].Name, (tags)[i].Name)
 		})
 	case util.SortModeRefCountASC:
 		sort.Slice(tags, func(i, j int) bool { return (tags)[i].Count < (tags)[j].Count })
@@ -258,16 +267,17 @@ func sortTags(tags Tags) {
 		sort.Slice(tags, func(i, j int) bool { return (tags)[i].Count > (tags)[j].Count })
 	default:
 		sort.Slice(tags, func(i, j int) bool {
-			return natsort.Compare(util.RemoveEmoji((tags)[i].Name), util.RemoveEmoji((tags)[j].Name))
+			return util.NaturalCompare((tags)[i].Name, (tags)[j].Name)
 		})
 	}
 }
 
 func SearchTags(keyword string) (ret []string) {
 	ret = []string{}
+	defer logging.Recover() // 定位 无法添加题头图标签 https://github.com/siyuan-note/siyuan/issues/6756
 
 	labels := labelBlocksByKeyword(keyword)
-	for label, _ := range labels {
+	for label := range labels {
 		_, t := search.MarkText(label, keyword, 1024, Conf.Search.CaseSensitive)
 		ret = append(ret, t)
 	}
@@ -294,6 +304,10 @@ func labelBlocksByKeyword(keyword string) (ret map[string]TagBlocks) {
 	sqlBlocks := sql.GetBlocks(blockIDs)
 	blockMap := map[string]*sql.Block{}
 	for _, block := range sqlBlocks {
+		if nil == block {
+			continue
+		}
+
 		blockMap[block.ID] = block
 	}
 
@@ -315,7 +329,7 @@ func labelBlocksByKeyword(keyword string) (ret map[string]TagBlocks) {
 func labelTags() (ret map[string]Tags) {
 	ret = map[string]Tags{}
 
-	tagSpans := sql.QueryTagSpans("", 10240)
+	tagSpans := sql.QueryTagSpans("")
 	for _, tagSpan := range tagSpans {
 		label := tagSpan.Content
 		if _, ok := ret[label]; ok {
@@ -330,7 +344,9 @@ func labelTags() (ret map[string]Tags) {
 func appendTagChildren(tags *Tags, labels map[string]Tags) {
 	for _, tag := range *tags {
 		tag.Label = tag.Name
-		tag.Count = len(labels[tag.Label]) + 1
+		if _, ok := labels[tag.Label]; ok {
+			tag.Count = len(labels[tag.Label]) + 1
+		}
 		appendChildren0(tag, labels)
 		sortTags(tag.Children)
 	}
@@ -340,7 +356,9 @@ func appendChildren0(tag *Tag, labels map[string]Tags) {
 	sortTags(tag.tags)
 	for _, t := range tag.tags {
 		t.Label = tag.Label + "/" + t.Name
-		t.Count = len(labels[t.Label]) + 1
+		if _, ok := labels[t.Label]; ok {
+			t.Count = len(labels[t.Label]) + 1
+		}
 		tag.Children = append(tag.Children, t)
 	}
 	for _, child := range tag.tags {
@@ -360,7 +378,7 @@ func buildTags(root Tags, labels []string, depth int) Tags {
 		}
 	}
 	if i == len(root) {
-		root = append(root, &Tag{Name: html.EscapeHTMLStr(labels[0]), Type: "tag", Depth: depth})
+		root = append(root, &Tag{Name: util.EscapeHTML(labels[0]), Type: "tag", Depth: depth})
 	}
 	depth++
 	root[i].tags = buildTags(root[i].tags, labels[1:], depth)

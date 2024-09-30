@@ -5,14 +5,22 @@ import {genListItemElement, updateListOrder} from "../protyle/wysiwyg/list";
 import {transaction, updateTransaction} from "../protyle/wysiwyg/transaction";
 import {scrollCenter} from "../util/highlightById";
 import {Constants} from "../constants";
+import {hideElements} from "../protyle/ui/hideElements";
+import {blockRender} from "../protyle/render/blockRender";
+import {fetchPost} from "../util/fetch";
+import {openFileById} from "../editor/util";
+import {openMobileFileById} from "../mobile/editor";
 
 export const cancelSB = (protyle: IProtyle, nodeElement: Element) => {
     const doOperations: IOperation[] = [];
     const undoOperations: IOperation[] = [];
     let previousId = nodeElement.previousElementSibling ? nodeElement.previousElementSibling.getAttribute("data-node-id") : undefined;
     nodeElement.classList.remove("protyle-wysiwyg--select");
+    nodeElement.removeAttribute("select-start");
+    nodeElement.removeAttribute("select-end");
     const id = nodeElement.getAttribute("data-node-id");
-    const sbElement = genSBElement(nodeElement.getAttribute("data-sb-layout"), id, nodeElement.lastElementChild.outerHTML);
+    const sbElement = nodeElement.cloneNode() as HTMLElement;
+    sbElement.innerHTML = nodeElement.lastElementChild.outerHTML;
     undoOperations.push({
         action: "insert",
         id,
@@ -44,7 +52,14 @@ export const cancelSB = (protyle: IProtyle, nodeElement: Element) => {
         });
         previousId = item.getAttribute("data-node-id");
     });
-
+    // 超级块内嵌入块无面包屑，需重新渲染 https://github.com/siyuan-note/siyuan/issues/7574
+    doOperations.forEach(item => {
+        const element = protyle.wysiwyg.element.querySelector(`[data-node-id="${item.id}"]`);
+        if (element && element.getAttribute("data-type") === "NodeBlockQueryEmbed") {
+            element.removeAttribute("data-render");
+            blockRender(protyle, element);
+        }
+    });
     return {
         doOperations, undoOperations, previousId
     };
@@ -60,6 +75,24 @@ export const genSBElement = (layout: string, id?: string, attrHTML?: string) => 
     return sbElement;
 };
 
+export const jumpToParent = (protyle: IProtyle, nodeElement: Element, type: "parent" | "next" | "previous") => {
+    fetchPost("/api/block/getBlockSiblingID", {id: nodeElement.getAttribute("data-node-id")}, (response) => {
+        const targetId = response.data[type];
+        if (!targetId) {
+            return;
+        }
+        /// #if !MOBILE
+        openFileById({
+            app: protyle.app,
+            id: targetId,
+            action: [Constants.CB_GET_FOCUS, targetId !== protyle.block.rootID && protyle.block.showAll ? Constants.CB_GET_ALL : ""]
+        });
+        /// #else
+        openMobileFileById(protyle.app, targetId, [Constants.CB_GET_FOCUS, targetId !== protyle.block.rootID && protyle.block.showAll ? Constants.CB_GET_ALL : ""]);
+        /// #endif
+    });
+};
+
 export const insertEmptyBlock = (protyle: IProtyle, position: InsertPosition, id?: string) => {
     const range = getEditorRange(protyle.wysiwyg.element);
     let blockElement: Element;
@@ -73,6 +106,7 @@ export const insertEmptyBlock = (protyle: IProtyle, position: InsertPosition, id
             } else {
                 blockElement = selectElements[selectElements.length - 1];
             }
+            hideElements(["select"], protyle);
         } else {
             blockElement = hasClosestBlock(range.startContainer) as HTMLElement;
             blockElement = getTopAloneElement(blockElement);
@@ -80,14 +114,6 @@ export const insertEmptyBlock = (protyle: IProtyle, position: InsertPosition, id
     }
     if (!blockElement) {
         return;
-    }
-    let previousID;
-    if (position === "beforebegin") {
-        if (blockElement.previousElementSibling) {
-            previousID = blockElement.previousElementSibling.getAttribute("data-node-id");
-        }
-    } else {
-        previousID = blockElement.getAttribute("data-node-id");
     }
     let newElement = genEmptyElement(false, true);
     let orderIndex = 1;
@@ -103,13 +129,23 @@ export const insertEmptyBlock = (protyle: IProtyle, position: InsertPosition, id
         updateListOrder(newElement.parentElement, orderIndex);
         updateTransaction(protyle, newElement.parentElement.getAttribute("data-node-id"), newElement.parentElement.outerHTML, parentOldHTML);
     } else {
-        transaction(protyle, [{
-            action: "insert",
-            data: newElement.outerHTML,
-            id: newId,
-            previousID,
-            parentID: blockElement.parentElement.getAttribute("data-node-id") || protyle.block.parentID
-        }], [{
+        let doOperations: IOperation[];
+        if (position === "beforebegin") {
+            doOperations = [{
+                action: "insert",
+                data: newElement.outerHTML,
+                id: newId,
+                nextID: blockElement.getAttribute("data-node-id"),
+            }];
+        } else {
+            doOperations = [{
+                action: "insert",
+                data: newElement.outerHTML,
+                id: newId,
+                previousID: blockElement.getAttribute("data-node-id"),
+            }];
+        }
+        transaction(protyle, doOperations, [{
             action: "delete",
             id: newId,
         }]);
@@ -129,7 +165,7 @@ export const genEmptyBlock = (zwsp = true, wbr = true, string?: string) => {
     if (string) {
         html += string;
     }
-    return `<div data-node-id="${Lute.NewNodeID()}" data-type="NodeParagraph" class="p"><div contenteditable="true" spellcheck="false">${html}</div><div contenteditable="false" class="protyle-attr">${Constants.ZWSP}</div></div>`;
+    return `<div data-node-id="${Lute.NewNodeID()}" data-type="NodeParagraph" class="p"><div contenteditable="true" spellcheck="${window.siyuan.config.editor.spellcheck}">${html}</div><div contenteditable="false" class="protyle-attr">${Constants.ZWSP}</div></div>`;
 };
 
 export const genEmptyElement = (zwsp = true, wbr = true, id?: string) => {
@@ -137,6 +173,34 @@ export const genEmptyElement = (zwsp = true, wbr = true, id?: string) => {
     element.setAttribute("data-node-id", id || Lute.NewNodeID());
     element.setAttribute("data-type", "NodeParagraph");
     element.classList.add("p");
-    element.innerHTML = `<div contenteditable="true" spellcheck="false">${zwsp ? Constants.ZWSP : ""}${wbr ? "<wbr>" : ""}</div><div class="protyle-attr" contenteditable="false">${Constants.ZWSP}</div>`;
+    element.innerHTML = `<div contenteditable="true" spellcheck="${window.siyuan.config.editor.spellcheck}">${zwsp ? Constants.ZWSP : ""}${wbr ? "<wbr>" : ""}</div><div class="protyle-attr" contenteditable="false">${Constants.ZWSP}</div>`;
     return element;
+};
+
+export const getLangByType = (type: string) => {
+    let lang = type;
+    switch (type) {
+        case "NodeIFrame":
+            lang = "IFrame";
+            break;
+        case "NodeAttributeView":
+            lang = window.siyuan.languages.database;
+            break;
+        case "NodeThematicBreak":
+            lang = window.siyuan.languages.line;
+            break;
+        case "NodeWidget":
+            lang = window.siyuan.languages.widget;
+            break;
+        case "NodeVideo":
+            lang = window.siyuan.languages.video;
+            break;
+        case "NodeAudio":
+            lang = window.siyuan.languages.audio;
+            break;
+        case "NodeBlockQueryEmbed":
+            lang = window.siyuan.languages.blockEmbed;
+            break;
+    }
+    return lang;
 };
