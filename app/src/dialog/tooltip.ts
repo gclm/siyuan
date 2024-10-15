@@ -1,7 +1,6 @@
-import {setPosition} from "../util/setPosition";
 import {isMobile} from "../util/functions";
 
-export const showTooltip = (message: string, target: Element) => {
+export const showTooltip = (message: string, target: Element, tooltipClass?: string) => {
     if (isMobile()) {
         return;
     }
@@ -17,14 +16,58 @@ export const showTooltip = (message: string, target: Element) => {
     } else {
         messageElement.innerHTML = message;
     }
-    let left = targetRect.left;
-    const position = target.getAttribute("data-position");
-    if (position === "right") {
-        left = targetRect.right - messageElement.clientWidth;
-    } else if (position === "center") {
-        left = targetRect.left + (targetRect.width - messageElement.clientWidth) / 2;
+
+    if (tooltipClass) {
+        messageElement.classList.add("tooltip--" + tooltipClass);
+    } else {
+        messageElement.className = "tooltip";
     }
-    setPosition(messageElement, left, targetRect.top + targetRect.height + 8, targetRect.height * 2 + 8);
+
+    let left = targetRect.left;
+    let top = targetRect.bottom;
+    const position = target.getAttribute("data-position");
+    const parentRect = target.parentElement.getBoundingClientRect();
+
+    if (position?.startsWith("right")) {
+        // block icon and background icon
+        left = targetRect.right - messageElement.clientWidth;
+    }
+
+    if (position?.endsWith("bottom")) {
+        top += parseInt(position.replace("right", "").replace("left", ""));
+    } else if (position?.endsWith("top")) {
+        // 编辑器动态滚动条
+        top = targetRect.top - messageElement.clientHeight;
+    } else if (position === "parentE") {
+        // file tree and outline、backlink
+        top = parentRect.top;
+        left = parentRect.right + 8;
+    } else if (position === "parentW") {
+        // 数据库属性视图
+        top = parentRect.top + 8;
+        left = parentRect.left - messageElement.clientWidth;
+    }
+
+    const topHeight = position === "parentE" ? top : targetRect.top;
+    const bottomHeight = window.innerHeight - top;
+
+    messageElement.style.maxHeight = Math.max(topHeight, bottomHeight) + "px";
+
+    if (top + messageElement.clientHeight > window.innerHeight && topHeight > bottomHeight) {
+        messageElement.style.top = ((position === "parentE" ? parentRect.bottom : targetRect.top) - messageElement.clientHeight) + "px";
+    } else {
+        messageElement.style.top = top + "px";
+    }
+
+    if (left + messageElement.clientWidth > window.innerWidth) {
+        if (position === "parentE") {
+            messageElement.style.left = (parentRect.left - 8 - messageElement.clientWidth) + "px";
+        } else {
+            messageElement.style.left = (window.innerWidth - messageElement.clientWidth) + "px";
+        }
+    } else {
+        messageElement.style.left = Math.max(0, left) + "px";
+    }
 };
 
 export const hideTooltip = () => {

@@ -1,7 +1,7 @@
 import {hasClosestBlock, hasClosestByAttribute} from "../protyle/util/hasClosest";
-import {getEditorRange, getSelectionPosition} from "../protyle/util/selection";
+import {getEditorRange} from "../protyle/util/selection";
 
-const bgFade = (element: HTMLElement) => {
+export const bgFade = (element: Element) => {
     element.classList.add("protyle-wysiwyg--hl");
     setTimeout(function () {
         element.classList.remove("protyle-wysiwyg--hl");
@@ -32,25 +32,52 @@ export const highlightById = (protyle: IProtyle, id: string, top = false) => {
         bgFade(nodeElement);
         return nodeElement;// 仅配合前进后退使用
     }
-    if (id === protyle.block.rootID && protyle.options.render.title) {
+    if (id === protyle.block.rootID && protyle.options.render.title && protyle.title.editElement) {
         bgFade(protyle.title.editElement);
         return protyle.title.editElement;
     }
 };
 
-export const scrollCenter = (protyle: IProtyle, nodeElement?: Element, top = false) => {
-    if (!top && getSelection().rangeCount > 0 && hasClosestBlock(getSelection().getRangeAt(0).startContainer)) {
-        const editorElement = protyle.contentElement;
-        const cursorTop = getSelectionPosition(editorElement).top - editorElement.getBoundingClientRect().top;
-        if (cursorTop < 0) {
-            editorElement.scrollTop = editorElement.scrollTop + cursorTop;
-        } else if (cursorTop > editorElement.clientHeight - 34) {
-            editorElement.scrollTop = editorElement.scrollTop + (cursorTop + 34 - editorElement.clientHeight);
+export const scrollCenter = (protyle: IProtyle, nodeElement?: Element, top = false, behavior: ScrollBehavior = "auto") => {
+    if (!protyle.disabled && !top && getSelection().rangeCount > 0) {
+        const range = getSelection().getRangeAt(0);
+        const blockElement = hasClosestBlock(range.startContainer);
+        if (blockElement) {
+            // https://github.com/siyuan-note/siyuan/issues/10769
+            if (blockElement.classList.contains("code-block")) {
+                const brElement = document.createElement("br");
+                range.insertNode(brElement);
+                brElement.scrollIntoView({block: "center", behavior});
+                brElement.remove();
+                return;
+            }
+            // undo 时禁止数据库滚动
+            if (blockElement.classList.contains("av") && blockElement.dataset.render === "true" &&
+                (blockElement.querySelector(".av__row--header").getAttribute("style")?.indexOf("transform") > -1 || blockElement.querySelector(".av__row--footer").getAttribute("style")?.indexOf("transform") > -1)) {
+                return;
+            }
+
+            const br2Element = document.createElement("br");
+            range.insertNode(br2Element);
+            const editorElement = protyle.contentElement;
+            const cursorTop = br2Element.getBoundingClientRect().top - editorElement.getBoundingClientRect().top;
+            let scrollTop = 0;
+            if (cursorTop < 0) {
+                scrollTop = editorElement.scrollTop + cursorTop;
+            } else if (cursorTop > editorElement.clientHeight - 74) {   // 74 = 移动端底部 + 段落块高度
+                scrollTop = editorElement.scrollTop + (cursorTop + 74 - editorElement.clientHeight);
+            }
+            if (scrollTop !== 0) {
+                editorElement.scroll({top: scrollTop, behavior});
+            }
+            br2Element.remove();
+            return;
         }
-        return;
     }
 
-    if (!nodeElement) {
+    if (!nodeElement &&
+        // https://github.com/siyuan-note/siyuan/issues/11175
+        document.activeElement?.tagName !== "TEXTAREA" && document.activeElement?.tagName !== "INPUT") {
         nodeElement = hasClosestBlock(getEditorRange(protyle.wysiwyg.element).startContainer) as HTMLElement;
     }
     if (!nodeElement) {
@@ -59,17 +86,26 @@ export const scrollCenter = (protyle: IProtyle, nodeElement?: Element, top = fal
 
     let offsetTop = 0;
     let parentNodeElement = nodeElement;
-    while (!parentNodeElement.classList.contains("protyle-wysiwyg")) {
+    while (parentNodeElement && !parentNodeElement.classList.contains("protyle-wysiwyg")) {
         offsetTop += (parentNodeElement as HTMLElement).offsetTop;
         parentNodeElement = parentNodeElement.parentElement;
     }
+    let contentTop = 0;
+    let topElement = protyle.element.firstElementChild;
+    while (topElement && !topElement.classList.contains("protyle-content")) {
+        contentTop += topElement.clientHeight;
+        topElement = topElement.nextElementSibling;
+    }
     if (top) {
-        protyle.contentElement.scrollTop = offsetTop - 32;
+        protyle.contentElement.scroll({top: offsetTop - contentTop, behavior});
         return;
     }
     if (protyle.contentElement.scrollTop > offsetTop - 32) {
-        protyle.contentElement.scrollTop = offsetTop - 32;
-    } else if (protyle.contentElement.scrollTop + protyle.contentElement.clientHeight < offsetTop + nodeElement.clientHeight - 32) {
-        protyle.contentElement.scrollTop = offsetTop + nodeElement.clientHeight - 32 - protyle.contentElement.clientHeight;
+        protyle.contentElement.scroll({top: offsetTop - contentTop, behavior});
+    } else if (protyle.contentElement.scrollTop + protyle.contentElement.clientHeight < offsetTop + nodeElement.clientHeight - contentTop) {
+        protyle.contentElement.scroll({
+            top: offsetTop + nodeElement.clientHeight - contentTop - protyle.contentElement.clientHeight,
+            behavior
+        });
     }
 };

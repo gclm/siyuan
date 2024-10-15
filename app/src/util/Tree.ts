@@ -1,18 +1,20 @@
 import {getIconByType} from "../editor/getIcon";
-import {hasClosestByTag} from "../protyle/util/hasClosest";
+import {hasClosestByMatchTag, hasClosestByTag} from "../protyle/util/hasClosest";
 import {isMobile} from "./functions";
-import {mathRender} from "../protyle/markdown/mathRender";
+import {mathRender} from "../protyle/render/mathRender";
 import {unicode2Emoji} from "../emoji";
 import {Constants} from "../constants";
+import {escapeAriaLabel} from "./escape";
 
 export class Tree {
     public element: HTMLElement;
     private data: IBlockTree[];
     private blockExtHTML: string;
+    private topExtHTML: string;
 
-    private click: (element: HTMLElement, event: MouseEvent) => void;
-
+    public click: (element: Element, event?: MouseEvent) => void;
     private ctrlClick: (element: HTMLElement) => void;
+    private toggleClick: (element: Element) => void;
     private shiftClick: (element: HTMLElement) => void;
     private altClick: (element: HTMLElement) => void;
     private rightClick: (element: HTMLElement, event: MouseEvent) => void;
@@ -21,10 +23,12 @@ export class Tree {
         element: HTMLElement,
         data: IBlockTree[],
         blockExtHTML?: string,
+        topExtHTML?: string,
         click?(element: HTMLElement, event: MouseEvent): void
         ctrlClick?(element: HTMLElement): void
         altClick?(element: HTMLElement): void
         shiftClick?(element: HTMLElement): void
+        toggleClick?(element: HTMLElement): void
         rightClick?(element: HTMLElement, event: MouseEvent): void
     }) {
         this.click = options.click;
@@ -32,8 +36,10 @@ export class Tree {
         this.altClick = options.altClick;
         this.shiftClick = options.shiftClick;
         this.rightClick = options.rightClick;
+        this.toggleClick = options.toggleClick;
         this.element = options.element;
         this.blockExtHTML = options.blockExtHTML;
+        this.topExtHTML = options.topExtHTML;
         this.updateData(options.data);
         this.bindEvent();
     }
@@ -51,32 +57,48 @@ export class Tree {
     private genHTML(data: IBlockTree[]) {
         let html = `<ul${data[0].depth === 0 ? " class='b3-list b3-list--background'" : ""}>`;
         data.forEach((item) => {
+            let titleTip = "";
             let iconHTML = '<svg class="b3-list-item__graphic"><use xlink:href="#iconFolder"></use></svg>';
             if (item.type === "bookmark") {
                 iconHTML = '<svg class="b3-list-item__graphic"><use xlink:href="#iconBookmark"></use></svg>';
             } else if (item.type === "tag") {
                 iconHTML = '<svg class="b3-list-item__graphic"><use xlink:href="#iconTags"></use></svg>';
             } else if (item.type === "backlink") {
+                titleTip = ` aria-label="${escapeAriaLabel(item.hPath)}"`;
                 iconHTML = `<svg class="b3-list-item__graphic popover__block" data-id="${item.id}"><use xlink:href="#${getIconByType(item.nodeType, item.subType)}"></use></svg>`;
             } else if (item.type === "outline") {
-                iconHTML = `<svg class="b3-list-item__graphic popover__block" data-id="${item.id}"><use xlink:href="#${getIconByType(item.nodeType, item.subType)}"></use></svg>`;
+                titleTip = ` aria-label="${escapeAriaLabel(Lute.BlockDOM2Content(item.name))}"`;
+                iconHTML = `<svg class="b3-list-item__graphic popover__block" data-id="${item.id}" style="height: 22px;width: 10px;"><use xlink:href="#${getIconByType(item.nodeType, item.subType)}"></use></svg>`;
             }
             let countHTML = "";
             if (item.count) {
                 countHTML = `<span class="counter">${item.count}</span>`;
             }
-            html += `<li class="b3-list-item" 
-${(item.nodeType !== "NodeDocument" && item.type === "backlink") ? 'draggable="true"' : ""}
+            const hasChild = (item.children && item.children.length > 0) || (item.blocks && item.blocks.length > 0);
+            let style = "";
+            if (isMobile()) {
+                if (item.depth > 0) {
+                    style = `padding-left: ${(item.depth - 1) * 20 + 24}px`;
+                }
+            } else {
+                style = `padding-left: ${(item.depth - 1) * 18 + 22}px;margin-right: 2px`;
+            }
+            const showArrow = hasChild || (item.type === "backlink" && !isMobile());
+            // data-id 需要添加 item.id，否则大纲更新时 name 不一致导致 https://github.com/siyuan-note/siyuan/issues/11843
+            html += `<li class="b3-list-item${isMobile() ? "" : " b3-list-item--hide-action"}" 
 ${item.id ? 'data-node-id="' + item.id + '"' : ""} 
+${item.box ? 'data-notebook-id="' + item.box + '"' : ""} 
+style="--file-toggle-width:${(item.depth - 1) * 18 + 38}px" 
 data-treetype="${item.type}" 
 data-type="${item.nodeType}" 
 data-subtype="${item.subType}" 
 ${item.label ? "data-label='" + item.label + "'" : ""}>
-    <span style="padding-left: ${item.depth * 16}px" class="b3-list-item__toggle">
-        <svg data-id="${encodeURIComponent(item.name + item.depth)}" class="b3-list-item__arrow ${((item.children && item.children.length > 0) || (item.blocks && item.blocks.length > 0)) ? "b3-list-item__arrow--open" : "fn__hidden"}"><use xlink:href="#iconRight"></use></svg>
+    <span style="${style}" class="b3-list-item__toggle${showArrow ? " b3-list-item__toggle--hl" : ""}${showArrow ? "" : " fn__hidden"}">
+        <svg data-id="${item.id || encodeURIComponent(item.name + item.depth)}" class="b3-list-item__arrow${hasChild ? " b3-list-item__arrow--open" : ""}"><use xlink:href="#iconRight"></use></svg>
     </span>
     ${iconHTML}
-    <span class="b3-list-item__text"${item.type === "outline" ? ' title="' + Lute.EscapeHTMLStr(Lute.BlockDOM2Content(item.name)) + '"' : ""}>${item.name}</span>
+    <span class="b3-list-item__text ariaLabel" data-position="parentE"${titleTip}>${item.name}</span>
+    ${this.topExtHTML || ""}
     ${countHTML}
 </li>`;
             if (item.children && item.children.length > 0) {
@@ -103,25 +125,37 @@ ${item.label ? "data-label='" + item.label + "'" : ""}>
                 countHTML = `<span class="counter">${item.count}</span>`;
             }
             let iconHTML;
-            if (item.type === "NodeDocument") {
-                iconHTML = `<span data-defids='["${item.defID}"]' class="b3-list-item__graphic popover__block" data-id="${item.id}">${unicode2Emoji(item.ial.icon || Constants.SIYUAN_IMAGE_FILE)}</span>`;
+            if (type === "outline") {
+                iconHTML = `<svg data-defids='["${item.defID}"]' class="b3-list-item__graphic popover__block" data-id="${item.id}" style="height: 22px;width: 10px;"><use xlink:href="#${getIconByType(item.type, item.subType)}"></use></svg>`;
             } else {
-                iconHTML = `<svg data-defids='["${item.defID}"]' class="b3-list-item__graphic popover__block" data-id="${item.id}"><use xlink:href="#${getIconByType(item.type, item.subType)}"></use></svg>`;
+                if (item.type === "NodeDocument") {
+                    iconHTML = `<span data-defids='["${item.defID}"]' class="b3-list-item__graphic popover__block" data-id="${item.id}">${unicode2Emoji(item.ial.icon || Constants.SIYUAN_IMAGE_FILE)}</span>`;
+                } else {
+                    iconHTML = `<svg data-defids='["${item.defID}"]' class="b3-list-item__graphic popover__block" data-id="${item.id}"><use xlink:href="#${getIconByType(item.type, item.subType)}"></use></svg>`;
+                }
             }
-            html += `<li ${type === "backlink" ? 'draggable="true"' : ""} 
-class="b3-list-item ${isMobile() ? "" : "b3-list-item--hide-action"}"  
+            let style = "";
+            if (isMobile()) {
+                if (item.depth > 0) {
+                    style = `padding-left: ${(item.depth - 1) * 20 + 24}px`;
+                }
+            } else {
+                style = `padding-left: ${(item.depth - 1) * 18 + 22}px;margin-right: 2px`;
+            }
+            html += `<li class="b3-list-item${isMobile() ? "" : " b3-list-item--hide-action"}"  
+style="--file-toggle-width:${(item.depth - 1) * 18 + 38}px" 
 data-node-id="${item.id}" 
 data-ref-text="${encodeURIComponent(item.refText)}" 
 data-def-id="${item.defID}" 
 data-type="${item.type}" 
 data-subtype="${item.subType}" 
-data-treetype="${type}"
+data-treetype="${type}" 
 data-def-path="${item.defPath}">
-    <span style="padding-left: ${item.depth * 16}px" class="b3-list-item__toggle">
-        <svg data-id="${item.id}" class="b3-list-item__arrow${item.children ? "" : " fn__hidden"}"><use xlink:href="#iconRight"></use></svg>
+    <span style="${style}" class="b3-list-item__toggle${item.children ? " b3-list-item__toggle--hl" : ""}${item.children ? "" : " fn__hidden"}">
+        <svg data-id="${item.id}" class="b3-list-item__arrow"><use xlink:href="#iconRight"></use></svg>
     </span>
     ${iconHTML}
-    <span class="b3-list-item__text" ${type === "outline" ? ' title="' + Lute.EscapeHTMLStr(Lute.BlockDOM2Content(item.content)) + '"' : ""}>${item.content}</span>
+    <span class="b3-list-item__text ariaLabel" data-position="parentE" ${type === "outline" ? ' aria-label="' + escapeAriaLabel(Lute.BlockDOM2Content(item.content)) + '"' : ""}>${item.content}</span>
     ${countHTML}
     ${this.blockExtHTML || ""}
 </li>`;
@@ -132,7 +166,11 @@ data-def-path="${item.defPath}">
         return html;
     }
 
-    private toggleBlocks(liElement: HTMLElement) {
+    public toggleBlocks(liElement: Element) {
+        if (this.toggleClick) {
+            this.toggleClick(liElement);
+            return;
+        }
         if (!liElement.nextElementSibling) {
             return;
         }
@@ -178,14 +216,22 @@ data-def-path="${item.defPath}">
         this.element.addEventListener("click", (event: MouseEvent & { target: HTMLElement }) => {
             let target = event.target as HTMLElement;
             while (target && !target.isEqualNode(this.element)) {
-                if (target.classList.contains("b3-list-item__toggle") && !target.firstElementChild.classList.contains("fn__hidden")) {
+                if (target.classList.contains("b3-list-item__toggle") && !target.classList.contains("fn__hidden")) {
                     this.toggleBlocks(target.parentElement);
                     this.setCurrent(target.parentElement);
                     event.preventDefault();
                     break;
                 }
-
-                if (target.tagName === "LI") {
+                if (target.classList.contains("b3-list-item__action") && this.click) {
+                    // 移动端书签父节点删除按钮
+                    const liElement = hasClosestByMatchTag(target, "LI");
+                    if (liElement) {
+                        this.click(liElement, event);
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                    break;
+                } else if (target.tagName === "LI") {
                     this.setCurrent(target);
                     if (target.getAttribute("data-node-id") || target.getAttribute("data-treetype") === "tag") {
                         if (this.ctrlClick && window.siyuan.ctrlIsPressed) {
@@ -211,8 +257,7 @@ data-def-path="${item.defPath}">
             const liElement = hasClosestByTag(event.target, "LI");
             if (liElement) {
                 event.dataTransfer.setData("text/html", liElement.outerHTML);
-                // event.dataTransfer.setData(Constants.SIYUAN_DROP_FILE, liElement.parentElement);
-                event.dataTransfer.dropEffect = "move";
+                // 设置了的话 drop 就无法监听 alt event.dataTransfer.dropEffect = "move";
                 liElement.style.opacity = "0.1";
                 window.siyuan.dragElement = liElement;
             }
