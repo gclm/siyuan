@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,97 +17,88 @@
 package bazaar
 
 import (
-	"errors"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 
-	"github.com/dustin/go-humanize"
+	"github.com/88250/go-humanize"
 	ants "github.com/panjf2000/ants/v2"
 	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 type Theme struct {
-	Author  string   `json:"author"`
-	URL     string   `json:"url"`
-	Version string   `json:"version"`
-	Modes   []string `json:"modes"`
+	*Package
 
-	Name            string `json:"name"`
-	RepoURL         string `json:"repoURL"`
-	RepoHash        string `json:"repoHash"`
-	PreviewURL      string `json:"previewURL"`
-	PreviewURLThumb string `json:"previewURLThumb"`
-
-	README string `json:"readme"`
-
-	Installed  bool   `json:"installed"`
-	Outdated   bool   `json:"outdated"`
-	Current    bool   `json:"current"`
-	Updated    string `json:"updated"`
-	Stars      int    `json:"stars"`
-	OpenIssues int    `json:"openIssues"`
-	Size       int64  `json:"size"`
-	HSize      string `json:"hSize"`
-	HUpdated   string `json:"hUpdated"`
-	Downloads  int    `json:"downloads"`
+	Modes []string `json:"modes"`
 }
 
-func Themes(proxyURL string) (ret []*Theme) {
+func Themes() (ret []*Theme) {
 	ret = []*Theme{}
-	result, err := util.GetRhyResult(false, proxyURL)
-	if nil != err {
+
+	isOnline := isBazzarOnline()
+	if !isOnline {
 		return
 	}
 
-	bazaarIndex := getBazaarIndex(proxyURL)
-	bazaarHash := result["bazaar"].(string)
-	result = map[string]interface{}{}
-	request := httpclient.NewBrowserRequest(proxyURL)
-	u := util.BazaarOSSServer + "/bazaar@" + bazaarHash + "/stage/themes.json"
-	resp, reqErr := request.SetResult(&result).Get(u)
-	if nil != reqErr {
-		util.LogErrorf("get community stage index [%s] failed: %s", u, reqErr)
+	stageIndex, err := getStageIndex("themes")
+	if err != nil {
 		return
 	}
-	if 200 != resp.StatusCode {
-		util.LogErrorf("get community stage index [%s] failed: %d", u, resp.StatusCode)
-		return
-	}
-
-	repos := result["repos"].([]interface{})
+	bazaarIndex := getBazaarIndex()
 	waitGroup := &sync.WaitGroup{}
 	lock := &sync.Mutex{}
 	p, _ := ants.NewPoolWithFunc(8, func(arg interface{}) {
 		defer waitGroup.Done()
 
-		repo := arg.(map[string]interface{})
-		repoURL := repo["url"].(string)
+		repo := arg.(*StageRepo)
+		repoURL := repo.URL
+
+		if pkg, found := packageCache.Get(repoURL); found {
+			lock.Lock()
+			ret = append(ret, pkg.(*Theme))
+			lock.Unlock()
+			return
+		}
 
 		theme := &Theme{}
 		innerU := util.BazaarOSSServer + "/package/" + repoURL + "/theme.json"
-		innerResp, innerErr := httpclient.NewBrowserRequest(proxyURL).SetResult(theme).Get(innerU)
+		innerResp, innerErr := httpclient.NewBrowserRequest().SetSuccessResult(theme).Get(innerU)
 		if nil != innerErr {
-			util.LogErrorf("get bazaar package [%s] failed: %s", innerU, innerErr)
+			logging.LogErrorf("get bazaar package [%s] failed: %s", innerU, innerErr)
 			return
 		}
 		if 200 != innerResp.StatusCode {
-			util.LogErrorf("get bazaar package [%s] failed: %d", innerU, resp.StatusCode)
+			logging.LogErrorf("get bazaar package [%s] failed: %d", innerU, innerResp.StatusCode)
 			return
 		}
 
+		if disallowDisplayBazaarPackage(theme.Package) {
+			return
+		}
+
+		theme.URL = strings.TrimSuffix(theme.URL, "/")
 		repoURLHash := strings.Split(repoURL, "@")
 		theme.RepoURL = "https://github.com/" + repoURLHash[0]
 		theme.RepoHash = repoURLHash[1]
 		theme.PreviewURL = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageslim"
 		theme.PreviewURLThumb = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageView2/2/w/436/h/232"
-		theme.Updated = repo["updated"].(string)
-		theme.Stars = int(repo["stars"].(float64))
-		theme.OpenIssues = int(repo["openIssues"].(float64))
-		theme.Size = int64(repo["size"].(float64))
-		theme.HSize = humanize.Bytes(uint64(theme.Size))
+		theme.IconURL = util.BazaarOSSServer + "/package/" + repoURL + "/icon.png"
+		theme.Funding = repo.Package.Funding
+		theme.PreferredFunding = getPreferredFunding(theme.Funding)
+		theme.PreferredName = GetPreferredName(theme.Package)
+		theme.PreferredDesc = getPreferredDesc(theme.Description)
+		theme.Updated = repo.Updated
+		theme.Stars = repo.Stars
+		theme.OpenIssues = repo.OpenIssues
+		theme.Size = repo.Size
+		theme.HSize = humanize.BytesCustomCeil(uint64(theme.Size), 2)
+		theme.InstallSize = repo.InstallSize
+		theme.HInstallSize = humanize.BytesCustomCeil(uint64(theme.InstallSize), 2)
+		packageInstallSizeCache.SetDefault(theme.RepoURL, theme.InstallSize)
 		theme.HUpdated = formatUpdated(theme.Updated)
 		pkg := bazaarIndex[strings.Split(repoURL, "@")[0]]
 		if nil != pkg {
@@ -116,8 +107,10 @@ func Themes(proxyURL string) (ret []*Theme) {
 		lock.Lock()
 		ret = append(ret, theme)
 		lock.Unlock()
+
+		packageCache.SetDefault(repoURL, theme)
 	})
-	for _, repo := range repos {
+	for _, repo := range stageIndex.Repos {
 		waitGroup.Add(1)
 		p.Invoke(repo)
 	}
@@ -128,20 +121,86 @@ func Themes(proxyURL string) (ret []*Theme) {
 	return
 }
 
-func InstallTheme(repoURL, repoHash, installPath, proxyURL string, chinaCDN bool, systemID string) error {
+func InstalledThemes() (ret []*Theme) {
+	ret = []*Theme{}
+
+	if !util.IsPathRegularDirOrSymlinkDir(util.ThemesPath) {
+		return
+	}
+
+	themeDirs, err := os.ReadDir(util.ThemesPath)
+	if err != nil {
+		logging.LogWarnf("read appearance themes folder failed: %s", err)
+		return
+	}
+
+	bazaarThemes := Themes()
+
+	for _, themeDir := range themeDirs {
+		if !util.IsDirRegularOrSymlink(themeDir) {
+			continue
+		}
+		dirName := themeDir.Name()
+		if isBuiltInTheme(dirName) {
+			continue
+		}
+
+		theme, parseErr := ThemeJSON(dirName)
+		if nil != parseErr || nil == theme {
+			continue
+		}
+
+		installPath := filepath.Join(util.ThemesPath, dirName)
+
+		theme.Installed = true
+		theme.RepoURL = theme.URL
+		theme.PreviewURL = "/appearance/themes/" + dirName + "/preview.png"
+		theme.PreviewURLThumb = "/appearance/themes/" + dirName + "/preview.png"
+		theme.IconURL = "/appearance/themes/" + dirName + "/icon.png"
+		theme.PreferredFunding = getPreferredFunding(theme.Funding)
+		theme.PreferredName = GetPreferredName(theme.Package)
+		theme.PreferredDesc = getPreferredDesc(theme.Description)
+		info, statErr := os.Stat(filepath.Join(installPath, "README.md"))
+		if nil != statErr {
+			logging.LogWarnf("stat install theme README.md failed: %s", statErr)
+			continue
+		}
+		theme.HInstallDate = info.ModTime().Format("2006-01-02")
+		if installSize, ok := packageInstallSizeCache.Get(theme.RepoURL); ok {
+			theme.InstallSize = installSize.(int64)
+		} else {
+			is, _ := util.SizeOfDirectory(installPath)
+			theme.InstallSize = is
+			packageInstallSizeCache.SetDefault(theme.RepoURL, is)
+		}
+		theme.HInstallSize = humanize.BytesCustomCeil(uint64(theme.InstallSize), 2)
+		readmeFilename := getPreferredReadme(theme.Readme)
+		readme, readErr := os.ReadFile(filepath.Join(installPath, readmeFilename))
+		if nil != readErr {
+			logging.LogWarnf("read installed README.md failed: %s", readErr)
+			continue
+		}
+
+		theme.PreferredReadme, _ = renderREADME(theme.URL, readme)
+		theme.Outdated = isOutdatedTheme(theme, bazaarThemes)
+		ret = append(ret, theme)
+	}
+	return
+}
+
+func isBuiltInTheme(dirName string) bool {
+	return "daylight" == dirName || "midnight" == dirName
+}
+
+func InstallTheme(repoURL, repoHash, installPath string, systemID string) error {
 	repoURLHash := repoURL + "@" + repoHash
-	data, err := downloadPackage(repoURLHash, proxyURL, chinaCDN, true, systemID)
-	if nil != err {
+	data, err := downloadPackage(repoURLHash, true, systemID)
+	if err != nil {
 		return err
 	}
-	return installPackage(data, installPath)
+	return installPackage(data, installPath, repoURLHash)
 }
 
 func UninstallTheme(installPath string) error {
-	if err := os.RemoveAll(installPath); nil != err {
-		util.LogErrorf("remove theme [%s] failed: %s", installPath, err)
-		return errors.New("remove community theme failed")
-	}
-	//util.Logger.Infof("uninstalled theme [%s]", installPath)
-	return nil
+	return uninstallPackage(installPath)
 }
