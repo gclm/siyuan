@@ -1,6 +1,6 @@
 # Binaries for programs and plugins
 *.exe
-cloc.exe
+!app/elevator/elevator-*.exe
 *.dll
 *.so
 *.dylib
@@ -8,9 +8,11 @@ cloc.exe
 *.jar
 *.syso
 .DS_Store
+.eslintcache
 app/node_modules
 app/stage/build
 app/build
+app/src/types/dist
 app/kernel*
 ios
 pprof
@@ -24,6 +26,7 @@ electron/dist
 
 # IDE
 .idea/
+.vscode/
 
 # Log
 logs
@@ -34,6 +37,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# package
+# NPM Package
 package-lock.json
 yarn.lock
+
+# Workflows
+**/__pycache__
