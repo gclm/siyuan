@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -38,9 +38,14 @@ func getDocOutline(c *gin.Context) {
 		return
 	}
 
+	preview := false
+	if previewArg := arg["preview"]; nil != previewArg {
+		preview = previewArg.(bool)
+	}
+
 	rootID := arg["id"].(string)
-	headings, err := model.Outline(rootID)
-	if nil != err {
+	headings, err := model.Outline(rootID, preview)
+	if err != nil {
 		ret.Code = 1
 		ret.Msg = err.Error()
 		return
