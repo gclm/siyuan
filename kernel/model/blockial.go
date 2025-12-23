@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,18 +19,47 @@ package model
 import (
 	"errors"
 	"fmt"
+	"maps"
+	"strings"
 	"time"
 
 	"github.com/88250/gulu"
 	"github.com/88250/lute/ast"
-	"github.com/88250/lute/html"
-	"github.com/88250/lute/lex"
+	"github.com/88250/lute/editor"
 	"github.com/88250/lute/parse"
 	"github.com/araddon/dateparse"
 	"github.com/siyuan-note/siyuan/kernel/cache"
+	"github.com/siyuan-note/siyuan/kernel/filesys"
+	"github.com/siyuan-note/siyuan/kernel/sql"
 	"github.com/siyuan-note/siyuan/kernel/treenode"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
+
+// isValidAttrName 验证属性名是否合法
+func isValidAttrName(name string) bool {
+	if len(name) == 0 {
+		return false
+	}
+	// 首字符必须是小写字母
+	if name[0] < 'a' || name[0] > 'z' {
+		return false
+	}
+	// 自定义属性 custom- 之后的首个字符必须是小写字母
+	if strings.HasPrefix(name, "custom-") {
+		if len(name) <= 7 || name[7] < 'a' || name[7] > 'z' {
+			return false
+		}
+	}
+	// 后续字符只能是小写字母、数字、连字符
+	for i := 1; i < len(name); i++ {
+		c := name[i]
+		if c == '-' || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') {
+			continue
+		}
+		return false
+	}
+	return true
+}
 
 func SetBlockReminder(id string, timed string) (err error) {
 	if !IsSubscriber() {
@@ -49,9 +78,11 @@ func SetBlockReminder(id string, timed string) (err error) {
 		timedMills = t.UnixMilli()
 	}
 
-	attrs := GetBlockAttrs(id) // 获取属性是会等待树写入
-	tree, err := loadTreeByBlockID(id)
-	if nil != err {
+	FlushTxQueue()
+
+	attrs := sql.GetBlockAttrs(id)
+	tree, err := LoadTreeByBlockID(id)
+	if err != nil {
 		return
 	}
 
@@ -63,10 +94,11 @@ func SetBlockReminder(id string, timed string) (err error) {
 	if ast.NodeDocument != node.Type && node.IsContainerBlock() {
 		node = treenode.FirstLeafBlock(node)
 	}
-	content := treenode.NodeStaticContent(node)
+	content := sql.NodeStaticContent(node, nil, false, false, false)
 	content = gulu.Str.SubStr(content, 128)
+	content = strings.ReplaceAll(content, editor.Zwsp, "")
 	err = SetCloudBlockReminder(id, content, timedMills)
-	if nil != err {
+	if err != nil {
 		return
 	}
 
@@ -84,54 +116,71 @@ func SetBlockReminder(id string, timed string) (err error) {
 		node.SetIALAttr(attrName, timed)
 		util.PushMsg(fmt.Sprintf(Conf.Language(101), time.UnixMilli(timedMills).Format("2006-01-02 15:04")), 5000)
 	}
-	if err = indexWriteJSONQueue(tree); nil != err {
+	if err = indexWriteTreeUpsertQueue(tree); err != nil {
 		return
 	}
-	IncWorkspaceDataVer()
+	IncSync()
 	cache.PutBlockIAL(id, attrs)
 	return
 }
 
-func SetBlockAttrs(id string, nameValues map[string]string) (err error) {
-	WaitForWritingFiles()
-
-	tree, err := loadTreeByBlockID(id)
-	if nil != err {
-		return err
-	}
-
-	node := treenode.GetNodeInTree(tree, id)
-	if nil == node {
-		return errors.New(fmt.Sprintf(Conf.Language(15), id))
-	}
-
-	for name, _ := range nameValues {
-		for i := 0; i < len(name); i++ {
-			if !lex.IsASCIILetterNumHyphen(name[i]) {
-				return errors.New(fmt.Sprintf(Conf.Language(25), id))
-			}
-		}
-	}
-
-	for name, value := range nameValues {
-		if "" == value {
-			node.RemoveIALAttr(name)
-		} else {
-			node.SetIALAttr(name, html.EscapeAttrVal(value))
-		}
-	}
-
-	if err = indexWriteJSONQueue(tree); nil != err {
+func BatchSetBlockAttrs(blockAttrs []map[string]interface{}) (err error) {
+	if util.ReadOnly {
 		return
 	}
-	IncWorkspaceDataVer()
-	cache.PutBlockIAL(id, parse.IAL2Map(node.KramdownIAL))
+
+	FlushTxQueue()
+
+	var blockIDs []string
+	for _, blockAttr := range blockAttrs {
+		blockIDs = append(blockIDs, blockAttr["id"].(string))
+	}
+
+	trees := filesys.LoadTrees(blockIDs)
+	var nodes []*ast.Node
+	for _, blockAttr := range blockAttrs {
+		id := blockAttr["id"].(string)
+		tree := trees[id]
+		if nil == tree {
+			return errors.New(fmt.Sprintf(Conf.Language(15), id))
+		}
+
+		node := treenode.GetNodeInTree(tree, id)
+		if nil == node {
+			return errors.New(fmt.Sprintf(Conf.Language(15), id))
+		}
+
+		attrs := blockAttr["attrs"].(map[string]string)
+		oldAttrs, e := setNodeAttrs0(node, attrs)
+		if nil != e {
+			return e
+		}
+
+		cache.PutBlockIAL(node.ID, parse.IAL2Map(node.KramdownIAL))
+		pushBroadcastAttrTransactions(oldAttrs, node)
+		nodes = append(nodes, node)
+	}
+
+	for _, tree := range trees {
+		if err = indexWriteTreeUpsertQueue(tree); err != nil {
+			return
+		}
+	}
+
+	IncSync()
+	// 不做锚文本刷新
 	return
 }
 
-func ResetBlockAttrs(id string, nameValues map[string]string) (err error) {
-	tree, err := loadTreeByBlockID(id)
-	if nil != err {
+func SetBlockAttrs(id string, nameValues map[string]string) (err error) {
+	if util.ReadOnly {
+		return
+	}
+
+	FlushTxQueue()
+
+	tree, err := LoadTreeByBlockID(id)
+	if err != nil {
 		return err
 	}
 
@@ -140,11 +189,135 @@ func ResetBlockAttrs(id string, nameValues map[string]string) (err error) {
 		return errors.New(fmt.Sprintf(Conf.Language(15), id))
 	}
 
-	for name, _ := range nameValues {
-		for i := 0; i < len(name); i++ {
-			if !lex.IsASCIILetterNumHyphen(name[i]) {
-				return errors.New(fmt.Sprintf(Conf.Language(25), id))
+	err = setNodeAttrs(node, tree, nameValues)
+	return
+}
+
+func setNodeAttrs(node *ast.Node, tree *parse.Tree, nameValues map[string]string) (err error) {
+	oldAttrs, err := setNodeAttrs0(node, nameValues)
+	if err != nil {
+		return
+	}
+
+	if err = indexWriteTreeUpsertQueue(tree); err != nil {
+		return
+	}
+
+	IncSync()
+	cache.PutBlockIAL(node.ID, parse.IAL2Map(node.KramdownIAL))
+
+	pushBroadcastAttrTransactions(oldAttrs, node)
+
+	go func() {
+		sql.FlushQueue()
+		refreshDynamicRefText(node, tree)
+	}()
+	return
+}
+
+func setNodeAttrsWithTx(tx *Transaction, node *ast.Node, tree *parse.Tree, nameValues map[string]string) (err error) {
+	oldAttrs, err := setNodeAttrs0(node, nameValues)
+	if err != nil {
+		return
+	}
+
+	tx.writeTree(tree)
+
+	IncSync()
+	cache.PutBlockIAL(node.ID, parse.IAL2Map(node.KramdownIAL))
+	pushBroadcastAttrTransactions(oldAttrs, node)
+	return
+}
+
+func setNodeAttrs0(node *ast.Node, nameValues map[string]string) (oldAttrs map[string]string, err error) {
+	oldAttrs = parse.IAL2Map(node.KramdownIAL)
+	newAttrs := maps.Clone(oldAttrs)
+
+	for name, value := range nameValues {
+		value = util.RemoveInvalidRetainCtrl(value)
+		value = strings.TrimSpace(value)
+		lowerName := strings.ToLower(name)
+		// 转换为小写再验证属性名
+		if !isValidAttrName(lowerName) {
+			err = errors.New(Conf.Language(25) + " [" + node.ID + "]")
+			return
+		}
+
+		// 处理文档标签 https://github.com/siyuan-note/siyuan/issues/13311
+		if lowerName == "tags" {
+			var tags []string
+			tmp := strings.Split(value, ",")
+			for _, t := range tmp {
+				t = util.RemoveInvalid(t)
+				t = strings.TrimSpace(t)
+				if "" != t {
+					tags = append(tags, t)
+				}
 			}
+			tags = gulu.Str.RemoveDuplicatedElem(tags)
+			if 0 < len(tags) {
+				value = strings.Join(tags, ",")
+			} else {
+				value = ""
+			}
+		}
+
+		if "" == value {
+			// 删除属性
+			if name != lowerName {
+				if _, exists := newAttrs[name]; exists {
+					// 仅删除完全匹配的包含大写字母的属性
+					delete(newAttrs, name)
+					continue
+				}
+			}
+			delete(newAttrs, lowerName)
+		} else {
+			// 添加或更新属性
+			// 删除大小写完全匹配的属性
+			delete(newAttrs, name)
+			// 保存小写的属性 https://github.com/siyuan-note/siyuan/issues/16447
+			newAttrs[lowerName] = value
+		}
+	}
+
+	node.KramdownIAL = parse.Map2IAL(newAttrs)
+
+	if oldAttrs["tags"] != newAttrs["tags"] {
+		ReloadTag()
+	}
+	return
+}
+
+func pushBroadcastAttrTransactions(oldAttrs map[string]string, node *ast.Node) {
+	newAttrs := parse.IAL2Map(node.KramdownIAL)
+	data := map[string]interface{}{"old": oldAttrs, "new": newAttrs}
+	if "" != node.AttributeViewType {
+		data["data-av-type"] = node.AttributeViewType
+	}
+	doOp := &Operation{Action: "updateAttrs", Data: data, ID: node.ID}
+	evt := util.NewCmdResult("transactions", 0, util.PushModeBroadcast)
+	evt.Data = []*Transaction{{
+		DoOperations:   []*Operation{doOp},
+		UndoOperations: []*Operation{},
+	}}
+	util.PushEvent(evt)
+}
+
+func ResetBlockAttrs(id string, nameValues map[string]string) (err error) {
+	tree, err := LoadTreeByBlockID(id)
+	if err != nil {
+		return err
+	}
+
+	node := treenode.GetNodeInTree(tree, id)
+	if nil == node {
+		return errors.New(fmt.Sprintf(Conf.Language(15), id))
+	}
+
+	for name := range nameValues {
+		if !isValidAttrName(name) {
+			return errors.New(Conf.Language(25) + " [" + id + "]")
 		}
 	}
 
@@ -155,32 +328,16 @@ func ResetBlockAttrs(id string, nameValues map[string]string) (err error) {
 		}
 	}
 
-	if err = indexWriteJSONQueue(tree); nil != err {
+	if ast.NodeDocument == node.Type {
+		// 修改命名文档块后引用动态锚文本未跟随 https://github.com/siyuan-note/siyuan/issues/6398
+		// 使用重命名文档队列来刷新引用锚文本
+		updateRefTextRenameDoc(tree)
+	}
+
+	if err = indexWriteTreeUpsertQueue(tree); err != nil {
 		return
 	}
-	IncWorkspaceDataVer()
+	IncSync()
 	cache.RemoveBlockIAL(id)
-	return
-}
-
-func GetBlockAttrs(id string) (ret map[string]string) {
-	ret = map[string]string{}
-	if cached := cache.GetBlockIAL(id); nil != cached {
-		ret = cached
-		return
-	}
-
-	WaitForWritingFiles()
-
-	tree, err := loadTreeByBlockID(id)
-	if nil != err {
-		return
-	}
-
-	node := treenode.GetNodeInTree(tree, id)
-	for _, kv := range node.KramdownIAL {
-		ret[kv[0]] = html.UnescapeAttrVal(kv[1])
-	}
-	cache.PutBlockIAL(id, ret)
 	return
 }
