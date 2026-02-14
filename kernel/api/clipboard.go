@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,15 +17,38 @@
 package api
 
 import (
+	"os"
+
 	"github.com/88250/clipboard"
 	"github.com/88250/gulu"
 	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/logging"
 )
 
 func readFilePaths(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
 	defer c.JSON(200, ret)
 
-	paths, _ := clipboard.ReadFilePaths()
-	ret.Data = paths
+	var paths []string
+	if !gulu.OS.IsLinux() { // Linux 端不再支持 `粘贴为纯文本` 时处理文件绝对路径 https://github.com/siyuan-note/siyuan/issues/5825
+		paths, _ = clipboard.ReadFilePaths()
+	}
+
+	data := []map[string]any{}
+	for _, path := range paths {
+		fi, err := os.Stat(path)
+		if nil != err {
+			logging.LogErrorf("stat file failed: %s", err)
+			continue
+		}
+
+		data = append(data, map[string]any{
+			"name":    fi.Name(),
+			"size":    fi.Size(),
+			"isDir":   fi.IsDir(),
+			"updated": fi.ModTime().UnixMilli(),
+			"path":    path,
+		})
+	}
+	ret.Data = data
 }

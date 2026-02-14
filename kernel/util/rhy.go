@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,31 +17,71 @@
 package util
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
+	"golang.org/x/sync/singleflight"
 )
 
-var cachedRhyResult = map[string]interface{}{}
-var rhyResultCacheTime int64
-var rhyResultLock = sync.Mutex{}
+var (
+	RhyCacheDuration = int64(3600 * 6)
 
-func GetRhyResult(force bool, proxyURL string) (map[string]interface{}, error) {
-	rhyResultLock.Lock()
-	defer rhyResultLock.Unlock()
+	cachedRhyResult    = map[string]interface{}{}
+	rhyResultCacheTime int64
+	rhyResultLock      = sync.Mutex{}
+	rhyResultFlight    singleflight.Group
+)
 
-	now := time.Now().Unix()
-	if 3600 >= now-rhyResultCacheTime && !force && 0 < len(cachedRhyResult) {
+func GetRhyResult(ctx context.Context, force bool) (map[string]interface{}, error) {
+	if ContainerDocker == Container {
+		RhyCacheDuration = int64(3600 * 24)
+	}
+
+	if RhyCacheDuration >= time.Now().Unix()-rhyResultCacheTime && !force && 0 < len(cachedRhyResult) {
 		return cachedRhyResult, nil
 	}
 
-	request := httpclient.NewCloudRequest(proxyURL)
-	_, err := request.SetResult(&cachedRhyResult).Get(AliyunServer + "/apis/siyuan/version?ver=" + Ver)
-	if nil != err {
-		LogErrorf("get version meta info failed: %s", err)
+	// 并发调用只执行一次实际请求
+	v, err, _ := rhyResultFlight.Do("rhyResult", func() (interface{}, error) {
+		return getRhyResult0(ctx)
+	})
+	if err != nil {
 		return nil, err
 	}
-	rhyResultCacheTime = now
+	return v.(map[string]interface{}), nil
+}
+
+func getRhyResult0(ctx context.Context) (map[string]interface{}, error) {
+	rhyResultLock.Lock()
+	defer rhyResultLock.Unlock()
+
+	request := httpclient.NewCloudRequest30s()
+	resp, err := request.SetContext(ctx).SetSuccessResult(&cachedRhyResult).Get(GetCloudServer() + "/apis/siyuan/version?ver=" + Ver)
+	if err != nil {
+		logging.LogErrorf("get version info failed: %s", err)
+		return nil, err
+	}
+	if 200 != resp.StatusCode {
+		msg := fmt.Sprintf("get rhy result failed: %d", resp.StatusCode)
+		logging.LogErrorf(msg)
+		return nil, errors.New(msg)
+	}
+	rhyResultCacheTime = time.Now().Unix()
 	return cachedRhyResult, nil
+}
+
+func RefreshRhyResultJob() {
+	_, err := GetRhyResult(context.TODO(), true)
+	if nil != err {
+		// 系统唤醒后可能还没有网络连接，这里等待后再重试
+		go func() {
+			time.Sleep(7 * time.Second)
+			GetRhyResult(context.TODO(), true)
+		}()
+	}
 }

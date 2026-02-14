@@ -1,10 +1,12 @@
 {
 	"ID": "20211226122358-hctqcn5",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20211226122358-hctqcn5",
 		"title": "Kernel 參數",
-		"updated": "20220601091200"
+		"type": "doc",
+		"updated": "20221025095721"
 	},
 	"Children": [
 		{
@@ -24,34 +26,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--workspace",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--workspace"
 				}
 			]
 		},
@@ -71,34 +51,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "~/Documents/SiYuan/",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "~/SiYuan/"
 				},
 				{
 					"Type": "NodeText",
@@ -126,34 +84,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--wd",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--wd"
 				}
 			]
 		},
@@ -168,199 +104,6 @@
 				{
 					"Type": "NodeText",
 					"Data": "Kernel 工作目錄路徑，不指定時按 Kernel 可執行文件入口自動獲取。",
-					"Properties": {
-						"id": ""
-					}
-				}
-			]
-		},
-		{
-			"ID": "20211226122447-8tgkcep",
-			"Type": "NodeHeading",
-			"HeadingLevel": 3,
-			"Properties": {
-				"id": "20211226122447-8tgkcep",
-				"updated": "20211226011025"
-			},
-			"Children": [
-				{
-					"Type": "NodeHeadingC8hMarker",
-					"Data": "### ",
-					"Properties": {
-						"id": ""
-					}
-				},
-				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Properties": {
-						"id": ""
-					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--resident",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
-				}
-			]
-		},
-		{
-			"ID": "20211226122447-kbcejv5",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226122447-kbcejv5",
-				"updated": "20211228132931"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "使用 ",
-					"Properties": {
-						"id": ""
-					}
-				},
-				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Properties": {
-						"id": ""
-					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--resident=true",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
-				},
-				{
-					"Type": "NodeText",
-					"Data": " 指定後 Kernel 將常駐記憶體，預設 ",
-					"Properties": {
-						"id": ""
-					}
-				},
-				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Properties": {
-						"id": ""
-					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "true",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
-				},
-				{
-					"Type": "NodeText",
-					"Data": "。",
-					"Properties": {
-						"id": ""
-					}
-				}
-			]
-		},
-		{
-			"ID": "20211226122447-wpeb408",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226122447-wpeb408",
-				"updated": "20220517144242"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "設置為 ",
-					"Properties": {
-						"id": ""
-					}
-				},
-				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Properties": {
-						"id": ""
-					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "false",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
-				},
-				{
-					"Type": "NodeText",
-					"Data": " 後會每隔 30 秒檢查一次活動會話列表，如果沒有活動會話則退出 Kernel 程式。",
 					"Properties": {
 						"id": ""
 					}
@@ -384,34 +127,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--readonly",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--readonly"
 				}
 			]
 		},
@@ -431,34 +152,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--readonly=true",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--readonly=true"
 				},
 				{
 					"Type": "NodeText",
@@ -486,34 +185,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--accessAuthCode",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--accessAuthCode"
 				}
 			]
 		},
@@ -533,56 +210,14 @@
 					}
 				},
 				{
-					"Type": "NodeBlockRef",
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeOpenParen",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeOpenParen",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20211226122545-lsv6dhu",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeBlockRefSpace",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "鑒權密碼",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCloseParen",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCloseParen",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226122545-lsv6dhu",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "鑒權密碼"
 				},
 				{
 					"Type": "NodeText",
@@ -610,34 +245,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--ssl",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--ssl"
 				}
 			]
 		},
@@ -657,34 +270,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--ssl=true",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--ssl=true"
 				},
 				{
 					"Type": "NodeText",
@@ -712,34 +303,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--lang",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--lang"
 				}
 			]
 		},
@@ -759,34 +328,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--lang=zh_CN",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--lang=zh_CN"
 				},
 				{
 					"Type": "NodeText",
@@ -796,34 +343,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "en_US",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "en_US"
 				},
 				{
 					"Type": "NodeText",
@@ -833,34 +358,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "zh_CN",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ar_SA"
 				},
 				{
 					"Type": "NodeText",
@@ -870,34 +373,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "zh_CHT",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "de_DE"
 				},
 				{
 					"Type": "NodeText",
@@ -907,34 +388,177 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "en_US",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "en_US"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "es_ES"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "fr_FR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "he_IL"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "it_IT"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ja_JP"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ko_KR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "pl_PL"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "pt_BR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ru_RU"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "tr_TR"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "、",
+					"Properties": {
+						"id": ""
+					}
+				},
+				{
+					"Type": "NodeTextMark",
+					"Properties": {
+						"id": ""
+					},
+					"TextMarkType": "code",
+					"TextMarkTextContent": "zh_CHT"
 				},
 				{
 					"Type": "NodeText",
@@ -944,34 +568,12 @@
 					}
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
+					"Type": "NodeTextMark",
 					"Properties": {
 						"id": ""
 					},
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "fr_FR",
-							"Properties": {
-								"id": ""
-							}
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`",
-							"Properties": {
-								"id": ""
-							}
-						}
-					]
+					"TextMarkType": "code",
+					"TextMarkTextContent": "zh_CN"
 				},
 				{
 					"Type": "NodeText",
@@ -992,20 +594,9 @@
 			},
 			"Children": [
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--mode"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--mode"
 				}
 			]
 		},
@@ -1022,60 +613,27 @@
 					"Data": "使用 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--mode=dev"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--mode=dev"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " 後將使用開發模式運行，使用 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "--mode=prod"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--mode=prod"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " 將使用生產模式運行，預設 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "prod"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "prod"
 				},
 				{
 					"Type": "NodeText",
@@ -1096,44 +654,132 @@
 					"Data": "開發模式和生產模式的主要區別開發模式會使用 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "工作目錄/appearance/"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "工作目錄/appearance/"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " 作為外觀文件夾，而生產模式使用的是 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "工作空間/conf/appearance/"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "工作空間/conf/appearance/"
 				},
 				{
 					"Type": "NodeText",
 					"Data": "。"
+				}
+			]
+		},
+		{
+			"ID": "20221025095644-g0ka4wv",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20221025095644-g0ka4wv",
+				"updated": "20221025095644"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "--port"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20221025095644-7uijx77",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221025095644-7uijx77",
+				"updated": "20221025095644"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "用於指定偵聽埠，不指定時："
+				}
+			]
+		},
+		{
+			"ID": "20221025095644-yxap136",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20221025095644-yxap136",
+				"updated": "20221025095721"
+			},
+			"Children": [
+				{
+					"ID": "20221025095644-4yq1w95",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221025095644-4yq1w95",
+						"updated": "20221025095644"
+					},
+					"Children": [
+						{
+							"ID": "20221025095644-rf1ldjb",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221025095644-rf1ldjb",
+								"updated": "20221025095644"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "桌面端使用隨機埠"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20221025095644-weqayss",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221025095644-weqayss",
+						"updated": "20221025095721"
+					},
+					"Children": [
+						{
+							"ID": "20221025095644-uhgv2bx",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221025095644-uhgv2bx",
+								"updated": "20221025095721"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "Docker/移動端使用 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "6806"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
 				}
 			]
 		}
