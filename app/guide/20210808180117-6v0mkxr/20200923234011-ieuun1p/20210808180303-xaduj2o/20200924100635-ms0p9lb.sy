@@ -1,11 +1,12 @@
 {
 	"ID": "20200924100635-ms0p9lb",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20200924100635-ms0p9lb",
 		"title": "Bookmark and Tag",
 		"type": "doc",
-		"updated": "20210702231509"
+		"updated": "20250115152004"
 	},
 	"Children": [
 		{
@@ -13,7 +14,8 @@
 			"Type": "NodeHeading",
 			"HeadingLevel": 2,
 			"Properties": {
-				"id": "20210104091414-c8862yg"
+				"id": "20210104091414-c8862yg",
+				"updated": "20250115152001"
 			},
 			"Children": [
 				{
@@ -41,23 +43,11 @@
 			]
 		},
 		{
-			"ID": "20210104091414-xr1dze2",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20210104091414-xr1dze2"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "The built-in bookmark label are ✨💡️⏳, you can create other text as the bookmark label."
-				}
-			]
-		},
-		{
 			"ID": "20210104091414-b6lifws",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091414-b6lifws"
+				"id": "20210104091414-b6lifws",
+				"updated": "20250115152001"
 			},
 			"Children": [
 				{
@@ -65,42 +55,31 @@
 					"Data": "All favorite content blocks will be listed in the bookmark tab ("
 				},
 				{
-					"Type": "NodeKbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "Alt 3"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Alt"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " / "
+					"Data": "​+"
 				},
 				{
-					"Type": "NodeKbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "⌘ 3"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "3"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "). If you want to cancel the collection, select Delete in the drop-down menu of the content block ID."
+					"Data": "​ / "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "⌃3"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​). If you want to cancel the collection, select Delete in the drop-down menu of the content block ID."
 				}
 			]
 		},
@@ -109,7 +88,8 @@
 			"Type": "NodeHeading",
 			"HeadingLevel": 2,
 			"Properties": {
-				"id": "20210104091414-qp10fn0"
+				"id": "20210104091414-qp10fn0",
+				"updated": "20250115152004"
 			},
 			"Children": [
 				{
@@ -134,44 +114,18 @@
 					"Data": "The tag is used to mark the block in the content block. The syntax is to wrap the tag identifier with two "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "#"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " in the first and one after the other, like this "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "#Tag#"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#Tag#"
 				},
 				{
 					"Type": "NodeText",
@@ -191,44 +145,18 @@
 					"Data": "Tag support hierarchical levels, so that content blocks can be sorted more easily. Use "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "/"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " to separate different levels, like this "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "#A/B/C#"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#A/B/C#"
 				},
 				{
 					"Type": "NodeText",
@@ -240,7 +168,8 @@
 			"ID": "20210104091414-s3vdbdu",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210104091414-s3vdbdu"
+				"id": "20210104091414-s3vdbdu",
+				"updated": "20250115152004"
 			},
 			"Children": [
 				{
@@ -248,42 +177,227 @@
 					"Data": "All tagged content blocks will be listed in the tag tab ("
 				},
 				{
-					"Type": "NodeKbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "Alt 4"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Alt"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " / "
+					"Data": "​+"
 				},
 				{
-					"Type": "NodeKbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "⌘ 4"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "4"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "). If you need to cancel the tag, just delete the tag in the content block."
+					"Data": "​ / "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "⌃4"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​). If you need to cancel the tag, just delete the tag in the content block."
+				}
+			]
+		},
+		{
+			"ID": "20230928113947-gnlob5l",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230928113947-gnlob5l",
+				"updated": "20230928113958"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20230928113959-ebzf9zy",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230928113959-ebzf9zy",
+				"updated": "20231205225745"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Please do not use special symbols in bookmarks or tags, otherwise you will not be able to search globally, and you will not be able to rename and delete them in the bookmarks/tags panel. The \"special symbols\" here include: "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "*"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "_"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "["
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "!"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\\"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "`"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ , "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\u0026lt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\u0026gt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\u0026amp;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "~ "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "$"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "("
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ")"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "{"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​, "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "="
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ and "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​."
 				}
 			]
 		}

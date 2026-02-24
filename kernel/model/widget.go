@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -21,35 +21,46 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/bazaar"
 	"github.com/siyuan-note/siyuan/kernel/util"
-
-	"github.com/siyuan-note/siyuan/kernel/search"
 )
 
 func SearchWidget(keyword string) (ret []*Block) {
 	ret = []*Block{}
-	widgets := filepath.Join(util.DataDir, "widgets")
-	dirs, err := os.ReadDir(widgets)
-	if nil != err {
-		util.LogErrorf("read dir [%s] failed: %s", widgets, err)
+	widgetsDir := filepath.Join(util.DataDir, "widgets")
+	entries, err := os.ReadDir(widgetsDir)
+	if err != nil {
+		logging.LogErrorf("read dir [%s] failed: %s", widgetsDir, err)
 		return
 	}
 
 	k := strings.ToLower(keyword)
-	for _, dir := range dirs {
-		name := strings.ToLower(dir.Name())
-		if strings.HasPrefix(name, ".") {
+	var widgets []*bazaar.Widget
+	for _, entry := range entries {
+		if !util.IsDirRegularOrSymlink(entry) {
+			continue
+		}
+		if strings.HasPrefix(entry.Name(), ".") {
 			continue
 		}
 
-		if strings.Contains(name, k) {
-			name = dir.Name()
-			if "" != keyword {
-				_, name = search.MarkText(dir.Name(), keyword, 32, Conf.Search.CaseSensitive)
-			}
-			b := &Block{Content: name}
-			ret = append(ret, b)
+		widget, _ := bazaar.WidgetJSON(entry.Name())
+		if nil == widget {
+			continue
 		}
+
+		widgets = append(widgets, widget)
 	}
+
+	widgets = filterWidgets(widgets, k)
+	for _, widget := range widgets {
+		b := &Block{
+			Name:    bazaar.GetPreferredName(widget.Package),
+			Content: widget.Name,
+		}
+		ret = append(ret, b)
+	}
+
 	return
 }

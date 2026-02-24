@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -23,16 +23,14 @@ import (
 	"time"
 
 	"github.com/radovskyb/watcher"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/cache"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 var assetsWatcher *watcher.Watcher
 
 func WatchAssets() {
-	if "iOS" == util.Container {
-		return
-	}
-
 	go func() {
 		watchAssets()
 	}()
@@ -54,29 +52,38 @@ func watchAssets() {
 					return
 				}
 
-				//util.LogInfof("assets changed: %s", event)
+				//logging.LogInfof("assets changed: %s", event)
 				if watcher.Write == event.Op {
-					IncWorkspaceDataVer()
+					IncSync()
+				}
+
+				// 重新缓存资源文件，以便使用 /资源 搜索
+				go cache.LoadAssets()
+
+				if watcher.Remove == event.Op {
+					HandleAssetsRemoveEvent(event.Path)
+				} else {
+					HandleAssetsChangeEvent(event.Path)
 				}
 			case err, ok := <-assetsWatcher.Error:
 				if !ok {
 					return
 				}
-				util.LogErrorf("watch assets failed: %s", err)
+				logging.LogErrorf("watch assets failed: %s", err)
 			case <-assetsWatcher.Closed:
 				return
 			}
 		}
 	}()
 
-	if err := assetsWatcher.Add(assetsDir); nil != err {
-		util.LogErrorf("add assets watcher for folder [%s] failed: %s", assetsDir, err)
+	if err := assetsWatcher.Add(assetsDir); err != nil {
+		logging.LogErrorf("add assets watcher for folder [%s] failed: %s", assetsDir, err)
 		return
 	}
 
-	//util.LogInfof("added file watcher [%s]", assetsDir)
-	if err := assetsWatcher.Start(10 * time.Second); nil != err {
-		util.LogErrorf("start assets watcher for folder [%s] failed: %s", assetsDir, err)
+	//logging.LogInfof("added file watcher [%s]", assetsDir)
+	if err := assetsWatcher.Start(10 * time.Second); err != nil {
+		logging.LogErrorf("start assets watcher for folder [%s] failed: %s", assetsDir, err)
 		return
 	}
 }

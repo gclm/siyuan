@@ -1,11 +1,12 @@
 {
 	"ID": "20200924101200-gss5vee",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20200924101200-gss5vee",
 		"title": "Navigate in the Content Block",
 		"type": "doc",
-		"updated": "20220312233028"
+		"updated": "20250115164053"
 	},
 	"Children": [
 		{
@@ -59,7 +60,8 @@
 				"Num": -1
 			},
 			"Properties": {
-				"id": "20210428224834-ten8yt5"
+				"id": "20210428224834-ten8yt5",
+				"updated": "20221105220127"
 			},
 			"Children": [
 				{
@@ -104,7 +106,8 @@
 						"Num": -1
 					},
 					"Properties": {
-						"id": "20210428224834-dn1cwlq"
+						"id": "20210428224834-dn1cwlq",
+						"updated": "20221105220127"
 					},
 					"Children": [
 						{
@@ -112,7 +115,7 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20210428224834-3i7y0fu",
-								"updated": "20210428224925"
+								"updated": "20221105220127"
 							},
 							"Children": [
 								{
@@ -120,22 +123,11 @@
 									"Data": "The content block link established by "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"CodeMarkerLen": 1,
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker",
-											"Data": "`"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "((id))"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker",
-											"Data": "`"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20200924101256-f8b1sbi",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "ref"
 								},
 								{
 									"Type": "NodeText",
@@ -250,7 +242,8 @@
 			"Type": "NodeHeading",
 			"HeadingLevel": 2,
 			"Properties": {
-				"id": "20200924101210-zwf8ags"
+				"id": "20200924101210-zwf8ags",
+				"updated": "20250115164053"
 			},
 			"Children": [
 				{
@@ -289,7 +282,7 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20210428225309-l9hqxpz",
-				"updated": "20210428225516"
+				"updated": "20250115164053"
 			},
 			"Children": [
 				{
@@ -297,26 +290,13 @@
 					"Data": "Hold down "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "Ctrl"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " and click on the node: jump to the node."
+					"Data": "​ and click on the node: jump to the node."
 				}
 			]
 		},
@@ -455,30 +435,70 @@
 			"ID": "20210106204954-rpwfh3i",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210106204954-rpwfh3i"
+				"id": "20210106204954-rpwfh3i",
+				"updated": "20221026221426"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "It is mentioned that the name and aliases of the content block in the current document is used as a keyword to search, and the search result is a content block containing these keywords. You can use the link button to convert the mention into a link: the mention will be replaced with "
+					"Data": "Mentions are searched using the content block name, alias, reference anchor text and document name in the current document as keywords (the search scope can be set in "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "((id \"content block name\"))"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Search"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Backlink mentions"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​), the search results are blocks of content that contain these keywords."
+				}
+			]
+		},
+		{
+			"ID": "20221026222024-1ug5zq4",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221026222024-1ug5zq4",
+				"updated": "20221026222138"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "Note"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​: Mention search will only search in normal text, not in line-level elements such as bold and italics, and block-level elements such as code blocks and charts. The rule are the same as the "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211010212319-oy401ib",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "detection rules of virtual reference"
 				},
 				{
 					"Type": "NodeText",

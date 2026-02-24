@@ -4,10 +4,16 @@ import {Model} from "./Model";
 import {Editor} from "../editor";
 import {hasClosestByTag} from "../protyle/util/hasClosest";
 import {Constants} from "../constants";
-import {escapeHtml} from "../util/escape";
+import {escapeGreat, escapeHtml} from "../util/escape";
 import {unicode2Emoji} from "../emoji";
 import {fetchPost} from "../util/fetch";
-import {showTooltip} from "../dialog/tooltip";
+import {hideTooltip, showTooltip} from "../dialog/tooltip";
+import {isTouchDevice} from "../util/functions";
+/// #if !BROWSER
+import {openNewWindow} from "../window/openNewWindow";
+import {ipcRenderer} from "electron";
+/// #endif
+import {layoutToJSON, saveLayout} from "./util";
 
 export class Tab {
     public parent: Wnd;
@@ -31,7 +37,6 @@ export class Tab {
             this.headElement.setAttribute("data-type", "tab-header");
             this.headElement.setAttribute("draggable", "true");
             this.headElement.setAttribute("data-id", this.id);
-            this.headElement.setAttribute("data-position", "center"); // showTooltip 位置标识
             this.headElement.classList.add("item", "item--focus");
             let iconHTML = "";
             if (options.icon) {
@@ -40,46 +45,90 @@ export class Tab {
                 iconHTML = `<span class="item__icon">${unicode2Emoji(options.docIcon)}</span>`;
             }
             this.headElement.innerHTML = `${iconHTML}<span class="item__text">${escapeHtml(options.title)}</span>
-<span class="item__close"><svg><use xlink:href='#iconClose'></use></svg></span>`;
+<span class="item__close"><svg><use xlink:href="#iconClose"></use></svg></span>`;
             this.headElement.addEventListener("mouseenter", (event) => {
                 event.stopPropagation();
                 event.preventDefault();
+                const dragElement = Array.from(this.headElement.parentElement.childNodes).find((item: HTMLElement) => {
+                    if (item.style?.opacity === "0.38") {
+                        return true;
+                    }
+                });
+                if (dragElement) {
+                    hideTooltip();
+                    return;
+                }
+
+                let id = "";
                 if (this.model instanceof Editor && this.model.editor?.protyle?.block?.rootID) {
+                    id = (this.model as Editor).editor.protyle.block.rootID;
+                } else if (!this.model) {
+                    const initData = JSON.parse(this.headElement.getAttribute("data-initdata") || "{}");
+                    if (initData && initData.instance === "Editor") {
+                        id = initData.blockId;
+                    }
+                }
+                if (id) {
                     fetchPost("/api/filetree/getFullHPathByID", {
-                        id: (this.model as Editor).editor.protyle.block.rootID
+                        id
                     }, (response) => {
                         if (!this.headElement.getAttribute("aria-label")) {
-                            showTooltip(escapeHtml(response.data), this.headElement);
+                            showTooltip(escapeGreat(response.data), this.headElement);
                         }
-                        this.headElement.setAttribute("aria-label", escapeHtml(response.data));
+                        this.headElement.setAttribute("aria-label", escapeGreat(response.data));
                     });
+                } else {
+                    this.headElement.setAttribute("aria-label", escapeGreat(this.title));
                 }
             });
             this.headElement.addEventListener("dragstart", (event: DragEvent & { target: HTMLElement }) => {
+                if (isTouchDevice()) {
+                    event.stopPropagation();
+                    event.preventDefault();
+                    return;
+                }
                 window.getSelection().removeAllRanges();
+                hideTooltip();
                 const tabElement = hasClosestByTag(event.target, "LI");
                 if (tabElement) {
                     event.dataTransfer.setData("text/html", tabElement.outerHTML);
-                    event.dataTransfer.setData(Constants.SIYUAN_DROP_TAB, this.id);
+                    const modeJSON = {id: this.id};
+                    layoutToJSON(this, modeJSON);
+                    event.dataTransfer.setData(Constants.SIYUAN_DROP_TAB, JSON.stringify(modeJSON));
                     event.dataTransfer.dropEffect = "move";
-                    tabElement.style.opacity = "0.1";
+                    tabElement.style.opacity = "0.38";
                     window.siyuan.dragElement = this.headElement;
                 }
+                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "removeRegionStyle"});
             });
             this.headElement.addEventListener("dragend", (event: DragEvent & { target: HTMLElement }) => {
                 const tabElement = hasClosestByTag(event.target, "LI");
                 if (tabElement) {
                     tabElement.style.opacity = "1";
-                    document.querySelectorAll(".layout-tab-bar li[data-clone='true']").forEach((item) => {
-                        item.remove();
-                    });
                 }
+                /// #if !BROWSER
+                // 拖拽到屏幕外
+                setTimeout(() => {
+                    if (document.body.contains(this.panelElement) &&
+                        (event.clientX < 0 || event.clientY < 0 || event.clientX > window.innerWidth || event.clientY > window.innerHeight)) {
+                        openNewWindow(this);
+                    }
+                }, Constants.TIMEOUT_LOAD); // 等待主进程发送关闭消息
+                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "rmDragStyle"});
+                /// #else
+                document.querySelectorAll(".layout-tab-bars--drag").forEach(item => {
+                    item.classList.remove("layout-tab-bars--drag");
+                });
+                document.querySelectorAll(".layout-tab-bar li[data-clone='true']").forEach(tabItem => {
+                    tabItem.remove();
+                });
+                /// #endif
                 window.siyuan.dragElement = undefined;
                 if (event.dataTransfer.dropEffect === "none") {
                     // 按 esc 取消的时候应该还原在 dragover 时交换的 tab
                     this.parent.children.forEach((item, index) => {
                         const currentElement = this.headElement.parentElement.children[index];
-                        if (!item.headElement.isSameNode(currentElement)) {
+                        if (item.headElement !== currentElement) {
                             if (index === 0) {
                                 this.headElement.parentElement.firstElementChild.before(item.headElement);
                             } else {
@@ -88,6 +137,7 @@ export class Tab {
                         }
                     });
                 }
+                ipcRenderer.send(Constants.SIYUAN_SEND_WINDOWS, {cmd: "resetTabsStyle", data: "addRegionStyle"});
             });
         }
 
@@ -135,6 +185,7 @@ export class Tab {
         if (this.docIcon || this.icon) {
             this.headElement.querySelector(".item__text").classList.add("fn__none");
         }
+        saveLayout();
     }
 
     public setDocIcon(icon: string) {
@@ -150,7 +201,8 @@ export class Tab {
                 this.headElement.querySelector(".item__text").classList.add("fn__none");
             }
         } else {
-            this.headElement.querySelector(".item__icon").remove();
+            // 添加图标后刷新界面，没有 icon
+            this.headElement.querySelector(".item__icon")?.remove();
             this.headElement.querySelector(".item__text").classList.remove("fn__none");
         }
     }
@@ -179,5 +231,10 @@ export class Tab {
         if (this.docIcon || this.icon) {
             this.headElement.querySelector(".item__text").classList.remove("fn__none");
         }
+        saveLayout();
+    }
+
+    public close() {
+        this.parent.removeTab(this.id);
     }
 }

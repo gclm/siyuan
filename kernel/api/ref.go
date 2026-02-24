@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@ package api
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/88250/gulu"
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,103 @@ func refreshBacklink(c *gin.Context) {
 
 	id := arg["id"].(string)
 	model.RefreshBacklink(id)
+	model.FlushTxQueue()
+}
+
+func getBackmentionDoc(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	defID := arg["defID"].(string)
+	refTreeID := arg["refTreeID"].(string)
+	keyword := arg["keyword"].(string)
+	containChildren := model.Conf.Editor.BacklinkContainChildren
+	if val, ok := arg["containChildren"]; ok {
+		containChildren = val.(bool)
+	}
+	highlight := true
+	if val, ok := arg["highlight"]; ok {
+		highlight = val.(bool)
+	}
+	backlinks, keywords := model.GetBackmentionDoc(defID, refTreeID, keyword, containChildren, highlight)
+	ret.Data = map[string]interface{}{
+		"backmentions": backlinks,
+		"keywords":     keywords,
+	}
+}
+
+func getBacklinkDoc(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	defID := arg["defID"].(string)
+	refTreeID := arg["refTreeID"].(string)
+	keyword := arg["keyword"].(string)
+	containChildren := model.Conf.Editor.BacklinkContainChildren
+	if val, ok := arg["containChildren"]; ok {
+		containChildren = val.(bool)
+	}
+	highlight := true
+	if val, ok := arg["highlight"]; ok {
+		highlight = val.(bool)
+	}
+	backlinks, keywords := model.GetBacklinkDoc(defID, refTreeID, keyword, containChildren, highlight)
+	ret.Data = map[string]interface{}{
+		"backlinks": backlinks,
+		"keywords":  keywords,
+	}
+}
+
+func getBacklink2(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	if nil == arg["id"] {
+		return
+	}
+
+	id := arg["id"].(string)
+	keyword := arg["k"].(string)
+	mentionKeyword := arg["mk"].(string)
+	sortArg := arg["sort"]
+	sort := util.SortModeUpdatedDESC
+	if nil != sortArg {
+		sort, _ = strconv.Atoi(sortArg.(string))
+	}
+	mentionSortArg := arg["mSort"]
+	mentionSort := util.SortModeUpdatedDESC
+	if nil != mentionSortArg {
+		mentionSort, _ = strconv.Atoi(mentionSortArg.(string))
+	}
+	containChildren := model.Conf.Editor.BacklinkContainChildren
+	if val, ok := arg["containChildren"]; ok {
+		containChildren = val.(bool)
+	}
+	boxID, backlinks, backmentions, linkRefsCount, mentionsCount := model.GetBacklink2(id, keyword, mentionKeyword, sort, mentionSort, containChildren)
+	ret.Data = map[string]interface{}{
+		"backlinks":     backlinks,
+		"linkRefsCount": linkRefsCount,
+		"backmentions":  backmentions,
+		"mentionsCount": mentionsCount,
+		"k":             keyword,
+		"mk":            mentionKeyword,
+		"box":           boxID,
+	}
 }
 
 func getBacklink(c *gin.Context) {
@@ -54,8 +152,15 @@ func getBacklink(c *gin.Context) {
 	id := arg["id"].(string)
 	keyword := arg["k"].(string)
 	mentionKeyword := arg["mk"].(string)
-	beforeLen := arg["beforeLen"].(float64)
-	boxID, backlinks, backmentions, linkRefsCount, mentionsCount := model.BuildTreeBacklink(id, keyword, mentionKeyword, int(beforeLen))
+	beforeLen := 12
+	if nil != arg["beforeLen"] {
+		beforeLen = int(arg["beforeLen"].(float64))
+	}
+	containChildren := model.Conf.Editor.BacklinkContainChildren
+	if val, ok := arg["containChildren"]; ok {
+		containChildren = val.(bool)
+	}
+	boxID, backlinks, backmentions, linkRefsCount, mentionsCount := model.GetBacklink(id, keyword, mentionKeyword, beforeLen, containChildren)
 	ret.Data = map[string]interface{}{
 		"backlinks":     backlinks,
 		"linkRefsCount": linkRefsCount,
@@ -66,31 +171,4 @@ func getBacklink(c *gin.Context) {
 		"box":           boxID,
 	}
 	util.RandomSleep(200, 500)
-}
-
-func createBacklink(c *gin.Context) {
-	ret := gulu.Ret.NewResult()
-	defer c.JSON(http.StatusOK, ret)
-
-	arg, ok := util.JsonArg(c, ret)
-	if !ok {
-		return
-	}
-
-	defID := arg["defID"].(string)
-	refID := arg["refID"].(string)
-	refText := arg["refText"].(string)
-	isDynamic := arg["isDynamic"].(bool)
-	refRootID, err := model.CreateBacklink(defID, refID, refText, isDynamic)
-	if nil != err {
-		ret.Code = -1
-		ret.Msg = err.Error()
-		return
-	}
-	ret.Data = map[string]interface{}{
-		"defID":     defID,
-		"refID":     refID,
-		"refRootID": refRootID,
-		"refText":   refText,
-	}
 }

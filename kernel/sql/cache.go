@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,48 +17,59 @@
 package sql
 
 import (
-	"runtime/debug"
+	"strings"
 	"time"
 
 	"github.com/88250/lute/ast"
 	"github.com/88250/lute/parse"
 	"github.com/dgraph-io/ristretto"
+	"github.com/jinzhu/copier"
 	gcache "github.com/patrickmn/go-cache"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/search"
 )
 
-var memCache, _ = ristretto.NewCache(&ristretto.Config{
-	NumCounters: 100000,           // 10W
-	MaxCost:     1024 * 1024 * 10, // 10MB
+var cacheDisabled = true
+
+func enableCache() {
+	cacheDisabled = false
+}
+
+func disableCache() {
+	cacheDisabled = true
+}
+
+var blockCache, _ = ristretto.NewCache(&ristretto.Config{
+	NumCounters: 102400,
+	MaxCost:     10240,
 	BufferItems: 64,
 })
-var disabled = true
 
-func EnableCache() {
-	disabled = false
-}
-
-func DisableCache() {
-	disabled = true
-}
-
-func ClearBlockCache() {
-	memCache.Clear()
-	debug.FreeOSMemory()
+func ClearCache() {
+	blockCache.Clear()
 }
 
 func putBlockCache(block *Block) {
-	if disabled {
+	if cacheDisabled {
 		return
 	}
-	memCache.Set(block.ID, block, 1)
+
+	cloned := &Block{}
+	if err := copier.Copy(cloned, block); err != nil {
+		logging.LogErrorf("clone block failed: %v", err)
+		return
+	}
+	cloned.Content = strings.ReplaceAll(cloned.Content, search.SearchMarkLeft, "")
+	cloned.Content = strings.ReplaceAll(cloned.Content, search.SearchMarkRight, "")
+	blockCache.Set(cloned.ID, cloned, 1)
 }
 
 func getBlockCache(id string) (ret *Block) {
-	if disabled {
+	if cacheDisabled {
 		return
 	}
 
-	b, _ := memCache.Get(id)
+	b, _ := blockCache.Get(id)
 	if nil != b {
 		ret = b.(*Block)
 	}
@@ -66,32 +77,11 @@ func getBlockCache(id string) (ret *Block) {
 }
 
 func removeBlockCache(id string) {
-	memCache.Del(id)
+	blockCache.Del(id)
 	removeRefCacheByDefID(id)
 }
 
-func getVirtualRefKeywordsCache() ([]string, bool) {
-	if disabled {
-		return nil, false
-	}
-
-	if val, ok := memCache.Get("virtual_ref"); ok {
-		return val.([]string), true
-	}
-	return nil, false
-}
-
-func setVirtualRefKeywords(keywords []string) {
-	if disabled {
-		return
-	}
-
-	memCache.Set("virtual_ref", keywords, 1)
-}
-
-func ClearVirtualRefKeywords() {
-	memCache.Del("virtual_ref")
-}
+var defIDRefsCache = gcache.New(30*time.Minute, 5*time.Minute) // [defBlockID]map[refBlockID]*Ref
 
 func GetRefsCacheByDefID(defID string) (ret []*Ref) {
 	for defBlockID, refs := range defIDRefsCache.Items() {
@@ -110,12 +100,8 @@ func GetRefsCacheByDefID(defID string) (ret []*Ref) {
 	return
 }
 
-var (
-	defIDRefsCache = gcache.New(30*time.Minute, 5*time.Minute) // [defBlockID]map[refBlockID]*Ref
-)
-
-func CacheRef(tree *parse.Tree, refIDNode *ast.Node) {
-	ref := buildRef(tree, refIDNode)
+func CacheRef(tree *parse.Tree, refNode *ast.Node) {
+	ref := buildRef(tree, refNode)
 	putRefCache(ref)
 }
 

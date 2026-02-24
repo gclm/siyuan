@@ -1,11 +1,12 @@
 {
 	"ID": "20210505164949-c085p1d",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20210505164949-c085p1d",
 		"title": "Web Clipping",
 		"type": "doc",
-		"updated": "20211019235241"
+		"updated": "20230621111806"
 	},
 	"Children": [
 		{
@@ -64,7 +65,7 @@
 			"ListData": {},
 			"Properties": {
 				"id": "20210505165011-7ik6g6y",
-				"updated": "20211019235222"
+				"updated": "20230621111806"
 			},
 			"Children": [
 				{
@@ -103,7 +104,7 @@
 					},
 					"Properties": {
 						"id": "20210505165011-h6wqx9o",
-						"updated": "20211019235222"
+						"updated": "20230621111806"
 					},
 					"Children": [
 						{
@@ -111,7 +112,7 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20210505165011-crzzegk",
-								"updated": "20211019235222"
+								"updated": "20230621111806"
 							},
 							"Children": [
 								{
@@ -119,30 +120,10 @@
 									"Data": "If you need to pull the pictures contained in the clipped content to the local, you can use "
 								},
 								{
-									"Type": "NodeLink",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeOpenBracket"
-										},
-										{
-											"Type": "NodeLinkText",
-											"Data": "SiYuan Chome Extension"
-										},
-										{
-											"Type": "NodeCloseBracket"
-										},
-										{
-											"Type": "NodeOpenParen"
-										},
-										{
-											"Type": "NodeLinkDest",
-											"Data": "https://ld246.com/article/1629423901669"
-										},
-										{
-											"Type": "NodeCloseParen"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://liuyun.io/article/1692529862454",
+									"TextMarkTextContent": "SiYuan Chrome Extension"
 								}
 							]
 						}

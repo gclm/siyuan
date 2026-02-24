@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -21,6 +21,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/hex"
+
+	"github.com/siyuan-note/logging"
 )
 
 var SK = []byte("696D897C9AA0611B")
@@ -29,14 +31,14 @@ func AESEncrypt(str string) string {
 	buf := &bytes.Buffer{}
 	buf.Grow(4096)
 	_, err := hex.NewEncoder(buf).Write([]byte(str))
-	if nil != err {
-		LogErrorf("encrypt failed: %s", err)
+	if err != nil {
+		logging.LogErrorf("encrypt failed: %s", err)
 		return ""
 	}
 	data := buf.Bytes()
 	block, err := aes.NewCipher(SK)
-	if nil != err {
-		LogErrorf("encrypt failed: %s", err)
+	if err != nil {
+		logging.LogErrorf("encrypt failed: %s", err)
 		return ""
 	}
 	cbc := cipher.NewCBCEncrypter(block, []byte("RandomInitVector"))
@@ -55,13 +57,13 @@ func pkcs5Padding(ciphertext []byte, blockSize int) []byte {
 
 func AESDecrypt(cryptStr string) []byte {
 	crypt, err := hex.DecodeString(cryptStr)
-	if nil != err {
-		LogErrorf("decrypt failed: %s", err)
+	if err != nil {
+		logging.LogErrorf("decrypt failed: %s", err)
 		return nil
 	}
 
 	block, err := aes.NewCipher(SK)
-	if nil != err {
+	if err != nil {
 		return nil
 	}
 	cbc := cipher.NewCBCDecrypter(block, []byte("RandomInitVector"))

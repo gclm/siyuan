@@ -1,10 +1,12 @@
 {
 	"ID": "20211226123241-51pujtr",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20211226123241-51pujtr",
 		"title": "剪藏",
-		"updated": "20211228142803"
+		"type": "doc",
+		"updated": "20230630112320"
 	},
 	"Children": [
 		{
@@ -13,7 +15,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226123253-t5g675w",
-				"updated": "20211226014655"
+				"updated": "20230630112320"
 			},
 			"Children": [
 				{
@@ -57,7 +59,7 @@
 			"ListData": {},
 			"Properties": {
 				"id": "20211226123253-w0g1yfz",
-				"updated": "20211228142803"
+				"updated": "20230621111802"
 			},
 			"Children": [
 				{
@@ -97,7 +99,7 @@
 					},
 					"Properties": {
 						"id": "20211226123253-w41egg7",
-						"updated": "20211228142803"
+						"updated": "20230621111802"
 					},
 					"Children": [
 						{
@@ -105,7 +107,7 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226123253-526m8gm",
-								"updated": "20211228142803"
+								"updated": "20230621111802"
 							},
 							"Children": [
 								{
@@ -113,30 +115,10 @@
 									"Data": "如果需要將剪藏內容中包含的圖片拉取到本地，可使用"
 								},
 								{
-									"Type": "NodeLink",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeOpenBracket"
-										},
-										{
-											"Type": "NodeLinkText",
-											"Data": "思源 Chome 擴充"
-										},
-										{
-											"Type": "NodeCloseBracket"
-										},
-										{
-											"Type": "NodeOpenParen"
-										},
-										{
-											"Type": "NodeLinkDest",
-											"Data": "https://ld246.com/article/1629423901669"
-										},
-										{
-											"Type": "NodeCloseParen"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://ld246.com/article/1629423901669",
+									"TextMarkTextContent": "思源 Chrome 擴充"
 								}
 							]
 						}

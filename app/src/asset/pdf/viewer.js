@@ -13,216 +13,282 @@
  * limitations under the License.
  */
 
-import { AppOptions } from './app_options.js'
-import { PDFViewerApplication } from './app.js'
-import { initAnno } from '../anno'
+import {RenderingStates, ScrollMode, SpreadMode, TextLayerMode} from "./ui_utils.js";
+import { AppOptions } from "./app_options.js";
+import { LinkTarget } from "./pdf_link_service.js";
+import { PDFViewerApplication } from "./app.js";
+import {Constants} from "../../constants";
+import {initAnno} from "../anno";
+import {AnnotationEditorType} from "./pdfjs";
 
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion =
-  typeof PDFJSDev !== 'undefined' ? PDFJSDev.eval('BUNDLE_VERSION') : void 0
+  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_VERSION") : void 0;
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsBuild =
-  typeof PDFJSDev !== 'undefined' ? PDFJSDev.eval('BUNDLE_BUILD') : void 0
+  typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_BUILD") : void 0;
 
-window.PDFViewerApplication = PDFViewerApplication
-window.PDFViewerApplicationOptions = AppOptions
+const AppConstants =
+  typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")
+    ? { LinkTarget, RenderingStates, ScrollMode, SpreadMode }
+    : null;
 
-if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
-  var defaultUrl; // eslint-disable-line no-var
+// NOTE
+// window.PDFViewerApplication = PDFViewerApplication;
+// window.PDFViewerApplicationConstants = AppConstants;
+// window.PDFViewerApplicationOptions = AppOptions;
 
-  (function rewriteUrlClosure () {
-    // Run this code outside DOMContentLoaded to make sure that the URL
-    // is rewritten as soon as possible.
-    const queryString = document.location.search.slice(1)
-    const m = /(^|&)file=([^&]*)/.exec(queryString)
-    defaultUrl = m ? decodeURIComponent(m[2]) : ''
-
-    // Example: chrome-extension://.../http://example.com/file.pdf
-    const humanReadableUrl = '/' + defaultUrl + location.hash
-    history.replaceState(history.state, '', humanReadableUrl)
-    if (top === window) {
-      // eslint-disable-next-line no-undef
-      chrome.runtime.sendMessage('showPageAction')
-    }
-  })()
-}
-
-function getViewerConfiguration (element) {
-  let errorWrapper = null
-  if (typeof PDFJSDev === 'undefined' || !PDFJSDev.test('MOZCENTRAL')) {
-    errorWrapper = {
-      container: element.querySelector('#errorWrapper'),
-      errorMessage: element.querySelector('#errorMessage'),
-      closeButton: element.querySelector('#errorClose'),
-      errorMoreInfo: element.querySelector('#errorMoreInfo'),
-      moreInfoButton: element.querySelector('#errorShowMore'),
-      lessInfoButton: element.querySelector('#errorShowLess'),
-    }
-  }
-
+function getViewerConfiguration(element) {
+  // NOTE
   return {
     appContainer: element,
-    mainContainer: element.querySelector('#viewerContainer'),
-    viewerContainer: element.querySelector('#viewer'),
+    principalContainer: element.querySelector("#mainContainer"),
+    mainContainer: element.querySelector("#viewerContainer"),
+    viewerContainer: element.querySelector("#viewer"),
     toolbar: {
-      rectAnno: element.querySelector('#rectAnno'),
-      container: element.querySelector('#toolbarViewer'),
-      numPages: element.querySelector('#numPages'),
-      pageNumber: element.querySelector('#pageNumber'),
-      scaleSelect: element.querySelector('#scaleSelect'),
-      customScaleOption: element.querySelector('#customScaleOption'),
-      previous: element.querySelector('#previous'),
-      next: element.querySelector('#next'),
-      zoomIn: element.querySelector('#zoomIn'),
-      zoomOut: element.querySelector('#zoomOut'),
-      viewFind: element.querySelector('#viewFind'),
-      openFile: element.querySelector('#openFile'),
-      print: element.querySelector('#print'),
-      presentationModeButton: element.querySelector('#presentationMode'),
-      download: element.querySelector('#download'),
-      viewBookmark: element.querySelector('#viewBookmark'),
+      rectAnno: element.querySelector("#rectAnno"),
+      container: element.querySelector("#toolbarContainer"),
+      numPages: element.querySelector("#numPages"),
+      pageNumber: element.querySelector("#pageNumber"),
+      scaleSelect: element.querySelector("#scaleSelect"),
+      customScaleOption: element.querySelector("#customScaleOption"),
+      previous: element.querySelector("#previous"),
+      next: element.querySelector("#next"),
+      zoomIn: element.querySelector("#zoomInButton"),
+      zoomOut: element.querySelector("#zoomOutButton"),
+      print: element.querySelector("#printButton"),
+      editorFreeTextButton: element.querySelector("#editorFreeTextButton"),
+      editorFreeTextParamsToolbar: element.querySelector(
+        "#editorFreeTextParamsToolbar"
+      ),
+      editorHighlightButton: element.querySelector("#editorHighlightButton"),
+      editorHighlightParamsToolbar: element.querySelector(
+        "#editorHighlightParamsToolbar"
+      ),
+      editorHighlightColorPicker: element.querySelector(
+        "#editorHighlightColorPicker"
+      ),
+      editorInkButton: element.querySelector("#editorInkButton"),
+      editorInkParamsToolbar: element.querySelector("#editorInkParamsToolbar"),
+      editorStampButton: element.querySelector("#editorStampButton"),
+      editorStampParamsToolbar: element.querySelector(
+        "#editorStampParamsToolbar"
+      ),
+      download: element.querySelector("#downloadButton"),
     },
     secondaryToolbar: {
-      toolbar: element.querySelector('#secondaryToolbar'),
-      toggleButton: element.querySelector('#secondaryToolbarToggle'),
-      toolbarButtonContainer: element.querySelector(
-        '#secondaryToolbarButtonContainer'),
-      presentationModeButton: element.querySelector(
-        '#secondaryPresentationMode'),
-      openFileButton: element.querySelector('#secondaryOpenFile'),
-      printButton: element.querySelector('#secondaryPrint'),
-      downloadButton: element.querySelector('#secondaryDownload'),
-      viewBookmarkButton: element.querySelector('#secondaryViewBookmark'),
-      firstPageButton: element.querySelector('#firstPage'),
-      lastPageButton: element.querySelector('#lastPage'),
-      pageRotateCwButton: element.querySelector('#pageRotateCw'),
-      pageRotateCcwButton: element.querySelector('#pageRotateCcw'),
-      cursorSelectToolButton: element.querySelector('#cursorSelectTool'),
-      cursorHandToolButton: element.querySelector('#cursorHandTool'),
-      scrollPageButton: element.querySelector('#scrollPage'),
-      scrollVerticalButton: element.querySelector('#scrollVertical'),
-      scrollHorizontalButton: element.querySelector('#scrollHorizontal'),
-      scrollWrappedButton: element.querySelector('#scrollWrapped'),
-      spreadNoneButton: element.querySelector('#spreadNone'),
-      spreadOddButton: element.querySelector('#spreadOdd'),
-      spreadEvenButton: element.querySelector('#spreadEven'),
-      documentPropertiesButton: element.querySelector('#documentProperties'),
+      toolbar: element.querySelector("#secondaryToolbar"),
+      toggleButton: element.querySelector("#secondaryToolbarToggleButton"),
+      presentationModeButton: element.querySelector("#presentationMode"),
+      openFileButton:
+        typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")
+          ? element.querySelector("#secondaryOpenFile")
+          : null,
+      printButton: element.querySelector("#secondaryPrint"),
+      downloadButton: element.querySelector("#secondaryDownload"),
+      viewBookmarkButton: element.querySelector("#viewBookmark"),
+      firstPageButton: element.querySelector("#firstPage"),
+      lastPageButton: element.querySelector("#lastPage"),
+      pageRotateCwButton: element.querySelector("#pageRotateCw"),
+      pageRotateCcwButton: element.querySelector("#pageRotateCcw"),
+      cursorSelectToolButton: element.querySelector("#cursorSelectTool"),
+      cursorHandToolButton: element.querySelector("#cursorHandTool"),
+      scrollPageButton: element.querySelector("#scrollPage"),
+      scrollVerticalButton: element.querySelector("#scrollVertical"),
+      scrollHorizontalButton: element.querySelector("#scrollHorizontal"),
+      scrollWrappedButton: element.querySelector("#scrollWrapped"),
+      spreadNoneButton: element.querySelector("#spreadNone"),
+      spreadOddButton: element.querySelector("#spreadOdd"),
+      spreadEvenButton: element.querySelector("#spreadEven"),
+      imageAltTextSettingsButton: element.querySelector(
+        "#imageAltTextSettings"
+      ),
+      imageAltTextSettingsSeparator: element.querySelector(
+        "#imageAltTextSettingsSeparator"
+      ),
+      documentPropertiesButton: element.querySelector("#documentProperties"),
     },
     sidebar: {
       // Divs (and sidebar button)
-      outerContainer: element.querySelector('#outerContainer'),
-      viewerContainer: element.querySelector('#viewerContainer'),
-      toggleButton: element.querySelector('#sidebarToggle'),
+      outerContainer: element.querySelector("#outerContainer"),
+      sidebarContainer: element.querySelector("#sidebarContainer"),
+      toggleButton: element.querySelector("#sidebarToggleButton"),
+      resizer: element.querySelector("#sidebarResizer"),
       // Buttons
-      thumbnailButton: element.querySelector('#viewThumbnail'),
-      outlineButton: element.querySelector('#viewOutline'),
-      attachmentsButton: element.querySelector('#viewAttachments'),
-      layersButton: element.querySelector('#viewLayers'),
+      thumbnailButton: element.querySelector("#viewThumbnail"),
+      outlineButton: element.querySelector("#viewOutline"),
+      attachmentsButton: element.querySelector("#viewAttachments"),
+      layersButton: element.querySelector("#viewLayers"),
       // Views
-      thumbnailView: element.querySelector('#thumbnailView'),
-      outlineView: element.querySelector('#outlineView'),
-      attachmentsView: element.querySelector('#attachmentsView'),
-      layersView: element.querySelector('#layersView'),
+      thumbnailView: element.querySelector("#thumbnailView"),
+      outlineView: element.querySelector("#outlineView"),
+      attachmentsView: element.querySelector("#attachmentsView"),
+      layersView: element.querySelector("#layersView"),
       // View-specific options
-      outlineOptionsContainer: element.querySelector(
-        '#outlineOptionsContainer'),
-      currentOutlineItemButton: element.querySelector('#currentOutlineItem'),
-    },
-    sidebarResizer: {
-      outerContainer: element.querySelector('#outerContainer'),
-      resizer: element.querySelector('#sidebarResizer'),
+      currentOutlineItemButton: element.querySelector("#currentOutlineItem"),
     },
     findBar: {
-      bar: element.querySelector('#findbar'),
-      toggleButton: element.querySelector('#viewFind'),
-      findField: element.querySelector('#findInput'),
-      highlightAllCheckbox: element.querySelector('#findHighlightAll'),
-      caseSensitiveCheckbox: element.querySelector('#findMatchCase'),
-      matchDiacriticsCheckbox: element.querySelector('#findMatchDiacritics'),
-      entireWordCheckbox: element.querySelector('#findEntireWord'),
-      findMsg: element.querySelector('#findMsg'),
-      findResultsCount: element.querySelector('#findResultsCount'),
-      findPreviousButton: element.querySelector('#findPrevious'),
-      findNextButton: element.querySelector('#findNext'),
+      bar: element.querySelector("#findbar"),
+      toggleButton: element.querySelector("#viewFindButton"),
+      findField: element.querySelector("#findInput"),
+      highlightAllCheckbox: element.querySelector("#findHighlightAll"),
+      caseSensitiveCheckbox: element.querySelector("#findMatchCase"),
+      matchDiacriticsCheckbox: element.querySelector("#findMatchDiacritics"),
+      entireWordCheckbox: element.querySelector("#findEntireWord"),
+      findMsg: element.querySelector("#findMsg"),
+      findResultsCount: element.querySelector("#findResultsCount"),
+      findPreviousButton: element.querySelector("#findPreviousButton"),
+      findNextButton: element.querySelector("#findNextButton"),
     },
     passwordOverlay: {
-      overlayName: 'passwordOverlay',
-      container: element.querySelector('#passwordOverlay'),
-      label: element.querySelector('#passwordText'),
-      input: element.querySelector('#password'),
-      submitButton: element.querySelector('#passwordSubmit'),
-      cancelButton: element.querySelector('#passwordCancel'),
+      dialog: element.querySelector("#passwordDialog"),
+      label: element.querySelector("#passwordText"),
+      input: element.querySelector("#password"),
+      submitButton: element.querySelector("#passwordSubmit"),
+      cancelButton: element.querySelector("#passwordCancel"),
     },
     documentProperties: {
-      overlayName: 'documentPropertiesOverlay',
-      container: element.querySelector('#documentPropertiesOverlay'),
-      closeButton: element.querySelector('#documentPropertiesClose'),
+      dialog: element.querySelector("#documentPropertiesDialog"),
+      closeButton: element.querySelector("#documentPropertiesClose"),
       fields: {
-        fileName: element.querySelector('#fileNameField'),
-        fileSize: element.querySelector('#fileSizeField'),
-        title: element.querySelector('#titleField'),
-        author: element.querySelector('#authorField'),
-        subject: element.querySelector('#subjectField'),
-        keywords: element.querySelector('#keywordsField'),
-        creationDate: element.querySelector('#creationDateField'),
-        modificationDate: element.querySelector('#modificationDateField'),
-        creator: element.querySelector('#creatorField'),
-        producer: element.querySelector('#producerField'),
-        version: element.querySelector('#versionField'),
-        pageCount: element.querySelector('#pageCountField'),
-        pageSize: element.querySelector('#pageSizeField'),
-        linearized: element.querySelector('#linearizedField'),
+        fileName: element.querySelector("#fileNameField"),
+        fileSize: element.querySelector("#fileSizeField"),
+        title: element.querySelector("#titleField"),
+        author: element.querySelector("#authorField"),
+        subject: element.querySelector("#subjectField"),
+        keywords: element.querySelector("#keywordsField"),
+        creationDate: element.querySelector("#creationDateField"),
+        modificationDate: element.querySelector("#modificationDateField"),
+        creator: element.querySelector("#creatorField"),
+        producer: element.querySelector("#producerField"),
+        version: element.querySelector("#versionField"),
+        pageCount: element.querySelector("#pageCountField"),
+        pageSize: element.querySelector("#pageSizeField"),
+        linearized: element.querySelector("#linearizedField"),
       },
     },
-    errorWrapper,
-    printContainer: element.querySelector('#printContainer'),
-    openFileInputName: 'fileInput',
-    debuggerScriptPath: './debugger.js',
-  }
+    altTextDialog: {
+      dialog: element.querySelector("#altTextDialog"),
+      optionDescription: element.querySelector("#descriptionButton"),
+      optionDecorative: element.querySelector("#decorativeButton"),
+      textarea: element.querySelector("#descriptionTextarea"),
+      cancelButton: element.querySelector("#altTextCancel"),
+      saveButton: element.querySelector("#altTextSave"),
+    },
+    newAltTextDialog: {
+      dialog: element.querySelector("#newAltTextDialog"),
+      title: element.querySelector("#newAltTextTitle"),
+      descriptionContainer: element.querySelector(
+        "#newAltTextDescriptionContainer"
+      ),
+      textarea: element.querySelector("#newAltTextDescriptionTextarea"),
+      disclaimer: element.querySelector("#newAltTextDisclaimer"),
+      learnMore: element.querySelector("#newAltTextLearnMore"),
+      imagePreview: element.querySelector("#newAltTextImagePreview"),
+      createAutomatically: element.querySelector(
+        "#newAltTextCreateAutomatically"
+      ),
+      createAutomaticallyButton: element.querySelector(
+        "#newAltTextCreateAutomaticallyButton"
+      ),
+      downloadModel: element.querySelector("#newAltTextDownloadModel"),
+      downloadModelDescription: element.querySelector(
+        "#newAltTextDownloadModelDescription"
+      ),
+      error: element.querySelector("#newAltTextError"),
+      errorCloseButton: element.querySelector("#newAltTextCloseButton"),
+      cancelButton: element.querySelector("#newAltTextCancel"),
+      notNowButton: element.querySelector("#newAltTextNotNow"),
+      saveButton: element.querySelector("#newAltTextSave"),
+    },
+    altTextSettingsDialog: {
+      dialog: element.querySelector("#altTextSettingsDialog"),
+      createModelButton: element.querySelector("#createModelButton"),
+      aiModelSettings: element.querySelector("#aiModelSettings"),
+      learnMore: element.querySelector("#altTextSettingsLearnMore"),
+      deleteModelButton: element.querySelector("#deleteModelButton"),
+      downloadModelButton: element.querySelector("#downloadModelButton"),
+      showAltTextDialogButton: element.querySelector(
+        "#showAltTextDialogButton"
+      ),
+      altTextSettingsCloseButton: element.querySelector(
+        "#altTextSettingsCloseButton"
+      ),
+      closeButton: element.querySelector("#altTextSettingsCloseButton"),
+    },
+    annotationEditorParams: {
+      editorFreeTextFontSize: element.querySelector("#editorFreeTextFontSize"),
+      editorFreeTextColor: element.querySelector("#editorFreeTextColor"),
+      editorInkColor: element.querySelector("#editorInkColor"),
+      editorInkThickness: element.querySelector("#editorInkThickness"),
+      editorInkOpacity: element.querySelector("#editorInkOpacity"),
+      editorStampAddImage: element.querySelector("#editorStampAddImage"),
+      editorFreeHighlightThickness: element.querySelector(
+        "#editorFreeHighlightThickness"
+      ),
+      editorHighlightShowAll: element.querySelector("#editorHighlightShowAll"),
+    },
+    printContainer: element.querySelector("#printContainer"),
+  };
 }
 
 // NOTE
-function webViewerLoad (file, element, pdfPage, annoId) {
+function webViewerLoad(file, element, pdfPage, annoId) {
+  AppOptions.set("workerSrc", `${Constants.PROTYLE_CDN}/js/pdf/pdf.worker.min.mjs?v=4.7.85`);
+  AppOptions.set("defaultUrl", file);
+  AppOptions.set("cMapUrl", 'cmaps/');
+  AppOptions.set("standardFontDataUrl", 'standard_fonts/');
+  AppOptions.set("annotationEditorMode", AnnotationEditorType.DISABLE);
   const pdf = new PDFViewerApplication(pdfPage)
   pdf.annoId = annoId
-  const config = getViewerConfiguration(element)
-  if (typeof PDFJSDev === 'undefined' || !PDFJSDev.test('PRODUCTION')) {
-    config.file = file
-  } else {
-    if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('CHROME')) {
-      AppOptions.set('defaultUrl', defaultUrl)
-    }
-
-    if (typeof PDFJSDev !== 'undefined' && PDFJSDev.test('GENERIC')) {
-      // Give custom implementations of the default viewer a simpler way to
-      // set various `AppOptions`, by dispatching an event once all viewer
-      // files are loaded but *before* the viewer initialization has run.
-      const event = document.createEvent('CustomEvent')
-      event.initCustomEvent('webviewerloaded', true, true, {
+  const config = getViewerConfiguration(element);
+  config.file = file;
+  if (typeof PDFJSDev !== "undefined" && PDFJSDev.test("GENERIC")) {
+    // Give custom implementations of the default viewer a simpler way to
+    // set various `AppOptions`, by dispatching an event once all viewer
+    // files are loaded but *before* the viewer initialization has run.
+    const event = new CustomEvent("webviewerloaded", {
+      bubbles: true,
+      cancelable: true,
+      detail: {
         source: window,
-      })
-      try {
-        // Attempt to dispatch the event at the embedding `document`,
-        // in order to support cases where the viewer is embedded in
-        // a *dynamically* created <iframe> element.
-        parent.document.dispatchEvent(event)
-      } catch (ex) {
-        // The viewer could be in e.g. a cross-origin <iframe> element,
-        // fallback to dispatching the event at the current `document`.
-        console.error(`webviewerloaded: ${ex}`)
-        document.dispatchEvent(event)
-      }
+      },
+    });
+    try {
+      // Attempt to dispatch the event at the embedding `document`,
+      // in order to support cases where the viewer is embedded in
+      // a *dynamically* created <iframe> element.
+      parent.document.dispatchEvent(event);
+    } catch (ex) {
+      // The viewer could be in e.g. a cross-origin <iframe> element,
+      // fallback to dispatching the event at the current `document`.
+      console.error(`webviewerloaded: ${ex}`);
+      document.dispatchEvent(event);
     }
   }
-  pdf.run(config)
-  initAnno(file, element, annoId, pdf, config);
+  pdf.run(config);
+  initAnno(element, pdf);
   return pdf
 }
 
 // Block the "load" event until all pages are loaded, to ensure that printing
 // works in Firefox; see https://bugzilla.mozilla.org/show_bug.cgi?id=1618553
-if (document.blockUnblockOnload) {
-  document.blockUnblockOnload(true)
-}
+document.blockUnblockOnload?.(true);
 
-export { PDFViewerApplication, webViewerLoad }
+// NOTE
+// if (
+//   document.readyState === "interactive" ||
+//   document.readyState === "complete"
+// ) {
+//   webViewerLoad();
+// } else {
+//   document.addEventListener("DOMContentLoaded", webViewerLoad, true);
+// }
+
+// NOTE
+export {
+  // PDFViewerApplication,
+  // AppConstants as PDFViewerApplicationConstants,
+  // AppOptions as PDFViewerApplicationOptions,
+  webViewerLoad
+};

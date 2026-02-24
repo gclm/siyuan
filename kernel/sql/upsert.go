@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,13 +17,22 @@
 package sql
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"database/sql"
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
 	"strings"
+	"sync"
 
+	"github.com/88250/gulu"
 	"github.com/88250/lute/parse"
 	"github.com/emirpasic/gods/sets/hashset"
-	"github.com/siyuan-note/siyuan/kernel/treenode"
+	ignore "github.com/sabhiram/go-gitignore"
+	"github.com/siyuan-note/eventbus"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
@@ -31,19 +40,6 @@ var luteEngine = util.NewLute()
 
 func init() {
 	luteEngine.RenderOptions.KramdownBlockIAL = false // 数据库 markdown 字段为标准 md，但是要保留 span block ial
-}
-
-func InsertBlocksSpans(tx *sql.Tx, tree *parse.Tree) (err error) {
-	if err = insertBlocksSpans(tx, tree); nil != err {
-		util.LogErrorf("insert tree [%s] into database failed: %s", tree.Box+tree.Path, err)
-	}
-	return
-}
-
-func InsertRefs(tx *sql.Tx, tree *parse.Tree) {
-	if err := insertRef(tx, tree); nil != err {
-		util.LogErrorf("insert refs tree [%s] into database failed: %s", tree.Box+tree.Path, err)
-	}
 }
 
 const (
@@ -61,7 +57,7 @@ const (
 	FileAnnotationRefsPlaceholder = "(?, ?, ?, ?, ?, ?, ?, ?, ?)"
 )
 
-func insertBlocks(tx *sql.Tx, blocks []*Block) (err error) {
+func insertBlocks(tx *sql.Tx, blocks []*Block, context map[string]interface{}) (err error) {
 	if 1 > len(blocks) {
 		return
 	}
@@ -73,22 +69,23 @@ func insertBlocks(tx *sql.Tx, blocks []*Block) (err error) {
 			continue
 		}
 
-		if err = insertBlocks0(tx, bulk); nil != err {
+		if err = insertBlocks0(tx, bulk, context); err != nil {
 			return
 		}
 		bulk = []*Block{}
 	}
 	if 0 < len(bulk) {
-		if err = insertBlocks0(tx, bulk); nil != err {
+		if err = insertBlocks0(tx, bulk, context); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func insertBlocks0(tx *sql.Tx, bulk []*Block) (err error) {
+func insertBlocks0(tx *sql.Tx, bulk []*Block, context map[string]interface{}) (err error) {
 	valueStrings := make([]string, 0, len(bulk))
 	valueArgs := make([]interface{}, 0, len(bulk)*strings.Count(BlocksPlaceholder, "?"))
+	hashBuf := bytes.Buffer{}
 	for _, b := range bulk {
 		valueStrings = append(valueStrings, BlocksPlaceholder)
 		valueArgs = append(valueArgs, b.ID)
@@ -112,21 +109,34 @@ func insertBlocks0(tx *sql.Tx, bulk []*Block) (err error) {
 		valueArgs = append(valueArgs, b.Sort)
 		valueArgs = append(valueArgs, b.Created)
 		valueArgs = append(valueArgs, b.Updated)
-
 		putBlockCache(b)
+
+		hashBuf.WriteString(b.Hash)
 	}
+
 	stmt := fmt.Sprintf(BlocksInsert, strings.Join(valueStrings, ","))
-	if err = prepareExecInsertTx(tx, stmt, valueArgs); nil != err {
+	if err = prepareExecInsertTx(tx, stmt, valueArgs); err != nil {
 		return
 	}
+	hashBuf.WriteString("blocks")
+	evtHash := fmt.Sprintf("%x", sha256.Sum256(hashBuf.Bytes()))[:7]
+	// 使用下面的 EvtSQLInsertBlocksFTS 就可以了
+	//eventbus.Publish(eventbus.EvtSQLInsertBlocks, context, current, total, len(bulk), evtHash)
+
 	stmt = fmt.Sprintf(BlocksFTSInsert, strings.Join(valueStrings, ","))
-	if err = prepareExecInsertTx(tx, stmt, valueArgs); nil != err {
+	if err = prepareExecInsertTx(tx, stmt, valueArgs); err != nil {
 		return
 	}
-	stmt = fmt.Sprintf(BlocksFTSCaseInsensitiveInsert, strings.Join(valueStrings, ","))
-	if err = prepareExecInsertTx(tx, stmt, valueArgs); nil != err {
-		return
+
+	if !caseSensitive {
+		stmt = fmt.Sprintf(BlocksFTSCaseInsensitiveInsert, strings.Join(valueStrings, ","))
+		if err = prepareExecInsertTx(tx, stmt, valueArgs); err != nil {
+			return
+		}
 	}
+	hashBuf.WriteString("fts")
+	evtHash = fmt.Sprintf("%x", sha256.Sum256(hashBuf.Bytes()))[:7]
+	eventbus.Publish(eventbus.EvtSQLInsertBlocksFTS, context, len(bulk), evtHash)
 	return
 }
 
@@ -142,13 +152,13 @@ func insertAttributes(tx *sql.Tx, attributes []*Attribute) (err error) {
 			continue
 		}
 
-		if err = insertAttribute0(tx, bulk); nil != err {
+		if err = insertAttribute0(tx, bulk); err != nil {
 			return
 		}
 		bulk = []*Attribute{}
 	}
 	if 0 < len(bulk) {
-		if err = insertAttribute0(tx, bulk); nil != err {
+		if err = insertAttribute0(tx, bulk); err != nil {
 			return
 		}
 	}
@@ -190,13 +200,13 @@ func insertAssets(tx *sql.Tx, assets []*Asset) (err error) {
 			continue
 		}
 
-		if err = insertAsset0(tx, bulk); nil != err {
+		if err = insertAsset0(tx, bulk); err != nil {
 			return
 		}
 		bulk = []*Asset{}
 	}
 	if 0 < len(bulk) {
-		if err = insertAsset0(tx, bulk); nil != err {
+		if err = insertAsset0(tx, bulk); err != nil {
 			return
 		}
 	}
@@ -239,13 +249,13 @@ func insertSpans(tx *sql.Tx, spans []*Span) (err error) {
 			continue
 		}
 
-		if err = insertSpans0(tx, bulk); nil != err {
+		if err = insertSpans0(tx, bulk); err != nil {
 			return
 		}
 		bulk = []*Span{}
 	}
 	if 0 < len(bulk) {
-		if err = insertSpans0(tx, bulk); nil != err {
+		if err = insertSpans0(tx, bulk); err != nil {
 			return
 		}
 	}
@@ -276,7 +286,7 @@ func insertSpans0(tx *sql.Tx, bulk []*Span) (err error) {
 	return
 }
 
-func insertRefs(tx *sql.Tx, refs []*Ref) (err error) {
+func insertBlockRefs(tx *sql.Tx, refs []*Ref) (err error) {
 	if 1 > len(refs) {
 		return
 	}
@@ -288,13 +298,13 @@ func insertRefs(tx *sql.Tx, refs []*Ref) (err error) {
 			continue
 		}
 
-		if err = insertRefs0(tx, bulk); nil != err {
+		if err = insertRefs0(tx, bulk); err != nil {
 			return
 		}
 		bulk = []*Ref{}
 	}
 	if 0 < len(bulk) {
-		if err = insertRefs0(tx, bulk); nil != err {
+		if err = insertRefs0(tx, bulk); err != nil {
 			return
 		}
 	}
@@ -342,13 +352,13 @@ func insertFileAnnotationRefs(tx *sql.Tx, refs []*FileAnnotationRef) (err error)
 			continue
 		}
 
-		if err = insertFileAnnotationRefs0(tx, bulk); nil != err {
+		if err = insertFileAnnotationRefs0(tx, bulk); err != nil {
 			return
 		}
 		bulk = []*FileAnnotationRef{}
 	}
 	if 0 < len(bulk) {
-		if err = insertFileAnnotationRefs0(tx, bulk); nil != err {
+		if err = insertFileAnnotationRefs0(tx, bulk); err != nil {
 			return
 		}
 	}
@@ -379,35 +389,14 @@ func insertFileAnnotationRefs0(tx *sql.Tx, bulk []*FileAnnotationRef) (err error
 	return
 }
 
-func insertBlocksSpans(tx *sql.Tx, tree *parse.Tree) (err error) {
+func indexTree(tx *sql.Tx, tree *parse.Tree, context map[string]interface{}) (err error) {
 	blocks, spans, assets, attributes := fromTree(tree.Root, tree)
-	if err = insertBlocks(tx, blocks); nil != err {
-		return
-	}
-	if err = insertSpans(tx, spans); nil != err {
-		return
-	}
-	if err = insertAssets(tx, assets); nil != err {
-		return
-	}
-	if err = insertAttributes(tx, attributes); nil != err {
-		return
-	}
+	refs, fileAnnotationRefs := refsFromTree(tree)
+	err = insertTree0(tx, tree, context, blocks, spans, assets, attributes, refs, fileAnnotationRefs)
 	return
 }
 
-func insertRef(tx *sql.Tx, tree *parse.Tree) (err error) {
-	refs, fileAnnotationRefs := refsFromTree(tree)
-	if err = insertRefs(tx, refs); nil != err {
-		return
-	}
-	if err = insertFileAnnotationRefs(tx, fileAnnotationRefs); nil != err {
-		return
-	}
-	return err
-}
-
-func upsertTree(tx *sql.Tx, tree *parse.Tree) (err error) {
+func upsertTree(tx *sql.Tx, tree *parse.Tree, context map[string]interface{}) (err error) {
 	oldBlockHashes := queryBlockHashes(tree.ID)
 	blocks, spans, assets, attributes := fromTree(tree.Root, tree)
 	newBlockHashes := map[string]string{}
@@ -435,74 +424,118 @@ func upsertTree(tx *sql.Tx, tree *parse.Tree) (err error) {
 	for _, b := range blocks {
 		toRemoves = append(toRemoves, b.ID)
 	}
-	deleteBlocksByIDs(tx, toRemoves)
 
-	if err = deleteSpansByPathTx(tx, tree.Box, tree.Path); nil != err {
-		return
-	}
-	if err = deleteAssetsByPathTx(tx, tree.Box, tree.Path); nil != err {
-		return
-	}
-	if err = deleteAttributesByPathTx(tx, tree.Box, tree.Path); nil != err {
-		return
-	}
-	if err = deleteRefsByPathTx(tx, tree.Box, tree.Path); nil != err {
-		return
-	}
-	if err = deleteFileAnnotationRefsByPathTx(tx, tree.Box, tree.Path); nil != err {
+	if err = deleteBlocksByIDs(tx, toRemoves); err != nil {
 		return
 	}
 
-	if err = insertBlocks(tx, blocks); nil != err {
+	if err = deleteSpansByRootID(tx, tree.ID); err != nil {
 		return
 	}
-	anchors := map[string]string{}
-	var refIDs []string
-	for _, block := range blocks {
-		if "" != block.Content {
-			// content 不为空的话说明是定值，不需要解析引用内容
-			continue
-		}
-		subTree := parse.Parse("", []byte(block.Markdown), luteEngine.ParseOptions)
-		if nil == subTree {
-			util.LogErrorf("parse temp block [%s] failed: %s", block.ID, err)
-			continue
-		}
-		if 0 < len(treenode.GetLegacyDynamicBlockRefDefIDs(subTree.Root)) {
-			refIDs = append(refIDs, block.ID)
-		}
+	if err = deleteAssetsByRootID(tx, tree.ID); err != nil {
+		return
 	}
-	// 先删除再插入会快很多
-	refBlocks := GetBlocks(refIDs)
-	for _, refBlock := range refBlocks {
-		blockContent := ResolveRefContent(refBlock, &anchors)
-		refBlock.Content = blockContent
+	if err = deleteAttributesByRootID(tx, tree.ID); err != nil {
+		return
 	}
-	deleteBlocksByIDs(tx, refIDs)
-	insertBlocks(tx, refBlocks)
+	if err = deleteRefsByPathTx(tx, tree.Box, tree.Path); err != nil {
+		return
+	}
+	if err = deleteFileAnnotationRefsByPathTx(tx, tree.Box, tree.Path); err != nil {
+		return
+	}
 
 	refs, fileAnnotationRefs := refsFromTree(tree)
-	if err = insertRefs(tx, refs); nil != err {
+	if err = insertTree0(tx, tree, context, blocks, spans, assets, attributes, refs, fileAnnotationRefs); err != nil {
 		return
 	}
-	if err = insertFileAnnotationRefs(tx, fileAnnotationRefs); nil != err {
+	return err
+}
+
+func insertTree0(tx *sql.Tx, tree *parse.Tree, context map[string]interface{},
+	blocks []*Block, spans []*Span, assets []*Asset, attributes []*Attribute,
+	refs []*Ref, fileAnnotationRefs []*FileAnnotationRef) (err error) {
+	if ignoreLines := getIndexIgnoreLines(); 0 < len(ignoreLines) {
+		// Support ignore index https://github.com/siyuan-note/siyuan/issues/9198
+		matcher := ignore.CompileIgnoreLines(ignoreLines...)
+		if matcher.MatchesPath("/" + path.Join(tree.Box, tree.Path)) {
+			return
+		}
+	}
+
+	if err = insertBlocks(tx, blocks, context); err != nil {
+		return
+	}
+
+	if err = insertBlockRefs(tx, refs); err != nil {
+		return
+	}
+	if err = insertFileAnnotationRefs(tx, fileAnnotationRefs); err != nil {
 		return
 	}
 
 	if 0 < len(spans) {
 		// 移除文档标签，否则会重复添加 https://github.com/siyuan-note/siyuan/issues/3723
-		if err = deleteSpansByRootID(tx, tree.Root.ID); nil != err {
+		if err = deleteSpansByRootID(tx, tree.Root.ID); err != nil {
 			return
 		}
-		if err = insertSpans(tx, spans); nil != err {
+		if err = insertSpans(tx, spans); err != nil {
 			return
 		}
 	}
-	if err = insertAssets(tx, assets); nil != err {
+	if err = insertAssets(tx, assets); err != nil {
 		return
 	}
-	if err = insertAttributes(tx, attributes); nil != err {
+	if err = insertAttributes(tx, attributes); err != nil {
 		return
 	}
-	return err
+	return
+}
+
+var (
+	IndexIgnoreCached bool
+	indexIgnore       []string
+	indexIgnoreLock   = sync.Mutex{}
+)
+
+func getIndexIgnoreLines() (ret []string) {
+	// Support ignore index https://github.com/siyuan-note/siyuan/issues/9198
+
+	if IndexIgnoreCached {
+		return indexIgnore
+	}
+
+	indexIgnoreLock.Lock()
+	defer indexIgnoreLock.Unlock()
+
+	IndexIgnoreCached = true
+	indexIgnorePath := filepath.Join(util.DataDir, ".siyuan", "indexignore")
+	err := os.MkdirAll(filepath.Dir(indexIgnorePath), 0755)
+	if err != nil {
+		return
+	}
+	if !gulu.File.IsExist(indexIgnorePath) {
+		if err = gulu.File.WriteFileSafer(indexIgnorePath, nil, 0644); err != nil {
+			logging.LogErrorf("create indexignore [%s] failed: %s", indexIgnorePath, err)
+			return
+		}
+	}
+	data, err := os.ReadFile(indexIgnorePath)
+	if err != nil {
+		logging.LogErrorf("read indexignore [%s] failed: %s", indexIgnorePath, err)
+		return
+	}
+	dataStr := string(data)
+	dataStr = strings.ReplaceAll(dataStr, "\r\n", "\n")
+	ret = strings.Split(dataStr, "\n")
+
+	ret = gulu.Str.RemoveDuplicatedElem(ret)
+	if 0 < len(ret) && "" == ret[0] {
+		ret = ret[1:]
+	}
+	indexIgnore = nil
+	for _, line := range ret {
+		indexIgnore = append(indexIgnore, line)
+	}
+	return
 }

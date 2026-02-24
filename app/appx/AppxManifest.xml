@@ -8,16 +8,27 @@
     <!-- use single quotes to avoid double quotes escaping in the publisher value  -->
     <Identity Name="89C2A984.SiYuan"
               ProcessorArchitecture="x64"
-              Publisher='CN=087C656E-C1D9-42D8-8807-CED45A74FC0F'
-              Version="2.0.24.0"/>
+              Publisher="CN=087C656E-C1D9-42D8-8807-CED45A74FC0F"
+              Version="3.5.8.0"/>
     <Properties>
         <DisplayName>SiYuan</DisplayName>
         <PublisherDisplayName>云南链滴科技有限公司</PublisherDisplayName>
-        <Description>A local-first personal knowledge management system, supports fine-grained block-level reference, and Markdown WYSIWYG.</Description>
+        <Description>Refactor your thinking</Description>
         <Logo>assets\StoreLogo.png</Logo>
     </Properties>
     <Resources>
+        <Resource Language="ar-SA"/>
+        <Resource Language="de-DE"/>
         <Resource Language="en-US"/>
+        <Resource Language="es-ES"/>
+        <Resource Language="fr-FR"/>
+        <Resource Language="he-IL"/>
+        <Resource Language="it-IT"/>
+        <Resource Language="ja-JP"/>
+        <Resource Language="pl-PL"/>
+        <Resource Language="pt-BR"/>
+        <Resource Language="ru-RU"/>
+        <Resource Language="zh-TW"/>
         <Resource Language="zh-CN"/>
     </Resources>
     <Dependencies>
@@ -33,10 +44,8 @@
                     DisplayName="SiYuan"
                     Square150x150Logo="assets\Square150x150Logo.png"
                     Square44x44Logo="assets\Square44x44Logo.png"
-                    Description="A local-first personal knowledge management system, supports fine-grained block-level reference, and Markdown WYSIWYG.">
-
+                    Description="Refactor your thinking">
                 <uap:DefaultTile Wide310x150Logo="assets\Wide310x150Logo.png"/>
-
             </uap:VisualElements>
 
             <Extensions>

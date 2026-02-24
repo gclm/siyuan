@@ -1,24 +1,173 @@
 {
 	"ID": "20211226121633-qa2fjpl",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20211226121633-qa2fjpl",
 		"title": "圖示",
-		"updated": "20211226121706"
+		"type": "doc",
+		"updated": "20230821210641"
 	},
 	"Children": [
 		{
-			"ID": "20211226121706-w851d2z",
+			"ID": "20230418094656-xyftj25",
 			"Type": "NodeHeading",
 			"HeadingLevel": 2,
 			"Properties": {
-				"id": "20211226121706-w851d2z",
-				"updated": "20211226003711"
+				"id": "20230418094656-xyftj25",
+				"updated": "20230418094656"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "安裝"
+					"Data": "概述"
+				}
+			]
+		},
+		{
+			"ID": "20230418094656-c550ypj",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230418094656-c550ypj",
+				"updated": "20230418095450"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "圖示包可以從社區集市下載或者手動安裝。"
+				}
+			]
+		},
+		{
+			"ID": "20230418094656-t7xqmab",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20230418094656-t7xqmab",
+				"updated": "20230418094656"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "社區集市"
+				}
+			]
+		},
+		{
+			"ID": "20230418094656-bz4b34z",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230418094656-bz4b34z",
+				"updated": "20230418095512"
+			},
+			"Children": [
+				{
+					"ID": "20230418094656-xzkir4a",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230418094656-xzkir4a",
+						"updated": "20230418095512"
+					},
+					"Children": [
+						{
+							"ID": "20230418094656-b60gk4h",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230418094656-b60gk4h",
+								"updated": "20230418095512"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "在 "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設置"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "外觀"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "集市"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "圖示"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ 中在線瀏覽社區開發者貢獻的圖示"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230418094656-wrm6u7t",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230418094656-wrm6u7t",
+						"updated": "20230418095500"
+					},
+					"Children": [
+						{
+							"ID": "20230418094656-h4nnkr9",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230418094656-h4nnkr9",
+								"updated": "20230418095500"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "選擇所需圖示在線安裝或者更新"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20211226121706-w851d2z",
+			"Type": "NodeHeading",
+			"HeadingLevel": 3,
+			"Properties": {
+				"id": "20211226121706-w851d2z",
+				"updated": "20230418094733"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "手動安裝"
 				}
 			]
 		},
@@ -86,80 +235,36 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "設置"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設置"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "外觀"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "外觀"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "圖示"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "圖示"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "打開圖示文件夾"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "打開圖示文件夾"
 								}
 							]
 						}
@@ -222,60 +327,27 @@
 									"Data": "重啟後在 "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "設置"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設置"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "外觀"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "外觀"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "圖示"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "圖示"
 								},
 								{
 									"Type": "NodeText",
@@ -325,7 +397,7 @@
 			},
 			"Properties": {
 				"id": "20211226121706-eq30hv9",
-				"updated": "20211228132132"
+				"updated": "20230821210641"
 			},
 			"Children": [
 				{
@@ -355,20 +427,9 @@
 									"Data": "為你的圖示取一個好聽的名字，如 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "alice"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "alice"
 								}
 							]
 						}
@@ -397,80 +458,36 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "設置"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設置"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "外觀"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "外觀"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "圖示"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "圖示"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "打開圖示文件夾"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "打開圖示文件夾"
 								}
 							]
 						}
@@ -486,14 +503,16 @@
 						"Num": 3
 					},
 					"Properties": {
-						"id": "20211226121706-cxvhk6a"
+						"id": "20211226121706-cxvhk6a",
+						"updated": "20230821210641"
 					},
 					"Children": [
 						{
 							"ID": "20211226121706-v9ibyud",
 							"Type": "NodeParagraph",
 							"Properties": {
-								"id": "20211226121706-v9ibyud"
+								"id": "20211226121706-v9ibyud",
+								"updated": "20230821210641"
 							},
 							"Children": [
 								{
@@ -501,134 +520,40 @@
 									"Data": "在打開的文件夾中新建文件夾 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "alice"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "alice"
 								},
 								{
 									"Type": "NodeText",
-									"Data": "，在 "
+									"Data": "​，在 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "alice"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "alice"
 								},
 								{
 									"Type": "NodeText",
-									"Data": " 中新建 "
+									"Data": "​ 中新建 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "icon.js"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "icon.js"
 								},
 								{
 									"Type": "NodeText",
-									"Data": " 和 "
+									"Data": "​ 和 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "icon.json"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "icon.json"
 								},
 								{
 									"Type": "NodeText",
-									"Data": " 文件 "
-								},
-								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "icon.json"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
-								},
-								{
-									"Type": "NodeText",
-									"Data": " 文件如下："
-								}
-							]
-						},
-						{
-							"ID": "20211226121706-wsodgjf",
-							"Type": "NodeCodeBlock",
-							"IsFencedCodeBlock": true,
-							"Properties": {
-								"id": "20211226121706-wsodgjf"
-							},
-							"Children": [
-								{
-									"Type": "NodeCodeBlockFenceOpenMarker",
-									"Data": "```"
-								},
-								{
-									"Type": "NodeCodeBlockFenceInfoMarker",
-									"CodeBlockInfo": "anNvbg=="
-								},
-								{
-									"ID": "20220307092237-e74n38r",
-									"Type": "NodeCodeBlockCode",
-									"Data": "{\n  \"name\": \"alice\",\n  \"author\": \"Vanessa\",\n  \"url\": \"https://github.com/Vanessa219\",\n  \"version\": \"1.0.0\"\n}\n",
-									"Properties": {
-										"id": "20220307092237-e74n38r"
-									}
-								},
-								{
-									"Type": "NodeCodeBlockFenceCloseMarker",
-									"Data": "```"
+									"Data": "​ 文件，具體示例請參考 github repo: siyuan-note/icon-sample"
 								}
 							]
 						}
@@ -661,20 +586,9 @@
 									"Data": "打開 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "icon.js"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "icon.js"
 								},
 								{
 									"Type": "NodeText",
@@ -711,60 +625,27 @@
 									"Data": "重啟 "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "設置"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "設置"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "外觀"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "外觀"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " - "
 								},
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "圖示"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "圖示"
 								},
 								{
 									"Type": "NodeText",
@@ -797,7 +678,7 @@
 			"ListData": {},
 			"Properties": {
 				"id": "20211226121706-kvmedbk",
-				"updated": "20211228132320"
+				"updated": "20230418095424"
 			},
 			"Children": [
 				{
@@ -825,20 +706,9 @@
 									"Data": "使用瀏覽器打開圖示文件夾中的 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "index.html"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "index.html"
 								},
 								{
 									"Type": "NodeText",
@@ -908,30 +778,10 @@
 													"Data": "前往 "
 												},
 												{
-													"Type": "NodeLink",
-													"Data": "span",
-													"Children": [
-														{
-															"Type": "NodeOpenBracket"
-														},
-														{
-															"Type": "NodeLinkText",
-															"Data": "Iconfont"
-														},
-														{
-															"Type": "NodeCloseBracket"
-														},
-														{
-															"Type": "NodeOpenParen"
-														},
-														{
-															"Type": "NodeLinkDest",
-															"Data": "https://www.iconfont.cn"
-														},
-														{
-															"Type": "NodeCloseParen"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "a",
+													"TextMarkAHref": "https://www.iconfont.cn",
+													"TextMarkTextContent": "Iconfont"
 												},
 												{
 													"Type": "NodeText",
@@ -992,30 +842,10 @@
 													"Data": "前往 "
 												},
 												{
-													"Type": "NodeLink",
-													"Data": "span",
-													"Children": [
-														{
-															"Type": "NodeOpenBracket"
-														},
-														{
-															"Type": "NodeLinkText",
-															"Data": "pngtosvg"
-														},
-														{
-															"Type": "NodeCloseBracket"
-														},
-														{
-															"Type": "NodeOpenParen"
-														},
-														{
-															"Type": "NodeLinkDest",
-															"Data": "https://www.pngtosvg.com/"
-														},
-														{
-															"Type": "NodeCloseParen"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "a",
+													"TextMarkAHref": "https://www.pngtosvg.com/",
+													"TextMarkTextContent": "pngtosvg"
 												},
 												{
 													"Type": "NodeText",
@@ -1038,7 +868,7 @@
 					},
 					"Properties": {
 						"id": "20211226121706-qvrybsd",
-						"updated": "20211228132320"
+						"updated": "20230418095424"
 					},
 					"Children": [
 						{
@@ -1053,50 +883,19 @@
 									"Data": "前往 "
 								},
 								{
-									"Type": "NodeLink",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeOpenBracket"
-										},
-										{
-											"Type": "NodeLinkText",
-											"Data": "IcoMoon App"
-										},
-										{
-											"Type": "NodeCloseBracket"
-										},
-										{
-											"Type": "NodeOpenParen"
-										},
-										{
-											"Type": "NodeLinkDest",
-											"Data": "https://icomoon.io/app/#/select"
-										},
-										{
-											"Type": "NodeCloseParen"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://icomoon.io/app/#/select",
+									"TextMarkTextContent": "IcoMoon App"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " 制作 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "icon.js"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "icon.js"
 								}
 							]
 						},
@@ -1106,7 +905,7 @@
 							"ListData": {},
 							"Properties": {
 								"id": "20211226121706-e1i5k0q",
-								"updated": "20211228132320"
+								"updated": "20230418095424"
 							},
 							"Children": [
 								{
@@ -1132,20 +931,9 @@
 													"Data": "點擊右上角的 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "Import Icons"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "Import Icons"
 												},
 												{
 													"Type": "NodeText",
@@ -1276,7 +1064,7 @@
 									},
 									"Properties": {
 										"id": "20211226121706-kplyhyj",
-										"updated": "20211228132320"
+										"updated": "20230418095424"
 									},
 									"Children": [
 										{
@@ -1284,7 +1072,7 @@
 											"Type": "NodeParagraph",
 											"Properties": {
 												"id": "20211226121706-rkodjh5",
-												"updated": "20211228132320"
+												"updated": "20230418095424"
 											},
 											"Children": [
 												{
@@ -1292,64 +1080,31 @@
 													"Data": "修改 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "\u003csymbol id=\"icon-markdown\" viewBox=\"0 0 32 32\"\u003e"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "\u0026lt;symbol id=\u0026quot;iconMarkdown\u0026quot; viewBox=\u0026quot;0 0 32 32\u0026quot;\u0026gt;"
 												},
 												{
 													"Type": "NodeText",
-													"Data": " 中的 "
+													"Data": "​ 中的 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "id"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "id"
 												},
 												{
 													"Type": "NodeText",
-													"Data": " 為 "
+													"Data": "​ 為 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "index.html"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "index.html"
 												},
 												{
 													"Type": "NodeText",
-													"Data": " 對應的圖示名"
+													"Data": "​ 對應的圖示名"
 												}
 											]
 										}
@@ -1363,14 +1118,16 @@
 										"Marker": "Kg=="
 									},
 									"Properties": {
-										"id": "20211226121706-amb1561"
+										"id": "20211226121706-amb1561",
+										"updated": "20230418095420"
 									},
 									"Children": [
 										{
 											"ID": "20211226121706-3y9yhin",
 											"Type": "NodeParagraph",
 											"Properties": {
-												"id": "20211226121706-3y9yhin"
+												"id": "20211226121706-3y9yhin",
+												"updated": "20230418095420"
 											},
 											"Children": [
 												{
@@ -1378,44 +1135,22 @@
 													"Data": "將 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "\u003cdefs\u003e...\u003c/defs\u003e"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "\u0026lt;defs\u0026gt;...\u0026lt;/defs\u0026gt;"
 												},
 												{
 													"Type": "NodeText",
-													"Data": " 中的內容替換到 "
+													"Data": "​ 中的內容替換到 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "icon.js"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "icon.js"
 												},
 												{
 													"Type": "NodeText",
-													"Data": " 中對應的位置"
+													"Data": "​ 中對應的位置"
 												}
 											]
 										}
@@ -1482,60 +1217,27 @@
 													"Data": "將 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "index.html"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "index.html"
 												},
 												{
 													"Type": "NodeText",
 													"Data": " 中 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "material"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "material"
 												},
 												{
 													"Type": "NodeText",
 													"Data": " 替換為 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "alice"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "alice"
 												}
 											]
 										},
@@ -1596,20 +1298,9 @@
 													"Data": "重新整理 "
 												},
 												{
-													"Type": "NodeCodeSpan",
-													"Data": "code",
-													"Children": [
-														{
-															"Type": "NodeCodeSpanOpenMarker"
-														},
-														{
-															"Type": "NodeCodeSpanContent",
-															"Data": "index.html"
-														},
-														{
-															"Type": "NodeCodeSpanCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "code",
+													"TextMarkTextContent": "index.html"
 												},
 												{
 													"Type": "NodeText",
@@ -1644,60 +1335,27 @@
 													"Data": "打開思源在 "
 												},
 												{
-													"Type": "NodeKbd",
-													"Data": "kbd",
-													"Children": [
-														{
-															"Type": "NodeKbdOpenMarker"
-														},
-														{
-															"Type": "NodeText",
-															"Data": "設置"
-														},
-														{
-															"Type": "NodeKbdCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "kbd",
+													"TextMarkTextContent": "設置"
 												},
 												{
 													"Type": "NodeText",
 													"Data": " - "
 												},
 												{
-													"Type": "NodeKbd",
-													"Data": "kbd",
-													"Children": [
-														{
-															"Type": "NodeKbdOpenMarker"
-														},
-														{
-															"Type": "NodeText",
-															"Data": "外觀"
-														},
-														{
-															"Type": "NodeKbdCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "kbd",
+													"TextMarkTextContent": "外觀"
 												},
 												{
 													"Type": "NodeText",
 													"Data": " - "
 												},
 												{
-													"Type": "NodeKbd",
-													"Data": "kbd",
-													"Children": [
-														{
-															"Type": "NodeKbdOpenMarker"
-														},
-														{
-															"Type": "NodeText",
-															"Data": "圖示"
-														},
-														{
-															"Type": "NodeKbdCloseMarker"
-														}
-													]
+													"Type": "NodeTextMark",
+													"TextMarkType": "kbd",
+													"TextMarkTextContent": "圖示"
 												},
 												{
 													"Type": "NodeText",
@@ -1719,374 +1377,36 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226121706-yo7ar0b",
-				"updated": "20211228131800"
+				"updated": "20221114173643"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "上架圖示集市"
+					"Data": "上架社區集市"
 				}
 			]
 		},
 		{
-			"ID": "20211226121706-jfd8xjp",
+			"ID": "20221114173532-no1mtxr",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20211226121706-jfd8xjp",
-				"updated": "20211228131802"
+				"id": "20221114173532-no1mtxr",
+				"updated": "20230820184008"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "上架前請確認你的圖示倉庫根路徑下至少包含以下文件："
-				}
-			]
-		},
-		{
-			"ID": "20211226121706-i6ewsll",
-			"Type": "NodeList",
-			"ListData": {},
-			"Properties": {
-				"id": "20211226121706-i6ewsll",
-				"updated": "20211226004254"
-			},
-			"Children": [
-				{
-					"ID": "20211226121706-9elen8b",
-					"Type": "NodeListItem",
-					"ListData": {
-						"BulletChar": 42,
-						"Marker": "Kg=="
-					},
-					"Properties": {
-						"id": "20211226121706-9elen8b"
-					},
-					"Children": [
-						{
-							"ID": "20211226121706-dccuzjl",
-							"Type": "NodeParagraph",
-							"Properties": {
-								"id": "20211226121706-dccuzjl"
-							},
-							"Children": [
-								{
-									"Type": "NodeText",
-									"Data": "icon.json（請確保 JSON 格式正確）"
-								}
-							]
-						}
-					]
+					"Data": "請參考"
 				},
 				{
-					"ID": "20211226121706-w1rmag4",
-					"Type": "NodeListItem",
-					"ListData": {
-						"BulletChar": 42,
-						"Marker": "Kg=="
-					},
-					"Properties": {
-						"id": "20211226121706-w1rmag4"
-					},
-					"Children": [
-						{
-							"ID": "20211226121706-0mgnt3d",
-							"Type": "NodeParagraph",
-							"Properties": {
-								"id": "20211226121706-0mgnt3d"
-							},
-							"Children": [
-								{
-									"Type": "NodeText",
-									"Data": "icon.js"
-								}
-							]
-						}
-					]
-				},
-				{
-					"ID": "20211226121706-ipjwyv9",
-					"Type": "NodeListItem",
-					"ListData": {
-						"BulletChar": 42,
-						"Marker": "Kg=="
-					},
-					"Properties": {
-						"id": "20211226121706-ipjwyv9"
-					},
-					"Children": [
-						{
-							"ID": "20211226121706-wqppmoh",
-							"Type": "NodeParagraph",
-							"Properties": {
-								"id": "20211226121706-wqppmoh"
-							},
-							"Children": [
-								{
-									"Type": "NodeText",
-									"Data": "preview.png（請壓縮圖片大小在 512 KB 以內）"
-								}
-							]
-						}
-					]
-				},
-				{
-					"ID": "20211226121706-053qlph",
-					"Type": "NodeListItem",
-					"ListData": {
-						"BulletChar": 42,
-						"Marker": "Kg=="
-					},
-					"Properties": {
-						"id": "20211226121706-053qlph"
-					},
-					"Children": [
-						{
-							"ID": "20211226121706-j06vtb5",
-							"Type": "NodeParagraph",
-							"Properties": {
-								"id": "20211226121706-j06vtb5"
-							},
-							"Children": [
-								{
-									"Type": "NodeText",
-									"Data": "README.md（請註意大小寫）"
-								}
-							]
-						}
-					]
-				}
-			]
-		},
-		{
-			"ID": "20211226121706-2o47mtr",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226121706-2o47mtr",
-				"updated": "20211228132248"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "確認無誤以後請通過對"
-				},
-				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "社區集市"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/siyuan-note/bazaar"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://b3log.org/siyuan/community.html",
+					"TextMarkTextContent": "社區集市倉庫"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "倉庫"
-				},
-				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "發起 pull request"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://docs.github.com/cn/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
-				},
-				{
-					"Type": "NodeText",
-					"Data": "，修改 icons.json 文件。該文件是所有社區圖示倉庫的索引，格式為："
-				}
-			]
-		},
-		{
-			"ID": "20211226121706-ilx5qny",
-			"Type": "NodeCodeBlock",
-			"IsFencedCodeBlock": true,
-			"Properties": {
-				"id": "20211226121706-ilx5qny",
-				"updated": "20211226004254"
-			},
-			"Children": [
-				{
-					"Type": "NodeCodeBlockFenceOpenMarker",
-					"Data": "```"
-				},
-				{
-					"Type": "NodeCodeBlockFenceInfoMarker",
-					"CodeBlockInfo": "anNvbg=="
-				},
-				{
-					"ID": "20220307092237-rgdflev",
-					"Type": "NodeCodeBlockCode",
-					"Data": "{\n  \"repos\": [\n    \"username/reponame@commithash\"\n  ]\n}\n",
-					"Properties": {
-						"id": "20220307092237-rgdflev"
-					}
-				},
-				{
-					"Type": "NodeCodeBlockFenceCloseMarker",
-					"Data": "```"
-				}
-			]
-		},
-		{
-			"ID": "20211226121706-lx0pvpc",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226121706-lx0pvpc",
-				"updated": "20211228132216"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "其中 "
-				},
-				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "commithash"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
-				},
-				{
-					"Type": "NodeText",
-					"Data": " 請填寫你的圖示倉庫上最近一次發布版本的 Git 提交hash values，請使用完整hash values，不要使用 7 位短值。"
-				}
-			]
-		},
-		{
-			"ID": "20211226121706-17w0nbz",
-			"Type": "NodeHeading",
-			"HeadingLevel": 3,
-			"Properties": {
-				"id": "20211226121706-17w0nbz",
-				"updated": "20211226121706"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "更新"
-				}
-			]
-		},
-		{
-			"ID": "20211226121706-heb6pi9",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226121706-heb6pi9",
-				"updated": "20211228132218"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "如果你開發的圖示更新了版本，請記得："
-				}
-			]
-		},
-		{
-			"ID": "20211226121706-p99s23h",
-			"Type": "NodeList",
-			"ListData": {},
-			"Properties": {
-				"id": "20211226121706-p99s23h",
-				"updated": "20211228134344"
-			},
-			"Children": [
-				{
-					"ID": "20211226121706-3rj23r4",
-					"Type": "NodeListItem",
-					"ListData": {
-						"BulletChar": 42,
-						"Marker": "Kg=="
-					},
-					"Properties": {
-						"id": "20211226121706-3rj23r4",
-						"updated": "20211228134344"
-					},
-					"Children": [
-						{
-							"ID": "20211226121706-1vg7mj3",
-							"Type": "NodeParagraph",
-							"Properties": {
-								"id": "20211226121706-1vg7mj3",
-								"updated": "20211228134344"
-							},
-							"Children": [
-								{
-									"Type": "NodeText",
-									"Data": "更新你的圖示配置 icon.json 中的 version 欄位"
-								}
-							]
-						}
-					]
-				},
-				{
-					"ID": "20211226121706-4mezygv",
-					"Type": "NodeListItem",
-					"ListData": {
-						"BulletChar": 42,
-						"Marker": "Kg=="
-					},
-					"Properties": {
-						"id": "20211226121706-4mezygv"
-					},
-					"Children": [
-						{
-							"ID": "20211226121706-ul4y8sr",
-							"Type": "NodeParagraph",
-							"Properties": {
-								"id": "20211226121706-ul4y8sr"
-							},
-							"Children": [
-								{
-									"Type": "NodeText",
-									"Data": "再次對社區集市發起 Pull Request"
-								}
-							]
-						}
-					]
+					"Data": "。"
 				}
 			]
 		},

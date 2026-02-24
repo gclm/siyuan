@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -21,26 +21,46 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime/debug"
 	"strings"
+	"sync"
 	"time"
+	"unicode/utf8"
 
 	"github.com/88250/gulu"
 	"github.com/88250/lute/ast"
 	"github.com/siyuan-note/filelock"
-	"github.com/siyuan-note/siyuan/kernel/treenode"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/task"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 func CreateBox(name string) (id string, err error) {
-	WaitForWritingFiles()
-	writingDataLock.Lock()
-	defer writingDataLock.Unlock()
+	name = util.RemoveInvalid(name)
+	if 512 < utf8.RuneCountInString(name) {
+		// 限制笔记本名和文档名最大长度为 `512` https://github.com/siyuan-note/siyuan/issues/6299
+		err = errors.New(Conf.Language(106))
+		return
+	}
+	if "" == name {
+		name = Conf.language(105)
+	}
+
+	FlushTxQueue()
+
+	createDocLock.Lock()
+	defer createDocLock.Unlock()
+
+	boxes, _ := ListNotebooks()
+	for i, b := range boxes {
+		c := b.GetConf()
+		c.Sort = i + 1
+		b.SaveConf(c)
+	}
 
 	id = ast.NewNodeID()
 	boxLocalPath := filepath.Join(util.DataDir, id)
 	err = os.MkdirAll(boxLocalPath, 0755)
-	if nil != err {
+	if err != nil {
 		return
 	}
 
@@ -48,57 +68,75 @@ func CreateBox(name string) (id string, err error) {
 	boxConf := box.GetConf()
 	boxConf.Name = name
 	box.SaveConf(boxConf)
-	IncWorkspaceDataVer()
+	IncSync()
+	logging.LogInfof("created box [%s]", id)
 	return
 }
 
 func RenameBox(boxID, name string) (err error) {
-	WaitForWritingFiles()
-	writingDataLock.Lock()
-	defer writingDataLock.Unlock()
-
 	box := Conf.Box(boxID)
 	if nil == box {
 		return errors.New(Conf.Language(0))
+	}
+
+	if 512 < utf8.RuneCountInString(name) {
+		// 限制笔记本名和文档名最大长度为 `512` https://github.com/siyuan-note/siyuan/issues/6299
+		err = errors.New(Conf.Language(106))
+		return
+	}
+
+	if "" == name {
+		name = Conf.language(105)
 	}
 
 	boxConf := box.GetConf()
 	boxConf.Name = name
 	box.Name = name
 	box.SaveConf(boxConf)
-	IncWorkspaceDataVer()
+	IncSync()
+	logging.LogInfof("renamed box [%s] to [%s]", boxID, name)
 	return
 }
 
+var boxLock = sync.Map{}
+
 func RemoveBox(boxID string) (err error) {
-	WaitForWritingFiles()
-	writingDataLock.Lock()
-	defer writingDataLock.Unlock()
+	if _, ok := boxLock.Load(boxID); ok {
+		err = fmt.Errorf(Conf.language(239))
+		return
+	}
+
+	boxLock.Store(boxID, true)
+	defer boxLock.Delete(boxID)
 
 	if util.IsReservedFilename(boxID) {
 		return errors.New(fmt.Sprintf("can not remove [%s] caused by it is a reserved file", boxID))
 	}
 
+	FlushTxQueue()
+	isUserGuide := IsUserGuide(boxID)
+	createDocLock.Lock()
+	defer createDocLock.Unlock()
+
 	localPath := filepath.Join(util.DataDir, boxID)
-	if !gulu.File.IsExist(localPath) {
+	if !filelock.IsExist(localPath) {
 		return
 	}
 	if !gulu.File.IsDir(localPath) {
 		return errors.New(fmt.Sprintf("can not remove [%s] caused by it is not a dir", boxID))
 	}
 
-	filelock.ReleaseFileLocks(localPath)
-	if !isUserGuide(boxID) {
+	if !isUserGuide {
 		var historyDir string
-		historyDir, err = util.GetHistoryDir("delete")
-		if nil != err {
-			util.LogErrorf("get history dir failed: %s", err)
+		historyDir, err = GetHistoryDir(HistoryOpDelete)
+		if err != nil {
+			logging.LogErrorf("get history dir failed: %s", err)
 			return
 		}
 		p := strings.TrimPrefix(localPath, util.DataDir)
 		historyPath := filepath.Join(historyDir, p)
-		if err = gulu.File.Copy(localPath, historyPath); nil != err {
-			util.LogErrorf("gen sync history failed: %s", err)
+		if err = filelock.Copy(localPath, historyPath); err != nil {
+			logging.LogErrorf("gen sync history failed: %s", err)
 			return
 		}
 
@@ -106,20 +144,20 @@ func RemoveBox(boxID string) (err error) {
 	}
 
 	unmount0(boxID)
-	if err = os.RemoveAll(localPath); nil != err {
+	if err = filelock.Remove(localPath); err != nil {
 		return
 	}
-	IncWorkspaceDataVer()
+	IncSync()
+
+	logging.LogInfof("removed box [%s]", boxID)
 	return
 }
 
 func Unmount(boxID string) {
-	WaitForWritingFiles()
-	writingDataLock.Lock()
-	defer writingDataLock.Unlock()
+	FlushTxQueue()
 
 	unmount0(boxID)
-	evt := util.NewCmdResult("unmount", 0, util.PushModeBroadcast, 0)
+	evt := util.NewCmdResult("unmount", 0, util.PushModeBroadcast)
 	evt.Data = map[string]interface{}{
 		"box": boxID,
 	}
@@ -127,27 +165,32 @@ func Unmount(boxID string) {
 }
 
 func unmount0(boxID string) {
-	for _, box := range Conf.GetOpenedBoxes() {
-		if box.ID == boxID {
-			boxConf := box.GetConf()
-			boxConf.Closed = true
-			box.SaveConf(boxConf)
-			box.Unindex()
-			debug.FreeOSMemory()
-			return
-		}
+	box := Conf.Box(boxID)
+	if nil == box {
+		return
 	}
+
+	boxConf := box.GetConf()
+	boxConf.Closed = true
+	box.SaveConf(boxConf)
+	box.Unindex()
 }
 
 func Mount(boxID string) (alreadyMount bool, err error) {
-	WaitForWritingFiles()
-	writingDataLock.Lock()
-	defer writingDataLock.Unlock()
+	if _, ok := boxLock.Load(boxID); ok {
+		err = fmt.Errorf(Conf.language(239))
+		return
+	}
+
+	boxLock.Store(boxID, true)
+	defer boxLock.Delete(boxID)
+
+	FlushTxQueue()
+	isUserGuide := IsUserGuide(boxID)
 
 	localPath := filepath.Join(util.DataDir, boxID)
-
 	var reMountGuide bool
-	if isUserGuide(boxID) {
+	if isUserGuide {
 		// 重新挂载帮助文档
 
 		guideBox := Conf.Box(boxID)
@@ -156,30 +199,42 @@ func Mount(boxID string) (alreadyMount bool, err error) {
 			reMountGuide = true
 		}
 
-		if err = os.RemoveAll(localPath); nil != err {
+		if err = filelock.Remove(localPath); err != nil {
 			return
 		}
 
+		boxes, _ := ListNotebooks()
+		var sort int
+		if len(boxes) > 0 {
+			sort = boxes[0].Sort - 1
+		}
+
 		p := filepath.Join(util.WorkingDir, "guide", boxID)
-		if err = gulu.File.Copy(p, localPath); nil != err {
+		if err = filelock.Copy(p, localPath); err != nil {
 			return
+		}
+
+		avDirPath := filepath.Join(util.WorkingDir, "guide", boxID, "storage", "av")
+		if filelock.IsExist(avDirPath) {
+			if err = filelock.Copy(avDirPath, filepath.Join(util.DataDir, "storage", "av")); err != nil {
+				return
+			}
 		}
 
 		if box := Conf.Box(boxID); nil != box {
 			boxConf := box.GetConf()
 			boxConf.Closed = true
+			boxConf.Sort = sort
 			box.SaveConf(boxConf)
 		}
 
-		if Conf.Newbie {
-			Conf.Newbie = false
+		if Conf.OpenHelp {
+			Conf.OpenHelp = false
 			Conf.Save()
 		}
 
+		task.AppendAsyncTaskWithDelay(task.PushMsg, 3*time.Second, util.PushErrMsg, Conf.Language(52), 7000)
 		go func() {
-			time.Sleep(time.Second * 5)
-			util.PushErrMsg(Conf.Language(52), 9000)
-
 			// 每次打开帮助文档时自动检查版本更新并提醒 https://github.com/siyuan-note/siyuan/issues/5057
 			time.Sleep(time.Second * 10)
 			CheckUpdate(true)
@@ -201,18 +256,18 @@ func Mount(boxID string) (alreadyMount bool, err error) {
 	boxConf.Closed = false
 	box.SaveConf(boxConf)
 
-	box.Index(false)
-	IndexRefs()
 	// 缓存根一级的文档树展开
-	ListDocTree(box.ID, "/", Conf.FileTree.Sort)
-	treenode.SaveBlockTree()
-	util.ClearPushProgress(100)
+	files, _, _ := ListDocTree(box.ID, "/", util.SortModeUnassigned, false, false, Conf.FileTree.MaxListCount)
+	if 0 < len(files) {
+		box.Index()
+	}
+
 	if reMountGuide {
 		return true, nil
 	}
 	return false, nil
 }
 
-func isUserGuide(boxID string) bool {
-	return "20210808180117-czj9bvb" == boxID || "20210808180117-6v0mkxr" == boxID || "20211226090932-5lcq56f" == boxID
+func IsUserGuide(boxID string) bool {
+	return "20210808180117-czj9bvb" == boxID || "20210808180117-6v0mkxr" == boxID || "20211226090932-5lcq56f" == boxID || "20240530133126-axarxgx" == boxID
 }

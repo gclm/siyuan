@@ -4,6 +4,20 @@ import {Constants} from "../../constants";
 import {destroy} from "../util/destroy";
 import {fetchPost} from "../../util/fetch";
 import {getEditorRange} from "../util/selection";
+import {pathPosix} from "../../util/pathName";
+import {genAssetHTML} from "../../asset/renderAssets";
+import {hasClosestBlock, hasClosestByClassName} from "../util/hasClosest";
+import {getContenteditableElement} from "../wysiwyg/getBlock";
+import {getTypeByCellElement, updateCellsValue} from "../render/av/cell";
+import {scrollCenter} from "../../util/highlightById";
+import {confirmDialog} from "../../dialog/confirmDialog";
+import {filesize} from "filesize";
+import {transaction} from "../wysiwyg/transaction";
+import * as dayjs from "dayjs";
+
+interface FileWithPath extends File {
+    path: string;
+}
 
 export class Upload {
     public element: HTMLElement;
@@ -67,13 +81,13 @@ const validateFile = (protyle: IProtyle, files: File[]) => {
     }
     let msgId;
     if (errorTip !== "" || uploadingStr !== "") {
-        msgId = showMessage(`<ul>${errorTip}${uploadingStr}</ul>`);
+        msgId = showMessage(`<ul>${errorTip}${uploadingStr}</ul>`, -1);
     }
 
     return {files: uploadFileList, msgId};
 };
 
-const genUploadedLabel = (responseText: string, protyle: IProtyle) => {
+const genUploadedLabel = async (responseText: string, protyle: IProtyle) => {
     const response = JSON.parse(responseText);
     let errorTip = "";
 
@@ -94,49 +108,182 @@ const genUploadedLabel = (responseText: string, protyle: IProtyle) => {
     if (errorTip) {
         showMessage(errorTip);
     }
-
-    let succFileText = "";
-    const keys = Object.keys(response.data.succMap);
-    keys.forEach((key, index) => {
-        const path = response.data.succMap[key];
-        const lastIndex = key.lastIndexOf(".");
-        let type = key.substr(lastIndex);
-        let filename = protyle.options.upload.filename(key.substr(0, lastIndex)) + type;
-        if (-1 === lastIndex) {
-            type = "";
-            filename = protyle.options.upload.filename(key);
-        }
-        type = type.toLowerCase();
-        if (Constants.SIYUAN_ASSETS_AUDIO.includes(type)) {
-            succFileText += `<audio controls="controls" src="${path}"></audio>`;
-        } else if (Constants.SIYUAN_ASSETS_IMAGE.includes(type)) {
-            succFileText += `![${filename}](${path})`;
-        } else if (Constants.SIYUAN_ASSETS_VIDEO.includes(type)) {
-            succFileText += `<video controls="controls" src="${path}"></video>`;
-        } else {
-            succFileText += `[${filename}](${path})`;
-        }
-        if (keys.length - 1 !== index) {
-            succFileText += "\n";
-        }
-    });
+    let insertBlock = true;
     const range = getEditorRange(protyle.wysiwyg.element);
-    if (!succFileText.startsWith("<") && range.toString() === "" && range.startContainer.nodeType === 3 && protyle.toolbar.getCurrentType(range).length > 0) {
-        // 防止链接插入其他元素中
+    if (range.toString() === "" && range.startContainer.nodeType === 3 && protyle.toolbar.getCurrentType(range).length > 0) {
+        // 防止链接插入其他元素中 https://ld246.com/article/1676003478664
         range.setEndAfter(range.startContainer.parentElement);
         range.collapse(false);
     }
-    insertHTML(protyle.lute.SpinBlockDOM(succFileText), protyle);
+    const keys = Object.keys(response.data.succMap);
+    // https://github.com/siyuan-note/siyuan/issues/7624
+    const nodeElement = hasClosestBlock(range.startContainer);
+    if (nodeElement) {
+        if (nodeElement.classList.contains("table")) {
+            insertBlock = false;
+        } else {
+            const editableElement = getContenteditableElement(nodeElement);
+            if (editableElement && nodeElement.classList.contains("p") &&
+                (editableElement.textContent !== "" || keys.length < 2)) {
+                insertBlock = false;
+            }
+        }
+    }
+    let successFileText = "";
+    // 插入多个资源文件时按文件名自然升序排列 Use natural ascending order when inserting multiple assets https://github.com/siyuan-note/siyuan/issues/14643
+    keys.sort((a, b) => a.localeCompare(b, undefined, {numeric: true}));
+    const avAssets: IAVCellAssetValue[] = [];
+    let hasImage = false;
+    keys.forEach((key, index) => {
+        const path = response.data.succMap[key];
+        const type = pathPosix().extname(key).toLowerCase();
+        const filename = protyle.options.upload.filename(key);
+        const name = filename.substring(0, filename.length - type.length);
+        hasImage = Constants.SIYUAN_ASSETS_IMAGE.includes(type);
+        avAssets.push({
+            type: Constants.SIYUAN_ASSETS_IMAGE.includes(type) ? "image" : "file",
+            content: path,
+            name: name
+        });
+        successFileText += genAssetHTML(type, path, name, filename);
+        if (!Constants.SIYUAN_ASSETS_AUDIO.includes(type) && !Constants.SIYUAN_ASSETS_VIDEO.includes(type) &&
+            keys.length - 1 !== index) {
+            if (nodeElement && nodeElement.classList.contains("table")) {
+                successFileText += "<br>";
+            } else if (insertBlock) {
+                successFileText += "\n\n";
+            } else {
+                successFileText += "\n";
+            }
+        }
+    });
+
+    if (document.querySelector(".av__panel")) {
+        const cellElements: HTMLElement[] = [document.querySelector('.custom-attr__avvalue[data-type="mAsset"][data-active="true"]')];
+        if (!cellElements[0]) {
+            cellElements.splice(0, 1);
+            protyle.wysiwyg.element.querySelectorAll(".av__cell--active").forEach((item: HTMLElement) => {
+                if (getTypeByCellElement(item) === "mAsset") {
+                    cellElements.push(item);
+                }
+            });
+            if (cellElements.length === 0) {
+                document.querySelector(".av__panel .b3-menu__items")?.getAttribute("data-ids")?.split(",").forEach((id: string) => {
+                    const item = protyle.wysiwyg.element.querySelector(`.av__gallery-fields [data-dtype="mAsset"][data-id="${id}"]`) as HTMLElement;
+                    if (item) {
+                        cellElements.push(item);
+                    }
+                });
+            }
+        }
+        if (cellElements.length > 0) {
+            const blockElement = hasClosestBlock(cellElements[0]);
+            if (blockElement) {
+                updateCellsValue(protyle, blockElement, avAssets, cellElements);
+                document.querySelector(".av__panel")?.remove();
+                return;
+            }
+        } else {
+            return;
+        }
+    } else if (nodeElement && nodeElement.classList.contains("av")) {
+        const cellElements: HTMLElement[] = [];
+        nodeElement.querySelectorAll(".av__row--select:not(.av__row--header)").forEach(item => {
+            item.querySelectorAll(".av__cell").forEach((cellItem: HTMLElement) => {
+                if (getTypeByCellElement(cellItem) === "mAsset") {
+                    cellElements.push(cellItem);
+                }
+            });
+        });
+        if (cellElements.length === 0) {
+            protyle.wysiwyg.element.querySelectorAll(".av__cell--active").forEach((item: HTMLElement) => {
+                if (getTypeByCellElement(item) === "mAsset") {
+                    cellElements.push(item);
+                }
+            });
+        }
+        if (cellElements.length === 1) {
+            updateCellsValue(protyle, nodeElement, avAssets, cellElements);
+        } else if (cellElements.length > 1) {
+            const doOperations: IOperation[] = [];
+            const undoOperations: IOperation[] = [];
+            let currentRowElement;
+            const colId = cellElements[0].getAttribute("data-col-id");
+            for (let i = 0; i < avAssets.length; i++) {
+                let cellElement = cellElements[i];
+                if (!cellElement) {
+                    if (!currentRowElement) {
+                        currentRowElement = hasClosestByClassName(cellElements[i - 1], "av__row") as HTMLElement;
+                    }
+                    if (currentRowElement) {
+                        currentRowElement = currentRowElement.nextElementSibling;
+                        if (currentRowElement && currentRowElement.classList.contains("av__row")) {
+                            cellElement = currentRowElement.querySelector(`.av__cell[data-col-id="${colId}"]`);
+                        }
+                    }
+                }
+                if (!cellElement) {
+                    break;
+                }
+                const operations = await updateCellsValue(protyle, nodeElement,
+                    [avAssets[i]], [cellElement], null, null, true);
+                doOperations.push(...operations.doOperations);
+                undoOperations.push(...operations.undoOperations);
+            }
+            if (doOperations.length > 0) {
+                const id = nodeElement.dataset.nodeId;
+                doOperations.push({
+                    action: "doUpdateUpdated",
+                    id,
+                    data: dayjs().format("YYYYMMDDHHmmss"),
+                });
+                undoOperations.push({
+                    action: "doUpdateUpdated",
+                    id,
+                    data: nodeElement.getAttribute("updated"),
+                });
+                transaction(protyle, doOperations, undoOperations);
+            }
+        }
+        return;
+    }
+    // 避免插入代码块中，其次因为都要独立成块 https://github.com/siyuan-note/siyuan/issues/7607
+    insertHTML(successFileText, protyle, insertBlock);
+    // 粘贴图片后定位不准确 https://github.com/siyuan-note/siyuan/issues/13336
+    setTimeout(() => {
+        scrollCenter(protyle, undefined, "nearest", "smooth");
+    }, hasImage ? 0 : Constants.TIMEOUT_LOAD);
 };
 
-export const uploadLocalFiles = (files: string[], protyle: IProtyle) => {
-    const msgId = showMessage(window.siyuan.languages.uploading, 0);
-    fetchPost("/api/asset/insertLocalAssets", {
-        assetPaths: files,
-        id: protyle.block.rootID
-    }, (response) => {
-        hideMessage(msgId);
-        genUploadedLabel(JSON.stringify(response), protyle);
+export const uploadLocalFiles = (files: ILocalFiles[], protyle: IProtyle, isUpload: boolean) => {
+    let msg = "";
+    const assetPaths: string[] = [];
+    files.forEach(item => {
+        if (item.size && Constants.SIZE_UPLOAD_TIP_SIZE <= item.size) {
+            msg += window.siyuan.languages.uploadFileTooLarge.replace("${x}", item.path).replace("${y}", filesize(item.size, {standard: "iec"})) + "<br>";
+        }
+        assetPaths.push(item.path);
+    });
+
+    confirmDialog(msg ? window.siyuan.languages.upload : "", msg, () => {
+        const msgId = showMessage(window.siyuan.languages.uploading, 0);
+        fetchPost("/api/asset/insertLocalAssets", {
+            assetPaths,
+            isUpload,
+            id: protyle.block.rootID
+        }, (response) => {
+            hideMessage(msgId);
+            let tip = "";
+            Object.keys(response.data.succMap).forEach(name => {
+                if (response.data.succMap[name].startsWith("file:")) {
+                    tip += name + ", ";
+                }
+            });
+            if (tip) {
+                showMessage(window.siyuan.languages.dndFolderTip.replace("${x}", `<b>${tip.substring(0, tip.length - 2)}</b>`));
+            }
+            genUploadedLabel(JSON.stringify(response), protyle);
+        });
     });
 };
 
@@ -150,7 +297,7 @@ export const uploadFiles = (protyle: IProtyle, files: FileList | DataTransferIte
         }
         if (0 === fileItem.size && "" === fileItem.type && -1 === fileItem.name.indexOf(".")) {
             // 文件夹
-            document.execCommand("insertHTML", false, `[${fileItem.name}](file://${fileItem.path})`);
+            uploadLocalFiles([{path: (fileItem as FileWithPath).path, size: null}], protyle, false);
         } else {
             fileList.push(fileItem);
         }
@@ -200,65 +347,73 @@ export const uploadFiles = (protyle: IProtyle, files: FileList | DataTransferIte
     for (const key of Object.keys(extraData)) {
         formData.append(key, extraData[key]);
     }
-
+    let msg = "";
     for (let i = 0, iMax = validateResult.files.length; i < iMax; i++) {
         formData.append(protyle.options.upload.fieldName, validateResult.files[i]);
-    }
-    formData.append("id", protyle.block.rootID);
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", protyle.options.upload.url);
-    if (protyle.options.upload.token) {
-        xhr.setRequestHeader("X-Upload-Token", protyle.options.upload.token);
-    }
-    if (protyle.options.upload.withCredentials) {
-        xhr.withCredentials = true;
+        if (Constants.SIZE_UPLOAD_TIP_SIZE <= validateResult.files[i].size) {
+            msg += window.siyuan.languages.uploadFileTooLarge.replace("${x}", validateResult.files[i].name).replace("${y}", filesize(validateResult.files[i].size, {standard: "iec"})) + "<br>";
+        }
     }
 
-    protyle.upload.isUploading = true;
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-            protyle.upload.isUploading = false;
-            if (!document.body.contains(protyle.element)) {
-                // 网络较慢时，页签已经关闭
-                destroy(protyle);
+    formData.append("id", protyle.block.rootID);
+    confirmDialog(msg ? window.siyuan.languages.upload : "", msg, () => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", protyle.options.upload.url);
+        if (protyle.options.upload.token) {
+            xhr.setRequestHeader("X-Upload-Token", protyle.options.upload.token);
+        }
+        if (protyle.options.upload.withCredentials) {
+            xhr.withCredentials = true;
+        }
+
+        protyle.upload.isUploading = true;
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                protyle.upload.isUploading = false;
+                if (!document.body.contains(protyle.element)) {
+                    // 网络较慢时，页签已经关闭
+                    destroy(protyle);
+                    return;
+                }
+                if (xhr.status === 200) {
+                    hideMessage(validateResult.msgId);
+                    if (protyle.options.upload.success) {
+                        protyle.options.upload.success(editorElement, xhr.responseText);
+                    } else if (successCB) {
+                        successCB(xhr.responseText);
+                    } else {
+                        let responseText = xhr.responseText;
+                        if (protyle.options.upload.format) {
+                            responseText = protyle.options.upload.format(files as File [], xhr.responseText);
+                        }
+                        genUploadedLabel(responseText, protyle);
+                    }
+                } else if (xhr.status === 0) {
+                    showMessage(window.siyuan.languages.fileTypeError);
+                } else {
+                    if (protyle.options.upload.error) {
+                        protyle.options.upload.error(xhr.responseText);
+                    } else {
+                        showMessage(xhr.responseText);
+                    }
+                }
+                if (element) {
+                    element.value = "";
+                }
+                protyle.upload.element.style.display = "none";
+            }
+        };
+        xhr.upload.onprogress = (event: ProgressEvent) => {
+            if (!event.lengthComputable) {
                 return;
             }
-            if (xhr.status === 200) {
-                hideMessage(validateResult.msgId);
-                if (protyle.options.upload.success) {
-                    protyle.options.upload.success(editorElement, xhr.responseText);
-                } else if (successCB) {
-                    successCB(xhr.responseText);
-                } else {
-                    let responseText = xhr.responseText;
-                    if (protyle.options.upload.format) {
-                        responseText = protyle.options.upload.format(files as File [], xhr.responseText);
-                    }
-                    genUploadedLabel(responseText, protyle);
-                }
-            } else if (xhr.status === 0) {
-                showMessage(window.siyuan.languages.fileTypeError);
-            } else {
-                if (protyle.options.upload.error) {
-                    protyle.options.upload.error(xhr.responseText);
-                } else {
-                    showMessage(xhr.responseText);
-                }
-            }
-            if (element) {
-                element.value = "";
-            }
-            protyle.upload.element.style.display = "none";
-        }
-    };
-    xhr.upload.onprogress = (event: ProgressEvent) => {
-        if (!event.lengthComputable) {
-            return;
-        }
-        const progress = event.loaded / event.total * 100;
-        protyle.upload.element.style.display = "block";
-        const progressBar = protyle.upload.element;
-        progressBar.style.width = progress + "%";
-    };
-    xhr.send(formData);
+            const progress = event.loaded / event.total * 100;
+            protyle.upload.element.style.display = "block";
+            const progressBar = protyle.upload.element;
+            progressBar.style.width = progress + "%";
+        };
+        xhr.send(formData);
+    }, () => {
+        hideMessage(validateResult.msgId);
+    });
 };

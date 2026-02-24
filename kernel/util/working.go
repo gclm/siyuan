@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,56 +17,102 @@
 package util
 
 import (
+	"errors"
 	"flag"
-	"log"
+	"fmt"
 	"math/rand"
 	"mime"
+	"net/http"
+	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
+	"github.com/88250/go-humanize"
 	"github.com/88250/gulu"
 	figure "github.com/common-nighthawk/go-figure"
-	goPS "github.com/mitchellh/go-ps"
+	"github.com/gofrs/flock"
+	"github.com/siyuan-note/filelock"
 	"github.com/siyuan-note/httpclient"
+	"github.com/siyuan-note/logging"
 )
 
-//var Mode = "dev"
-//
+// var Mode = "dev"
 var Mode = "prod"
 
 const (
-	Ver       = "2.0.24"
+	Ver       = "3.5.8"
 	IsInsider = false
+
+	// env vars as fallback for commandline parameters
+	SIYUAN_ACCESS_AUTH_CODE = "SIYUAN_ACCESS_AUTH_CODE"
+	SIYUAN_WORKSPACE        = "SIYUAN_WORKSPACE_PATH"
+	SIYUAN_LANG             = "SIYUAN_LANG"
 )
 
 var (
-	bootProgress float64 // 启动进度，从 0 到 100
-	bootDetails  string  // 启动细节描述
-	HttpServing  = false // 是否 HTTP 伺服已经可用
+	RunInContainer                = false // 是否运行在容器中
+	SiyuanAccessAuthCodeBypass    = false // 是否跳过空访问授权码检查
+	SiyuanAccessAuthCodeViaEnvvar = ""    // Fallback auth code via env var (SIYUAN_ACCESS_AUTH_CODE)
 )
 
+func initEnvVars() {
+	RunInContainer = isRunningInDockerContainer()
+	var err error
+	if SiyuanAccessAuthCodeBypass, err = strconv.ParseBool(os.Getenv("SIYUAN_ACCESS_AUTH_CODE_BYPASS")); err != nil {
+		SiyuanAccessAuthCodeBypass = false
+	}
+	SiyuanAccessAuthCodeViaEnvvar = os.Getenv("SIYUAN_ACCESS_AUTH_CODE")
+}
+
+var (
+	bootProgress = atomic.Int32{} // 启动进度，从 0 到 100
+	bootDetails  string           // 启动细节描述
+	HttpServer   *http.Server     // HTTP 伺服器实例
+	HttpServing  = false          // 是否 HTTP 伺服已经可用
+)
+
+// If a commandline parameter is empty, fallback to the env var.
+//
+// "empty" means the parameter is not set or set to an empty string.
+// It returns a pointer to string, to be a drop-in replacement for
+// the commandline parameter itself.
+func coalesceToEnvVar(fromCLI *string, envVarName string) *string {
+	if fromCLI == nil || "" == *fromCLI {
+		ret := os.Getenv(envVarName)
+		return &ret
+	}
+	return fromCLI
+}
+
 func Boot() {
-	IncBootProgress(3, "Booting...")
+	initEnvVars()
+	IncBootProgress(3, "Booting kernel...")
 	rand.Seed(time.Now().UTC().UnixNano())
 	initMime()
-	httpclient.SetUserAgent(UserAgent)
+	initHttpClient()
 
-	workspacePath := flag.String("workspace", "", "dir path of the workspace, default to ~/Documents/SiYuan/")
+	workspacePath := flag.String("workspace", "", "dir path of the workspace, default to ~/SiYuan/")
 	wdPath := flag.String("wd", WorkingDir, "working directory of SiYuan")
-	servePath := flag.String("servePath", "", "obsoleted https://github.com/siyuan-note/siyuan/issues/4647")
-	_ = servePath
-	resident := flag.Bool("resident", true, "resident memory even if no active session")
-	readOnly := flag.Bool("readonly", false, "read-only mode")
+	port := flag.String("port", "0", "port of the HTTP server")
+	readOnly := flag.String("readonly", "false", "read-only mode")
 	accessAuthCode := flag.String("accessAuthCode", "", "access auth code")
 	ssl := flag.Bool("ssl", false, "for https and wss")
-	lang := flag.String("lang", "en_US", "zh_CN/zh_CHT/en_US/fr_FR")
+	lang := flag.String("lang", "", "ar_SA/de_DE/en_US/es_ES/fr_FR/he_IL/it_IT/ja_JP/ko_KR/pl_PL/pt_BR/ru_RU/tr_TR/zh_CHT/zh_CN")
 	mode := flag.String("mode", "prod", "dev/prod")
 	flag.Parse()
+
+	// Fallback to env vars if commandline args are not set
+	// valid only for CLI args that default to "", as the
+	// others have explicit (sane) defaults
+	workspacePath = coalesceToEnvVar(workspacePath, SIYUAN_WORKSPACE)
+	accessAuthCode = coalesceToEnvVar(accessAuthCode, SIYUAN_ACCESS_AUTH_CODE)
+	lang = coalesceToEnvVar(lang, SIYUAN_LANG)
 
 	if "" != *wdPath {
 		WorkingDir = *wdPath
@@ -75,18 +121,50 @@ func Boot() {
 		Lang = *lang
 	}
 	Mode = *mode
-	Resident = *resident
-	ReadOnly = *readOnly
+	ServerPort = *port
+	ReadOnly, _ = strconv.ParseBool(*readOnly)
 	AccessAuthCode = *accessAuthCode
-	Container = "std"
-	if isRunningInDockerContainer() {
-		Container = "docker"
+	AccessAuthCode = strings.TrimSpace(AccessAuthCode)
+	AccessAuthCode = RemoveInvalid(AccessAuthCode)
+	Container = ContainerStd
+	if RunInContainer {
+		Container = ContainerDocker
+		if "" == AccessAuthCode { // Still empty?
+			interruptBoot := true
+
+			// Set the env `SIYUAN_ACCESS_AUTH_CODE_BYPASS=true` to skip checking empty access auth code https://github.com/siyuan-note/siyuan/issues/9709
+			if SiyuanAccessAuthCodeBypass {
+				interruptBoot = false
+				fmt.Println("bypass access auth code check since the env [SIYUAN_ACCESS_AUTH_CODE_BYPASS] is set to [true]")
+			}
+
+			if interruptBoot {
+				// The access authorization code command line parameter must be set when deploying via Docker https://github.com/siyuan-note/siyuan/issues/9328
+				fmt.Printf("the access authorization code command line parameter (--accessAuthCode) must be set when deploying via Docker\n")
+				fmt.Printf("or you can set the SIYUAN_ACCESS_AUTH_CODE env var")
+				os.Exit(logging.ExitCodeSecurityRisk)
+			}
+		}
 	}
+	if ContainerStd != Container {
+		ServerPort = FixedPort
+	}
+
+	msStoreFilePath := filepath.Join(WorkingDir, "ms-store")
+	ISMicrosoftStore = gulu.File.IsExist(msStoreFilePath)
+
+	UserAgent = UserAgent + " " + Container + "/" + runtime.GOOS
+	httpclient.SetUserAgent(UserAgent)
 
 	initWorkspaceDir(*workspacePath)
 
 	SSL = *ssl
 	LogPath = filepath.Join(TempDir, "siyuan.log")
+	logging.SetLogPath(LogPath)
+
+	// 工作空间仅允许被一个内核进程伺服
+	tryLockWorkspace()
+
 	AppearancePath = filepath.Join(ConfDir, "appearance")
 	if "dev" == Mode {
 		ThemesPath = filepath.Join(WorkingDir, "appearance", "themes")
@@ -97,277 +175,281 @@ func Boot() {
 	}
 
 	initPathDir()
-	checkPort()
 
 	bootBanner := figure.NewColorFigure("SiYuan", "isometric3", "green", true)
-	LogInfof("\n" + bootBanner.String())
+	logging.LogInfof("\n" + bootBanner.String())
 	logBootInfo()
+}
 
-	go cleanOld()
+var bootDetailsLock = sync.Mutex{}
+
+func setBootDetails(details string) {
+	bootDetailsLock.Lock()
+	bootDetails = "v" + Ver + " " + details
+	bootDetailsLock.Unlock()
 }
 
 func SetBootDetails(details string) {
-	if 100 <= bootProgress {
+	if 100 <= bootProgress.Load() {
 		return
 	}
-	bootDetails = details
+	setBootDetails(details)
 }
 
-func IncBootProgress(progress float64, details string) {
-	if 100 <= bootProgress {
+func IncBootProgress(progress int32, details string) {
+	if 100 <= bootProgress.Load() {
 		return
 	}
-	bootProgress += progress
-	bootDetails = details
+	bootProgress.Add(progress)
+	setBootDetails(details)
 }
 
 func IsBooted() bool {
-	return 100 <= bootProgress
+	return 100 <= bootProgress.Load()
 }
 
-func GetBootProgressDetails() (float64, string) {
-	return bootProgress, bootDetails
+func GetBootProgressDetails() (progress int32, details string) {
+	progress = bootProgress.Load()
+	bootDetailsLock.Lock()
+	details = bootDetails
+	bootDetailsLock.Unlock()
+	return
 }
 
-func GetBootProgress() float64 {
-	return bootProgress
+func GetBootProgress() int32 {
+	return bootProgress.Load()
 }
 
 func SetBooted() {
-	bootDetails = "Finishing boot..."
-	bootProgress = 100
-	LogInfof("kernel booted")
-}
-
-func GetHistoryDirNow(now, suffix string) (ret string, err error) {
-	ret = filepath.Join(WorkspaceDir, "history", now+"-"+suffix)
-	if err = os.MkdirAll(ret, 0755); nil != err {
-		LogErrorf("make history dir failed: %s", err)
-		return
-	}
-	return
-}
-
-func GetHistoryDir(suffix string) (ret string, err error) {
-	ret = filepath.Join(WorkspaceDir, "history", time.Now().Format("2006-01-02-150405")+"-"+suffix)
-	if err = os.MkdirAll(ret, 0755); nil != err {
-		LogErrorf("make history dir failed: %s", err)
-		return
-	}
-	return
+	setBootDetails("Finishing boot...")
+	bootProgress.Store(100)
+	logging.LogInfof("kernel booted")
 }
 
 var (
 	HomeDir, _    = gulu.OS.Home()
 	WorkingDir, _ = os.Getwd()
 
-	WorkspaceDir   string        // 工作空间目录路径
-	ConfDir        string        // 配置目录路径
-	DataDir        string        // 数据目录路径
-	RepoDir        string        // 仓库目录路径
-	TempDir        string        // 临时目录路径
-	LogPath        string        // 配置目录下的日志文件 siyuan.log 路径
-	DBName         = "siyuan.db" // SQLite 数据库文件名
-	DBPath         string        // SQLite 数据库文件路径
-	BlockTreePath  string        // 区块树文件路径
-	AppearancePath string        // 配置目录下的外观目录 appearance/ 路径
-	ThemesPath     string        // 配置目录下的外观目录下的 themes/ 路径
-	IconsPath      string        // 配置目录下的外观目录下的 icons/ 路径
-
-	AndroidNativeLibDir   string // Android 库路径
-	AndroidPrivateDataDir string // Android 私有数据路径
+	WorkspaceDir       string        // 工作空间目录路径
+	WorkspaceName      string        // 工作空间名称
+	WorkspaceLock      *flock.Flock  // 工作空间锁
+	ConfDir            string        // 配置目录路径
+	DataDir            string        // 数据目录路径
+	RepoDir            string        // 仓库目录路径
+	HistoryDir         string        // 数据历史目录路径
+	TempDir            string        // 临时目录路径
+	LogPath            string        // 配置目录下的日志文件 siyuan.log 路径
+	DBName             = "siyuan.db" // SQLite 数据库文件名
+	DBPath             string        // SQLite 数据库文件路径
+	HistoryDBPath      string        // SQLite 历史数据库文件路径
+	AssetContentDBPath string        // SQLite 资源文件内容数据库文件路径
+	BlockTreeDBPath    string        // 区块树数据库文件路径
+	AppearancePath     string        // 配置目录下的外观目录 appearance/ 路径
+	ThemesPath         string        // 配置目录下的外观目录下的 themes/ 路径
+	IconsPath          string        // 配置目录下的外观目录下的 icons/ 路径
+	SnippetsPath       string        // 数据目录下的 snippets/ 路径
+	ShortcutsPath      string        // 用户家目录下的快捷方式目录路径 home/.config/siyuan/shortcuts/
 
 	UIProcessIDs = sync.Map{} // UI 进程 ID
-
-	IsNewbie bool // 是否是第一次安装
 )
 
 func initWorkspaceDir(workspaceArg string) {
 	userHomeConfDir := filepath.Join(HomeDir, ".config", "siyuan")
 	workspaceConf := filepath.Join(userHomeConfDir, "workspace.json")
+	logging.SetLogPath(filepath.Join(userHomeConfDir, "kernel.log"))
+
 	if !gulu.File.IsExist(workspaceConf) {
-		IsNewbie = "std" == Container // 只有桌面端需要设置新手标识，前端自动挂载帮助文档
-		if err := os.MkdirAll(userHomeConfDir, 0755); nil != err && !os.IsExist(err) {
-			log.Printf("create user home conf folder [%s] failed: %s", userHomeConfDir, err)
-			os.Exit(ExitCodeCreateConfDirErr)
+		if err := os.MkdirAll(userHomeConfDir, 0755); err != nil && !os.IsExist(err) {
+			logging.LogErrorf("create user home conf folder [%s] failed: %s", userHomeConfDir, err)
+			os.Exit(logging.ExitCodeInitWorkspaceErr)
 		}
 	}
 
-	defaultWorkspaceDir := filepath.Join(HomeDir, "Documents", "SiYuan")
+	defaultWorkspaceDir := filepath.Join(HomeDir, "SiYuan")
+	if gulu.OS.IsWindows() {
+		// 改进 Windows 端默认工作空间路径 https://github.com/siyuan-note/siyuan/issues/5622
+		if userProfile := os.Getenv("USERPROFILE"); "" != userProfile {
+			defaultWorkspaceDir = filepath.Join(userProfile, "SiYuan")
+		}
+	}
+
 	var workspacePaths []string
 	if !gulu.File.IsExist(workspaceConf) {
 		WorkspaceDir = defaultWorkspaceDir
-		if "" != workspaceArg {
-			WorkspaceDir = workspaceArg
-		}
-		if !gulu.File.IsDir(WorkspaceDir) {
-			log.Printf("use the default workspace [%s] since the specified workspace [%s] is not a dir", WorkspaceDir, defaultWorkspaceDir)
-			WorkspaceDir = defaultWorkspaceDir
-		}
-		workspacePaths = append(workspacePaths, WorkspaceDir)
 	} else {
-		data, err := os.ReadFile(workspaceConf)
-		if err = gulu.JSON.UnmarshalJSON(data, &workspacePaths); nil != err {
-			log.Printf("unmarshal workspace conf [%s] failed: %s", workspaceConf, err)
-		}
-
-		tmp := workspacePaths[:0]
-		for _, d := range workspacePaths {
-			if gulu.File.IsDir(d) {
-				tmp = append(tmp, d)
-			}
-		}
-		workspacePaths = tmp
-
+		workspacePaths, _ = ReadWorkspacePaths()
 		if 0 < len(workspacePaths) {
 			WorkspaceDir = workspacePaths[len(workspacePaths)-1]
-			if "" != workspaceArg {
-				WorkspaceDir = workspaceArg
-			}
-			if !gulu.File.IsDir(WorkspaceDir) {
-				log.Printf("use the default workspace [%s] since the specified workspace [%s] is not a dir", WorkspaceDir, defaultWorkspaceDir)
-				WorkspaceDir = defaultWorkspaceDir
-			}
-			workspacePaths[len(workspacePaths)-1] = WorkspaceDir
 		} else {
 			WorkspaceDir = defaultWorkspaceDir
-			if "" != workspaceArg {
-				WorkspaceDir = workspaceArg
-			}
-			if !gulu.File.IsDir(WorkspaceDir) {
-				log.Printf("use the default workspace [%s] since the specified workspace [%s] is not a dir", WorkspaceDir, defaultWorkspaceDir)
-				WorkspaceDir = defaultWorkspaceDir
-			}
-			workspacePaths = append(workspacePaths, WorkspaceDir)
 		}
 	}
 
-	if data, err := gulu.JSON.MarshalJSON(workspacePaths); nil == err {
-		if err = os.WriteFile(workspaceConf, data, 0644); nil != err {
-			log.Fatalf("write workspace conf [%s] failed: %s", workspaceConf, err)
-		}
-	} else {
-		log.Fatalf("marshal workspace conf [%s] failed: %s", workspaceConf, err)
+	if "" != workspaceArg {
+		WorkspaceDir = workspaceArg
 	}
 
+	if !gulu.File.IsDir(WorkspaceDir) {
+		logging.LogWarnf("use the default workspace [%s] since the specified workspace [%s] is not a dir", defaultWorkspaceDir, WorkspaceDir)
+		if err := os.MkdirAll(defaultWorkspaceDir, 0755); err != nil && !os.IsExist(err) {
+			logging.LogErrorf("create default workspace folder [%s] failed: %s", defaultWorkspaceDir, err)
+			os.Exit(logging.ExitCodeInitWorkspaceErr)
+		}
+		WorkspaceDir = defaultWorkspaceDir
+	}
+	workspacePaths = append(workspacePaths, WorkspaceDir)
+
+	if err := WriteWorkspacePaths(workspacePaths); err != nil {
+		logging.LogErrorf("write workspace conf [%s] failed: %s", workspaceConf, err)
+		os.Exit(logging.ExitCodeInitWorkspaceErr)
+	}
+
+	WorkspaceName = filepath.Base(WorkspaceDir)
 	ConfDir = filepath.Join(WorkspaceDir, "conf")
 	DataDir = filepath.Join(WorkspaceDir, "data")
 	RepoDir = filepath.Join(WorkspaceDir, "repo")
+	HistoryDir = filepath.Join(WorkspaceDir, "history")
 	TempDir = filepath.Join(WorkspaceDir, "temp")
 	osTmpDir := filepath.Join(TempDir, "os")
 	os.RemoveAll(osTmpDir)
-	if err := os.MkdirAll(osTmpDir, 0755); nil != err {
-		log.Fatalf("create os tmp dir [%s] failed: %s", osTmpDir, err)
+	if err := os.MkdirAll(osTmpDir, 0755); err != nil {
+		logging.LogErrorf("create os tmp dir [%s] failed: %s", osTmpDir, err)
+		os.Exit(logging.ExitCodeInitWorkspaceErr)
 	}
+	os.RemoveAll(filepath.Join(TempDir, "repo"))
 	os.Setenv("TMPDIR", osTmpDir)
 	os.Setenv("TEMP", osTmpDir)
 	os.Setenv("TMP", osTmpDir)
 	DBPath = filepath.Join(TempDir, DBName)
-	BlockTreePath = filepath.Join(TempDir, "blocktree.msgpack")
+	HistoryDBPath = filepath.Join(TempDir, "history.db")
+	AssetContentDBPath = filepath.Join(TempDir, "asset_content.db")
+	BlockTreeDBPath = filepath.Join(TempDir, "blocktree.db")
+	SnippetsPath = filepath.Join(DataDir, "snippets")
+	ShortcutsPath = filepath.Join(userHomeConfDir, "shortcuts")
+}
+
+func ReadWorkspacePaths() (ret []string, err error) {
+	ret = []string{}
+	workspaceConf := filepath.Join(HomeDir, ".config", "siyuan", "workspace.json")
+	data, err := os.ReadFile(workspaceConf)
+	if err != nil {
+		msg := fmt.Sprintf("read workspace conf [%s] failed: %s", workspaceConf, err)
+		logging.LogErrorf(msg)
+		err = errors.New(msg)
+		return
+	}
+
+	if err = gulu.JSON.UnmarshalJSON(data, &ret); err != nil {
+		msg := fmt.Sprintf("unmarshal workspace conf [%s] failed: %s", workspaceConf, err)
+		logging.LogErrorf(msg)
+		err = errors.New(msg)
+		return
+	}
+
+	var tmp []string
+	workspaceBaseDir := filepath.Dir(HomeDir)
+	for _, d := range ret {
+		if ContainerIOS == Container && strings.Contains(d, "/Documents/") {
+			// iOS 端沙箱路径会变化，需要转换为相对路径再拼接当前沙箱中的工作空间基路径
+			d = d[strings.Index(d, "/Documents/")+len("/Documents/"):]
+			d = filepath.Join(workspaceBaseDir, d)
+		}
+
+		d = strings.TrimRight(d, " \t\n") // 去掉工作空间路径尾部空格 https://github.com/siyuan-note/siyuan/issues/6353
+		if gulu.File.IsDir(d) {
+			tmp = append(tmp, d)
+		} else {
+			logging.LogWarnf("workspace path [%s] is not a dir", d)
+		}
+	}
+	ret = tmp
+	ret = gulu.Str.RemoveDuplicatedElem(ret)
+	return
+}
+
+func WriteWorkspacePaths(workspacePaths []string) (err error) {
+	workspacePaths = gulu.Str.RemoveDuplicatedElem(workspacePaths)
+	workspaceConf := filepath.Join(HomeDir, ".config", "siyuan", "workspace.json")
+	data, err := gulu.JSON.MarshalJSON(workspacePaths)
+	if err != nil {
+		msg := fmt.Sprintf("marshal workspace conf [%s] failed: %s", workspaceConf, err)
+		logging.LogErrorf(msg)
+		err = errors.New(msg)
+		return
+	}
+
+	if err = filelock.WriteFile(workspaceConf, data); err != nil {
+		msg := fmt.Sprintf("write workspace conf [%s] failed: %s", workspaceConf, err)
+		logging.LogErrorf(msg)
+		err = errors.New(msg)
+		return
+	}
+	return
 }
 
 var (
-	Resident       bool
+	ServerURL  *url.URL // 内核服务 URL
+	ServerPort = "0"    // HTTP/WebSocket 端口，0 为使用随机端口
+
 	ReadOnly       bool
 	AccessAuthCode string
-	Lang           = "en_US"
+	Lang           = ""
 
-	Container string // docker, android, ios, std
+	Container        string // docker, android, ios, harmony, std
+	ISMicrosoftStore bool   // 桌面端是否是微软商店版
+)
+
+const (
+	ContainerStd     = "std"     // 桌面端
+	ContainerDocker  = "docker"  // Docker 容器端
+	ContainerAndroid = "android" // Android 端
+	ContainerIOS     = "ios"     // iOS 端
+	ContainerHarmony = "harmony" // 鸿蒙端
+
+	LocalHost = "127.0.0.1" // 伺服地址
+	FixedPort = "6806"      // 固定端口
 )
 
 func initPathDir() {
-	if err := os.MkdirAll(ConfDir, 0755); nil != err && !os.IsExist(err) {
-		log.Fatalf("create conf folder [%s] failed: %s", ConfDir, err)
+	if err := os.MkdirAll(ConfDir, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create conf folder [%s] failed: %s", ConfDir, err)
 	}
-	if err := os.MkdirAll(DataDir, 0755); nil != err && !os.IsExist(err) {
-		log.Fatalf("create data folder [%s] failed: %s", DataDir, err)
+	if err := os.MkdirAll(DataDir, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create data folder [%s] failed: %s", DataDir, err)
 	}
-	if err := os.MkdirAll(TempDir, 0755); nil != err && !os.IsExist(err) {
-		log.Fatalf("create temp folder [%s] failed: %s", TempDir, err)
+	if err := os.MkdirAll(TempDir, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create temp folder [%s] failed: %s", TempDir, err)
 	}
 
 	assets := filepath.Join(DataDir, "assets")
-	if err := os.MkdirAll(assets, 0755); nil != err && !os.IsExist(err) {
-		log.Fatalf("create data assets folder [%s] failed: %s", assets, err)
+	if err := os.MkdirAll(assets, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create data assets folder [%s] failed: %s", assets, err)
 	}
 
 	templates := filepath.Join(DataDir, "templates")
-	if err := os.MkdirAll(templates, 0755); nil != err && !os.IsExist(err) {
-		log.Fatalf("create data templates folder [%s] failed: %s", templates, err)
+	if err := os.MkdirAll(templates, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create data templates folder [%s] failed: %s", templates, err)
 	}
 
 	widgets := filepath.Join(DataDir, "widgets")
-	if err := os.MkdirAll(widgets, 0755); nil != err && !os.IsExist(err) {
-		log.Fatalf("create data widgets folder [%s] failed: %s", widgets, err)
+	if err := os.MkdirAll(widgets, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create data widgets folder [%s] failed: %s", widgets, err)
+	}
+
+	plugins := filepath.Join(DataDir, "plugins")
+	if err := os.MkdirAll(plugins, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create data plugins folder [%s] failed: %s", widgets, err)
 	}
 
 	emojis := filepath.Join(DataDir, "emojis")
-	if err := os.MkdirAll(emojis, 0755); nil != err && !os.IsExist(err) {
-		log.Fatalf("create data emojis folder [%s] failed: %s", widgets, err)
-	}
-}
-
-func cleanOld() {
-	dirs, _ := os.ReadDir(WorkingDir)
-	for _, dir := range dirs {
-		if strings.HasSuffix(dir.Name(), ".old") {
-			old := filepath.Join(WorkingDir, dir.Name())
-			os.RemoveAll(old)
-		}
-	}
-}
-
-func checkPort() {
-	portOpened := isPortOpen(ServerPort)
-	if !portOpened {
-		return
+	if err := os.MkdirAll(emojis, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create data emojis folder [%s] failed: %s", widgets, err)
 	}
 
-	LogInfof("port [%s] is opened, try to check version of running kernel", ServerPort)
-	result := NewResult()
-	_, err := httpclient.NewBrowserRequest("").
-		SetResult(result).
-		SetHeader("User-Agent", UserAgent).
-		Get("http://127.0.0.1:" + ServerPort + "/api/system/version")
-	if nil != err || 0 != result.Code {
-		LogErrorf("connect to port [%s] for checking running kernel failed", ServerPort)
-		KillByPort(ServerPort)
-		return
-	}
-
-	if nil == result.Data {
-		LogErrorf("connect ot port [%s] for checking running kernel failed", ServerPort)
-		os.Exit(ExitCodeUnavailablePort)
-	}
-
-	runningVer := result.Data.(string)
-	if runningVer == Ver {
-		LogInfof("version of the running kernel is the same as this boot [%s], exit this boot", runningVer)
-		os.Exit(ExitCodeOk)
-	}
-
-	LogInfof("found kernel [%s] is running, try to exit it", runningVer)
-	processes, err := goPS.Processes()
-	if nil != err {
-		LogErrorf("close kernel [%s] failed: %s", runningVer, err)
-		os.Exit(ExitCodeUnavailablePort)
-	}
-
-	currentPid := os.Getpid()
-	for _, p := range processes {
-		name := p.Executable()
-		if strings.Contains(strings.ToLower(name), "siyuan-kernel") || strings.Contains(strings.ToLower(name), "siyuan kernel") {
-			kernelPid := p.Pid()
-			if currentPid != kernelPid {
-				pid := strconv.Itoa(kernelPid)
-				Kill(pid)
-				LogInfof("killed kernel [name=%s, pid=%s, ver=%s], continue to boot", name, pid, runningVer)
-			}
-		}
-	}
-
-	if !tryToListenPort() {
-		os.Exit(ExitCodeUnavailablePort)
+	// Support directly access `data/public/*` contents via URL link https://github.com/siyuan-note/siyuan/issues/8593
+	public := filepath.Join(DataDir, "public")
+	if err := os.MkdirAll(public, 0755); err != nil && !os.IsExist(err) {
+		logging.LogFatalf(logging.ExitCodeInitWorkspaceErr, "create data public folder [%s] failed: %s", widgets, err)
 	}
 }
 
@@ -376,72 +458,111 @@ func initMime() {
 	// https://github.com/siyuan-note/siyuan/issues/247
 	// https://github.com/siyuan-note/siyuan/issues/3813
 	mime.AddExtensionType(".css", "text/css")
-	mime.AddExtensionType(".js", "application/x-javascript")
-	mime.AddExtensionType(".json", "application/json")
+	mime.AddExtensionType(".js", "text/javascript")
+	mime.AddExtensionType(".mjs", "text/javascript")
 	mime.AddExtensionType(".html", "text/html")
+	mime.AddExtensionType(".json", "application/json")
+	mime.AddExtensionType(".woff2", "font/woff2")
+
+	// 某些系统上下载资源文件后打开是 zip https://github.com/siyuan-note/siyuan/issues/6347
+	mime.AddExtensionType(".doc", "application/msword")
+	mime.AddExtensionType(".docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+	mime.AddExtensionType(".xls", "application/vnd.ms-excel")
+	mime.AddExtensionType(".xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	mime.AddExtensionType(".dwg", "image/x-dwg")
+	mime.AddExtensionType(".dxf", "image/x-dxf")
+	mime.AddExtensionType(".dwf", "drawing/x-dwf")
+	mime.AddExtensionType(".pdf", "application/pdf")
+
+	// 某些系统上无法显示 SVG 图片 SVG images cannot be displayed on some systems https://github.com/siyuan-note/siyuan/issues/9413
+	mime.AddExtensionType(".svg", "image/svg+xml")
+
+	// 文档数据文件
+	mime.AddExtensionType(".sy", "application/json")
+
+	mime.AddExtensionType(".md", "text/markdown")
+	mime.AddExtensionType(".markdown", "text/markdown")
+
+	// 添加常用的图片格式
+	mime.AddExtensionType(".png", "image/png")
+	mime.AddExtensionType(".jpg", "image/jpeg")
+	mime.AddExtensionType(".jpeg", "image/jpeg")
+	mime.AddExtensionType(".gif", "image/gif")
+	mime.AddExtensionType(".bmp", "image/bmp")
+	mime.AddExtensionType(".tiff", "image/tiff")
+	mime.AddExtensionType(".tif", "image/tiff")
+	mime.AddExtensionType(".webp", "image/webp")
+	mime.AddExtensionType(".ico", "image/x-icon")
 }
 
-func KillByPort(port string) {
-	if pid := PidByPort(port); "" != pid {
-		pidInt, _ := strconv.Atoi(pid)
-		proc, _ := goPS.FindProcess(pidInt)
-		var name string
-		if nil != proc {
-			name = proc.Executable()
-		}
-		Kill(pid)
-		LogInfof("killed process [name=%s, pid=%s]", name, pid)
-	}
-}
-
-func Kill(pid string) {
-	var kill *exec.Cmd
-	if gulu.OS.IsWindows() {
-		kill = exec.Command("cmd", "/c", "TASKKILL /F /PID "+pid)
-	} else {
-		kill = exec.Command("kill", "-9", pid)
-	}
-	CmdAttr(kill)
-	kill.CombinedOutput()
-}
-
-func PidByPort(port string) (ret string) {
-	if gulu.OS.IsWindows() {
-		cmd := exec.Command("cmd", "/c", "netstat -ano | findstr "+port)
-		CmdAttr(cmd)
-		data, err := cmd.CombinedOutput()
-		if nil != err {
-			LogErrorf("netstat failed: %s", err)
-			return
-		}
-		output := string(data)
-		lines := strings.Split(output, "\n")
-		for _, l := range lines {
-			if strings.Contains(l, "LISTENING") {
-				l = l[strings.Index(l, "LISTENING")+len("LISTENING"):]
-				l = strings.TrimSpace(l)
-				ret = l
-				return
-			}
-		}
-		return
-	}
-
-	cmd := exec.Command("lsof", "-Fp", "-i", ":"+port)
-	CmdAttr(cmd)
-	data, err := cmd.CombinedOutput()
-	if nil != err {
-		LogErrorf("lsof failed: %s", err)
-		return
-	}
-	output := string(data)
-	lines := strings.Split(output, "\n")
-	for _, l := range lines {
-		if strings.HasPrefix(l, "p") {
-			l = l[1:]
-			ret = l
-			return
+func GetDataAssetsAbsPath() (ret string) {
+	ret = filepath.Join(DataDir, "assets")
+	if IsSymlinkPath(ret) {
+		// 跟随符号链接 https://github.com/siyuan-note/siyuan/issues/5480
+		var err error
+		ret, err = filepath.EvalSymlinks(ret)
+		if err != nil {
+			logging.LogErrorf("read assets link failed: %s", err)
 		}
 	}
 	return
+}
+
+func tryLockWorkspace() {
+	WorkspaceLock = flock.New(filepath.Join(WorkspaceDir, ".lock"))
+	ok, err := WorkspaceLock.TryLock()
+	if ok {
+		return
+	}
+	if err != nil {
+		logging.LogErrorf("lock workspace [%s] failed: %s", WorkspaceDir, err)
+	} else {
+		logging.LogErrorf("lock workspace [%s] failed", WorkspaceDir)
+	}
+	os.Exit(logging.ExitCodeWorkspaceLocked)
+}
+
+func IsWorkspaceLocked(workspacePath string) bool {
+	if !gulu.File.IsDir(workspacePath) {
+		return false
+	}
+
+	lockFilePath := filepath.Join(workspacePath, ".lock")
+	if !gulu.File.IsExist(lockFilePath) {
+		return false
+	}
+
+	f := flock.New(lockFilePath)
+	defer f.Unlock()
+	ok, _ := f.TryLock()
+	if ok {
+		return false
+	}
+	return true
+}
+
+func UnlockWorkspace() {
+	if nil == WorkspaceLock {
+		return
+	}
+
+	if err := WorkspaceLock.Unlock(); err != nil {
+		logging.LogErrorf("unlock workspace [%s] failed: %s", WorkspaceDir, err)
+		return
+	}
+
+	if err := os.Remove(filepath.Join(WorkspaceDir, ".lock")); err != nil {
+		logging.LogErrorf("remove workspace lock failed: %s", err)
+		return
+	}
+}
+
+func LogDatabaseSize(dbPath string) {
+	dbFile, err := os.Stat(dbPath)
+	if nil != err {
+		return
+	}
+
+	dbSize := humanize.BytesCustomCeil(uint64(dbFile.Size()), 2)
+	logging.LogInfof("database [%s] size [%s]", dbPath, dbSize)
 }

@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,20 +17,22 @@
 package search
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode/utf8"
 
-	"github.com/88250/lute/html"
+	"github.com/88250/gulu"
+	"github.com/88250/lute/lex"
+	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 func MarkText(text string, keyword string, beforeLen int, caseSensitive bool) (pos int, marked string) {
 	if "" == keyword {
 		return -1, text
 	}
-	text = html.EscapeString(text)
 	keywords := SplitKeyword(keyword)
-	marked = EncloseHighlighting(text, keywords, "<mark>", "</mark>", caseSensitive)
+	marked = EncloseHighlighting(text, keywords, "<mark>", "</mark>", caseSensitive, false)
 
 	pos = strings.Index(marked, "<mark>")
 	if 0 > pos {
@@ -53,7 +55,11 @@ func MarkText(text string, keyword string, beforeLen int, caseSensitive bool) (p
 	return
 }
 
-const TermSep = "__term@sep__"
+const (
+	TermSep         = "__term@sep__"
+	SearchMarkLeft  = "__@mark__"
+	SearchMarkRight = "__mark@__"
+)
 
 func SplitKeyword(keyword string) (keywords []string) {
 	keyword = strings.TrimSpace(keyword)
@@ -74,49 +80,64 @@ func SplitKeyword(keyword string) (keywords []string) {
 	return
 }
 
-func EncloseHighlighting(text string, keywords []string, openMark, closeMark string, caseSensitive bool) string {
+func EncloseHighlighting(text string, keywords []string, openMark, closeMark string, caseSensitive, splitWords bool) (ret string) {
 	ic := "(?i)"
 	if caseSensitive {
 		ic = "(?)"
 	}
 	re := ic + "("
 	for i, k := range keywords {
-		k = keyword2regexp(k)
-		re += "(" + k + ")"
+		if "" == k {
+			continue
+		}
+
+		wordBoundary := false
+		if splitWords {
+			wordBoundary = lex.IsASCIILetterNums(gulu.Str.ToBytes(k)) // Improve virtual reference split words https://github.com/siyuan-note/siyuan/issues/7833
+		}
+		k = regexp.QuoteMeta(util.EscapeHTML(k))
+		re += "("
+		if wordBoundary {
+			re += "\\b"
+		}
+		re += k
+		if wordBoundary {
+			re += "\\b"
+		}
+		re += ")"
 		if i < len(keywords)-1 {
 			re += "|"
 		}
 	}
 	re += ")"
-	if reg, err := regexp.Compile(re); nil == err {
-		text = reg.ReplaceAllStringFunc(text, func(s string) string {
-			return openMark + s + closeMark
-		})
-	} else {
-		for _, k := range keywords {
-			k = keyword2regexp(k)
-			var repls, words []string
-			if re, err := regexp.Compile(ic + k); nil == err {
-				words = re.FindAllString(text, -1)
-			} else {
-				re, _ := regexp.Compile(ic + regexp.QuoteMeta(k))
-				words = re.FindAllString(text, -1)
-			}
-			for _, word := range words {
-				repls = append(repls, word, openMark+word+closeMark)
-			}
-			replacer := strings.NewReplacer(repls...)
-			text = replacer.Replace(text)
-		}
+	ret = util.EscapeHTML(text)
+
+	ret = strings.ReplaceAll(ret, "&#34;", "\ue000")
+	ret = strings.ReplaceAll(ret, "&lt;", "\ue001")
+	ret = strings.ReplaceAll(ret, "&gt;", "\ue002")
+	ret = strings.ReplaceAll(ret, "&#39;", "\ue003")
+	if reg, err := regexp.Compile(re); err == nil {
+		ret = reg.ReplaceAllStringFunc(ret, func(s string) string { return openMark + s + closeMark })
 	}
-	return text
+	ret = strings.ReplaceAll(ret, "\ue000", "&#34;")
+	ret = strings.ReplaceAll(ret, "\ue001", "&lt;")
+	ret = strings.ReplaceAll(ret, "\ue002", "&gt;")
+	ret = strings.ReplaceAll(ret, "\ue003", "&#39;")
+
+	// 搜索结果预览包含转义符问题 Search results preview contains escape character issue https://github.com/siyuan-note/siyuan/issues/9790
+	ret = strings.ReplaceAll(ret, "\\<span", "\\\\<span")
+	return
 }
 
-func keyword2regexp(k string) string {
-	k = strings.ReplaceAll(k, "*", ".*")
-	k = strings.ReplaceAll(k, "?", ".")
-	k = strings.ReplaceAll(k, "%", ".*")
-	k = strings.ReplaceAll(k, "_", ".")
-	k = strings.ReplaceAll(k, "\\\\", "\\")
-	return k
+const (
+	MarkDataType            = "search-mark"
+	VirtualBlockRefDataType = "virtual-block-ref"
+)
+
+func GetMarkSpanStart(dataType string) string {
+	return fmt.Sprintf("<span data-type=\"%s\">", dataType)
+}
+
+func GetMarkSpanEnd() string {
+	return "</span>"
 }

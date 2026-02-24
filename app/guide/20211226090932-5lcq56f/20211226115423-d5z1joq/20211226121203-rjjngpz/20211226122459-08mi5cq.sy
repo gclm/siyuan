@@ -1,10 +1,12 @@
 {
 	"ID": "20211226122459-08mi5cq",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20211226122459-08mi5cq",
 		"title": "Docker 伺服",
-		"updated": "20220518213342"
+		"type": "doc",
+		"updated": "20250926110600"
 	},
 	"Children": [
 		{
@@ -70,20 +72,9 @@
 									"Data": "鏡像名稱 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "b3log/siyuan"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "b3log/siyuan"
 								}
 							]
 						}
@@ -110,30 +101,10 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeLink",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeOpenBracket"
-										},
-										{
-											"Type": "NodeLinkText",
-											"Data": "鏡像地址"
-										},
-										{
-											"Type": "NodeCloseBracket"
-										},
-										{
-											"Type": "NodeOpenParen"
-										},
-										{
-											"Type": "NodeLinkDest",
-											"Data": "https://hub.docker.com/r/b3log/siyuan"
-										},
-										{
-											"Type": "NodeCloseParen"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://hub.docker.com/r/b3log/siyuan",
+									"TextMarkTextContent": "鏡像地址"
 								}
 							]
 						}
@@ -169,20 +140,9 @@
 					"Data": "整體程式位於 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "/opt/siyuan/"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/opt/siyuan/"
 				},
 				{
 					"Type": "NodeText",
@@ -196,7 +156,7 @@
 			"ListData": {},
 			"Properties": {
 				"id": "20211226122519-dp4dv43",
-				"updated": "20211228132206"
+				"updated": "20230630170719"
 			},
 			"Children": [
 				{
@@ -290,7 +250,7 @@
 					},
 					"Properties": {
 						"id": "20211226122519-sn8phpz",
-						"updated": "20211228124516"
+						"updated": "20230630170719"
 					},
 					"Children": [
 						{
@@ -298,12 +258,12 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226122519-s5nun1r",
-								"updated": "20211228124516"
+								"updated": "20230630170719"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "kernel：內核程式"
+									"Data": "kernel：核心程式"
 								}
 							]
 						}
@@ -339,40 +299,18 @@
 					"Data": "構建 Docker 鏡像時設置了入口："
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "ENTRYPOINT [ \"/opt/siyuan/kernel\" ]"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "ENTRYPOINT [ \"/opt/siyuan/kernel\" ]"
 				},
 				{
 					"Type": "NodeText",
 					"Data": "，使用 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "docker run b3log/siyuan"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "docker run b3log/siyuan"
 				},
 				{
 					"Type": "NodeText",
@@ -408,40 +346,18 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "--workspace"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace"
 								},
 								{
 									"Type": "NodeText",
 									"Data": " 指定工作空間文件夾路徑，在宿主機上通過 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "-v"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "-v"
 								},
 								{
 									"Type": "NodeText",
@@ -458,7 +374,7 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226122519-ajimm1z",
-				"updated": "20211228141917"
+				"updated": "20231108220606"
 			},
 			"Children": [
 				{
@@ -466,53 +382,24 @@
 					"Data": "更多的參數可參考"
 				},
 				{
-					"Type": "NodeBlockRef",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeBlockRefID",
-							"Data": "20211226122358-hctqcn5"
-						},
-						{
-							"Type": "NodeBlockRefSpace"
-						},
-						{
-							"Type": "NodeBlockRefText",
-							"Data": "這裡"
-						},
-						{
-							"Type": "NodeCloseParen"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226122358-hctqcn5",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "這裡"
 				},
 				{
 					"Type": "NodeText",
 					"Data": "。下面是一條啟動指令示例："
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "docker run -v workspace_dir_host:workspace_dir_container -p 6806:6806 b3log/siyuan --workspace=workspace_dir_container"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "docker run -d -v workspace_dir_host:workspace_dir_container -p 6806:6806 b3log/siyuan --workspace=workspace_dir_container"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
 				}
 			]
 		},
@@ -544,20 +431,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "workspace_dir_host"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace_dir_host"
 								},
 								{
 									"Type": "NodeText",
@@ -586,40 +462,18 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "workspace_dir_container"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "workspace_dir_container"
 								},
 								{
 									"Type": "NodeText",
 									"Data": "：容器內工作空間文件夾路徑，和後面 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "--workspace"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "--workspace"
 								},
 								{
 									"Type": "NodeText",
@@ -636,7 +490,7 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226122519-yggdi08",
-				"updated": "20211228141927"
+				"updated": "20231108220609"
 			},
 			"Children": [
 				{
@@ -644,84 +498,40 @@
 					"Data": "為了簡化，建議將 workspace 文件夾路徑在宿主機和容器上配置為一致的，比如將 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "workspace_dir_host"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace_dir_host"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " 和 "
+					"Data": "​ 和 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "workspace_dir_container"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "workspace_dir_container"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " 都配置為 "
+					"Data": "​ 都配置為 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "/siyuan/workspace"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/siyuan/workspace"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "，對應的啟動指令示例："
+					"Data": "​，對應的啟動指令示例："
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "docker run -v /siyuan/workspace:/siyuan/workspace -p 6806:6806 -u 1000:1000 b3log/siyuan --workspace=/siyuan/workspace/"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "docker run -d -v /siyuan/workspace:/siyuan/workspace -p 6806:6806 -u 1000:1000 b3log/siyuan --workspace=/siyuan/workspace/"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "。"
+					"Data": "​。"
 				}
 			]
 		},
@@ -750,63 +560,30 @@
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "鏡像中是使用預設創建的普通用戶 "
+					"Data": "鏡像中是使用預設建立的普通用戶 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "siyuan"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "siyuan"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "（uid 1000/gid 1000）來啟動kernel程式的，所以在宿主機創建工作空間文件夾時請註意設置該文件夾所屬用戶組："
+					"Data": "（uid 1000/gid 1000）來啟動kernel程式的，所以在宿主機建立工作空間文件夾時請註意設置該文件夾所屬用戶組："
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "chown -R 1000:1000 /siyuan/workspace"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "chown -R 1000:1000 /siyuan/workspace"
 				},
 				{
 					"Type": "NodeText",
 					"Data": "，在啟動容器時需要帶參數 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "-u 1000:1000"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "-u 1000:1000"
 				},
 				{
 					"Type": "NodeText",
@@ -825,7 +602,7 @@
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "隱藏端口"
+					"Data": "隱藏埠"
 				}
 			]
 		},
@@ -839,7 +616,7 @@
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "使用 NGINX 反向代理可以隱藏 6806 端口，請註意："
+					"Data": "使用 NGINX 反向代理可以隱藏 6806 埠，請註意："
 				}
 			]
 		},
@@ -877,20 +654,182 @@
 									"Data": "配置 WebSocket 反代 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "/ws"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "/ws"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-87fl7tu",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230406105213-87fl7tu",
+				"updated": "20230406105213"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-bhjbz5l",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230406105213-bhjbz5l",
+				"updated": "20230406105250"
+			},
+			"Children": [
+				{
+					"ID": "20230406105213-9bsxoem",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-9bsxoem",
+						"updated": "20230406105213"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-q4aecyp",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-q4aecyp",
+								"updated": "20230406105213"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "請務必確認掛載卷的正確性，否則容器刪除後資料會丟失"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230406105213-3hw3e6i",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-3hw3e6i",
+						"updated": "20230406105250"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-hy2wy2j",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-hy2wy2j",
+								"updated": "20230406105250"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不要使用 URL 重寫進行重定向，否則鑑權可能會有問題，建議配置反向代理"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-yoyn08w",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230406105213-yoyn08w",
+				"updated": "20250926110600"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "限制"
+				}
+			]
+		},
+		{
+			"ID": "20230406105213-899tzed",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20230406105213-899tzed",
+				"updated": "20250926110600"
+			},
+			"Children": [
+				{
+					"ID": "20230406105213-n1iq0nk",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-n1iq0nk",
+						"updated": "20230406105213"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-8dbq6l2",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-8dbq6l2",
+								"updated": "20230406105213"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不支持桌面端和移動端應用連接，僅支持在瀏覽器上使用"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20230406105213-a8dt0r2",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20230406105213-a8dt0r2",
+						"updated": "20250926110600"
+					},
+					"Children": [
+						{
+							"ID": "20230406105213-2dqmoo6",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20230406105213-2dqmoo6",
+								"updated": "20250926110600"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "不支援匯出 PDF 和 Word 等格式"
 								}
 							]
 						}

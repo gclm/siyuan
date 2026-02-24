@@ -1,19 +1,24 @@
 import {Wnd} from "./Wnd";
 import {genUUID} from "../util/genID";
-import {addResize, resizeTabs} from "./util";
+import {addResize, fixWndFlex1} from "./util";
+import {resizeTabs} from "./tabUtil";
+/// #if MOBILE
+// 检测移动端是否引入了桌面端的代码
+console.error("Need remove unused code");
+/// #endif
 
 export class Layout {
     public element: HTMLElement;
     public children?: Array<Layout | Wnd>;
     public parent?: Layout;
-    public direction: TDirection;
-    public type?: TLayout;
+    public direction: Config.TUILayoutDirection;
+    public type?: Config.TUILayoutType;
     public id?: string;
-    public resize?: TDirection;
+    public resize?: Config.TUILayoutDirection;
     public size?: string;
 
     constructor(options?: ILayoutOptions) {
-        const mergedOptions = Object.assign({
+        const mergedOptions: ILayoutOptions = Object.assign({
             direction: "tb",
             size: "auto",
             type: "normal"
@@ -34,9 +39,6 @@ export class Layout {
             this.element.classList.add("fn__flex-column");
         } else {
             this.element.classList.add("fn__flex");
-        }
-        if (mergedOptions.type === "left") {
-            this.element.classList.add("fn__flex-shrink");
         }
     }
 
@@ -72,16 +74,26 @@ export class Layout {
             this.children.find((item, index) => {
                 if (item.id === id) {
                     this.children.splice(index + 1, 0, child);
-                    item.element.style.width = "";
-                    item.element.style.height = "";
-                    item.element.classList.add("fn__flex-1");
+                    if (this.direction === "lr") {
+                        // 向右分屏，左侧文档抖动，移除动画和边距
+                        item.element.querySelectorAll(".protyle-content").forEach((element: HTMLElement) => {
+                            if (!element.parentElement.classList.contains("fn__none")) {
+                                element.classList.remove("protyle-content--transition");
+                                (element.querySelector(".protyle-wysiwyg") as HTMLElement).style.padding = "";
+                                element.classList.add("protyle-content--transition");
+                            }
+                        });
+                    }
                     item.element.after(child.element);
                     return true;
                 }
             });
         }
+        if (id) {
+            fixWndFlex1(this);
+        }
         addResize(child);
-        resizeTabs();
+        resizeTabs(false);
         child.parent = this;
     }
 }
