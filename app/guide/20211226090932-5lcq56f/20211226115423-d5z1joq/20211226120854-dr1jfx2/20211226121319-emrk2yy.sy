@@ -1,11 +1,14 @@
 {
 	"ID": "20211226121319-emrk2yy",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
+		"icon": "1f4f0",
 		"id": "20211226121319-emrk2yy",
 		"title": "排版元素",
 		"title-img": "background-color: hsl(2, 57%, 40%);background-image: repeating-linear-gradient(transparent, transparent 50px, rgba(0,0,0,.4) 50px, rgba(0,0,0,.4) 53px, transparent 53px, transparent 63px, rgba(0,0,0,.4) 63px, rgba(0,0,0,.4) 66px, transparent 66px, transparent 116px, rgba(0,0,0,.5) 116px, rgba(0,0,0,.5) 166px, rgba(255,255,255,.2) 166px, rgba(255,255,255,.2) 169px, rgba(0,0,0,.5) 169px, rgba(0,0,0,.5) 179px, rgba(255,255,255,.2) 179px, rgba(255,255,255,.2) 182px, rgba(0,0,0,.5) 182px, rgba(0,0,0,.5) 232px, transparent 232px),repeating-linear-gradient(270deg, transparent, transparent 50px, rgba(0,0,0,.4) 50px, rgba(0,0,0,.4) 53px, transparent 53px, transparent 63px, rgba(0,0,0,.4) 63px, rgba(0,0,0,.4) 66px, transparent 66px, transparent 116px, rgba(0,0,0,.5) 116px, rgba(0,0,0,.5) 166px, rgba(255,255,255,.2) 166px, rgba(255,255,255,.2) 169px, rgba(0,0,0,.5) 169px, rgba(0,0,0,.5) 179px, rgba(255,255,255,.2) 179px, rgba(255,255,255,.2) 182px, rgba(0,0,0,.5) 182px, rgba(0,0,0,.5) 232px, transparent 232px),repeating-linear-gradient(125deg, transparent, transparent 2px, rgba(0,0,0,.2) 2px, rgba(0,0,0,.2) 3px, transparent 3px, transparent 5px, rgba(0,0,0,.2) 5px);",
-		"updated": "20220602101300"
+		"type": "doc",
+		"updated": "20251211094201"
 	},
 	"Children": [
 		{
@@ -14,12 +17,12 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226122008-i45akvs",
-				"updated": "20211226122008"
+				"updated": "20240702222119"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "行内元素"
+					"Data": "行級元素"
 				}
 			]
 		},
@@ -29,7 +32,7 @@
 			"ListData": {},
 			"Properties": {
 				"id": "20211226122008-1e014nh",
-				"updated": "20220521234434"
+				"updated": "20240702222119"
 			},
 			"Children": [
 				{
@@ -41,7 +44,7 @@
 					},
 					"Properties": {
 						"id": "20211226122008-9i560vp",
-						"updated": "20211226150308"
+						"updated": "20240416113759"
 					},
 					"Children": [
 						{
@@ -49,37 +52,15 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226122008-mc8bdbc",
-								"updated": "20211226150308"
+								"updated": "20240416113759"
 							},
 							"Children": [
 								{
-									"Type": "NodeBlockRef",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeOpenParen"
-										},
-										{
-											"Type": "NodeOpenParen"
-										},
-										{
-											"Type": "NodeBlockRefID",
-											"Data": "20211226115423-d5z1joq"
-										},
-										{
-											"Type": "NodeBlockRefSpace"
-										},
-										{
-											"Type": "NodeBlockRefText",
-											"Data": "請從這裡開始"
-										},
-										{
-											"Type": "NodeCloseParen"
-										},
-										{
-											"Type": "NodeCloseParen"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20211226115423-d5z1joq",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "塊引用"
 								}
 							]
 						}
@@ -94,7 +75,7 @@
 					},
 					"Properties": {
 						"id": "20211226122008-g3h952f",
-						"updated": "20220115193505"
+						"updated": "20240506230828"
 					},
 					"Children": [
 						{
@@ -102,19 +83,83 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226122008-9ff5a3r",
-								"updated": "20220115193505"
+								"updated": "20240506230828"
 							},
 							"Children": [
 								{
-									"Type": "NodeLink",
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://ld246.com",
+									"TextMarkTextContent": "超連結"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220916195409-g57vfyf",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220916195409-g57vfyf",
+						"updated": "20240702222119"
+					},
+					"Children": [
+						{
+							"ID": "20220916195414-a5jqqzy",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220916195414-a5jqqzy",
+								"updated": "20220916195414"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "圖片"
+								}
+							]
+						},
+						{
+							"ID": "20211226122008-pei037e",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122008-pei037e",
+								"updated": "20220916195424"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "可通過複制貼上或拖拽來上傳圖片；上傳後的圖片可通過拖拽進行大小調整。"
+								}
+							]
+						},
+						{
+							"ID": "20211226122008-poajwbi",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20211226122008-poajwbi",
+								"updated": "20240702222119"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "​"
+								},
+								{
+									"Type": "NodeImage",
 									"Data": "span",
 									"Children": [
+										{
+											"Type": "NodeBang"
+										},
 										{
 											"Type": "NodeOpenBracket"
 										},
 										{
-											"Type": "NodeLinkText",
-											"Data": "超級連結"
+											"Type": "NodeLinkText"
 										},
 										{
 											"Type": "NodeCloseBracket"
@@ -124,7 +169,7 @@
 										},
 										{
 											"Type": "NodeLinkDest",
-											"Data": "https://ld246.com"
+											"Data": "assets/siyuan-128-20210604092205-djd749a.png"
 										},
 										{
 											"Type": "NodeCloseParen"
@@ -156,22 +201,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "加粗"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "加粗"
 								}
 							]
 						}
@@ -198,22 +230,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeEmphasis",
-									"Data": "em",
-									"Children": [
-										{
-											"Type": "NodeEmA6kOpenMarker",
-											"Data": "*"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "傾斜"
-										},
-										{
-											"Type": "NodeEmA6kCloseMarker",
-											"Data": "*"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "em",
+									"TextMarkTextContent": "傾斜"
 								}
 							]
 						}
@@ -240,20 +259,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeUnderline",
-									"Data": "u",
-									"Children": [
-										{
-											"Type": "NodeUnderlineOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "下划線"
-										},
-										{
-											"Type": "NodeUnderlineCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "u",
+									"TextMarkTextContent": "下划線"
 								}
 							]
 						}
@@ -280,20 +288,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeStrikethrough",
-									"Data": "s",
-									"Children": [
-										{
-											"Type": "NodeStrikethrough2OpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "刪除線"
-										},
-										{
-											"Type": "NodeStrikethrough2CloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "s",
+									"TextMarkTextContent": "刪除線"
 								}
 							]
 						}
@@ -320,20 +317,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeMark",
-									"Data": "mark",
-									"Children": [
-										{
-											"Type": "NodeMark2OpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "標記"
-										},
-										{
-											"Type": "NodeMark2CloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "mark",
+									"TextMarkTextContent": "標記"
 								}
 							]
 						}
@@ -360,20 +346,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeSup",
-									"Data": "sup",
-									"Children": [
-										{
-											"Type": "NodeSupOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "上標"
-										},
-										{
-											"Type": "NodeSupCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "sup",
+									"TextMarkTextContent": "上標"
 								}
 							]
 						}
@@ -400,20 +375,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeSub",
-									"Data": "sub",
-									"Children": [
-										{
-											"Type": "NodeSubOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "下標"
-										},
-										{
-											"Type": "NodeSubCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "sub",
+									"TextMarkTextContent": "下標"
 								}
 							]
 						}
@@ -440,20 +404,9 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeKbd",
-									"Data": "kbd",
-									"Children": [
-										{
-											"Type": "NodeKbdOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "快捷鍵"
-										},
-										{
-											"Type": "NodeKbdCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "快捷鍵"
 								}
 							]
 						}
@@ -484,20 +437,9 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeTag",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeTagOpenMarker"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "標籤"
-										},
-										{
-											"Type": "NodeTagCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "tag",
+									"TextMarkTextContent": "標籤"
 								}
 							]
 						}
@@ -512,7 +454,7 @@
 					},
 					"Properties": {
 						"id": "20211226122008-dwvi51s",
-						"updated": "20211226122008"
+						"updated": "20220916195740"
 					},
 					"Children": [
 						{
@@ -520,24 +462,13 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226122008-f8vr0tu",
-								"updated": "20211226122008"
+								"updated": "20220916195740"
 							},
 							"Children": [
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "行內代碼"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": "行級代碼"
 								}
 							]
 						}
@@ -564,24 +495,42 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeInlineMath",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeInlineMathOpenMarker"
-										},
-										{
-											"Type": "NodeInlineMathContent",
-											"Data": "a^2 + b^2 = \\color{red}c^2"
-										},
-										{
-											"Type": "NodeInlineMathCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "inline-math",
+									"TextMarkInlineMathContent": "a^2 + b^2 = \\color{red}c^2"
 								},
 								{
-									"Type": "NodeText",
-									"Data": "\n"
+									"Type": "NodeText"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20220918172637-u4ckqgh",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20220918172637-u4ckqgh",
+						"updated": "20220918174803"
+					},
+					"Children": [
+						{
+							"ID": "20220918172637-x9l2igm",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20220918172637-x9l2igm",
+								"updated": "20220918174803"
+							},
+							"Children": [
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "inline-memo",
+									"TextMarkInlineMemoContent": "這是一個行級備註",
+									"TextMarkTextContent": "備註"
 								}
 							]
 						}
@@ -608,25 +557,12 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color1); background-color: var(--b3-font-background1);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 1"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 1"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -637,25 +573,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color2); background-color: var(--b3-font-background2);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 2"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 2"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -666,25 +589,12 @@
 									"Data": "  "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color3); background-color: var(--b3-font-background3);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 3"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 3"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -695,25 +605,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color4); background-color: var(--b3-font-background4);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 4"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 4"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -724,25 +621,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color5); background-color: var(--b3-font-background5);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 5"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 5"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -753,25 +637,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color6); background-color: var(--b3-font-background6);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 6"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 6"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -782,25 +653,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color7); background-color: var(--b3-font-background7);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 7"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 7"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -811,25 +669,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color8); background-color: var(--b3-font-background8);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 8"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 8"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -840,25 +685,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color9); background-color: var(--b3-font-background9);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 9"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 9"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -869,25 +701,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color10); background-color: var(--b3-font-background10);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 10"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 10"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -898,25 +717,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color11); background-color: var(--b3-font-background11);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 11"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 11"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -927,25 +733,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "background-color: var(--b3-font-background12);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 12"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 12"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -956,25 +749,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "color: var(--b3-font-color13); background-color: var(--b3-font-background13);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "顏色 13"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "顏色 13"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -991,25 +771,12 @@
 							},
 							"Children": [
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "-webkit-text-stroke: 0.2px var(--b3-theme-on-background); -webkit-text-fill-color: transparent;"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "特效 1"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "特效 1"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -1020,25 +787,12 @@
 									"Data": " "
 								},
 								{
-									"Type": "NodeStrong",
-									"Data": "strong",
+									"Type": "NodeTextMark",
 									"Properties": {
 										"style": "text-shadow: 1px 1px var(--b3-border-color), 2px 2px var(--b3-border-color), 3px 3px var(--b3-border-color), 4px 4px var(--b3-border-color);"
 									},
-									"Children": [
-										{
-											"Type": "NodeStrongA6kOpenMarker",
-											"Data": "**"
-										},
-										{
-											"Type": "NodeText",
-											"Data": "特效 2"
-										},
-										{
-											"Type": "NodeStrongA6kCloseMarker",
-											"Data": "**"
-										}
-									]
+									"TextMarkType": "strong",
+									"TextMarkTextContent": "特效 2"
 								},
 								{
 									"Type": "NodeKramdownSpanIAL",
@@ -1073,20 +827,9 @@
 									"Data": "通過輸入 "
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": ":"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "code",
+									"TextMarkTextContent": ":"
 								},
 								{
 									"Type": "NodeText",
@@ -1095,84 +838,6 @@
 							]
 						}
 					]
-				}
-			]
-		},
-		{
-			"ID": "20211226122008-s3rfg01",
-			"Type": "NodeHeading",
-			"HeadingLevel": 2,
-			"Properties": {
-				"id": "20211226122008-s3rfg01",
-				"updated": "20211226122008"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "圖片"
-				}
-			]
-		},
-		{
-			"ID": "20211226122008-pei037e",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226122008-pei037e",
-				"updated": "20211226002011"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "可通過複制貼上或拖拽來上傳圖片；上傳後的圖片可通過拖拽進行大小調整。"
-				}
-			]
-		},
-		{
-			"ID": "20211226122008-poajwbi",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226122008-poajwbi",
-				"updated": "20210604222204"
-			},
-			"Children": [
-				{
-					"Type": "NodeImage",
-					"Data": "span",
-					"Properties": {
-						"style": "display: block;"
-					},
-					"Children": [
-						{
-							"Type": "NodeBang"
-						},
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "assets/siyuan-128-20210604092205-djd749a.png"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
-				},
-				{
-					"Type": "NodeKramdownSpanIAL",
-					"Data": "{: style=\"display: block;\"}"
-				},
-				{
-					"Type": "NodeText",
-					"Data": "\n"
 				}
 			]
 		},
@@ -1331,7 +996,8 @@
 			"Type": "NodeBlockQueryEmbed",
 			"Properties": {
 				"id": "20211226122008-11wgyd6",
-				"updated": "20210604222515"
+				"style": "height: 72px;",
+				"updated": "20230428155746"
 			},
 			"Children": [
 				{
@@ -1342,7 +1008,7 @@
 				},
 				{
 					"Type": "NodeBlockQueryEmbedScript",
-					"Data": "select * from blocks where id='20210428212840-8rqwn5o'"
+					"Data": "select * from blocks where id='20211226115745-bygtonj'"
 				},
 				{
 					"Type": "NodeCloseBrace"
@@ -2155,7 +1821,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226122008-81ngeqd",
-				"updated": "20211226122008"
+				"updated": "20251209211701"
 			},
 			"Children": [
 				{
@@ -2169,7 +1835,7 @@
 			"Type": "NodeBlockquote",
 			"Properties": {
 				"id": "20211226122008-gdx4vn9",
-				"updated": "20211226002617"
+				"updated": "20251209211653"
 			},
 			"Children": [
 				{
@@ -2187,6 +1853,156 @@
 						{
 							"Type": "NodeText",
 							"Data": "注意不是内容塊引用，而是引述塊（Blockquote）。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251209211701-hu8m4pm",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20251209211701-hu8m4pm",
+				"updated": "20251211094201"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "提示塊"
+				}
+			]
+		},
+		{
+			"ID": "20251211094143-aymafj0",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094143-aymafj0",
+				"updated": "20251211094150"
+			},
+			"CalloutType": "NOTE",
+			"CalloutTitle": "Note",
+			"CalloutIcon": "✏️",
+			"Children": [
+				{
+					"ID": "20251211094143-df00ss1",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094143-df00ss1",
+						"updated": "20251211094150"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "反白顯示即使快速瀏覽也應注意的資訊。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094143-tfdwvoe",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094143-tfdwvoe",
+				"updated": "20251211094152"
+			},
+			"CalloutType": "TIP",
+			"CalloutTitle": "Tip",
+			"CalloutIcon": "💡",
+			"Children": [
+				{
+					"ID": "20251211094143-jgbn677",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094143-jgbn677",
+						"updated": "20251211094152"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "幫助取得更大成功的選用資訊。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094143-zst3xpn",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094143-zst3xpn",
+				"updated": "20251211094157"
+			},
+			"CalloutType": "IMPORTANT",
+			"CalloutTitle": "Important",
+			"CalloutIcon": "❗",
+			"Children": [
+				{
+					"ID": "20251211094143-91vr3mm",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094143-91vr3mm",
+						"updated": "20251211094157"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "成功所必需的關鍵資訊。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094143-vij9zby",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094143-vij9zby",
+				"updated": "20251211094201"
+			},
+			"CalloutType": "WARNING",
+			"CalloutTitle": "Warning",
+			"CalloutIcon": "⚠️",
+			"Children": [
+				{
+					"ID": "20251211094143-xt5f7c4",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094143-xt5f7c4",
+						"updated": "20251211094201"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "由於潛在風險，需要立即關注的關鍵內容。"
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20251211094143-1kho5im",
+			"Type": "NodeCallout",
+			"Properties": {
+				"id": "20251211094143-1kho5im",
+				"updated": "20251211094143"
+			},
+			"CalloutType": "CAUTION",
+			"CalloutTitle": "Caution",
+			"CalloutIcon": "🚨",
+			"Children": [
+				{
+					"ID": "20251211094143-s8sta3t",
+					"Type": "NodeParagraph",
+					"Properties": {
+						"id": "20251211094143-s8sta3t",
+						"updated": "20251211094143"
+					},
+					"Children": [
+						{
+							"Type": "NodeText",
+							"Data": "操作可能帶來的負面後果。"
 						}
 					]
 				}
@@ -2338,220 +2154,99 @@
 							"Data": "Tip: 語言名稱支援下面這些： "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "ruby"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "ruby"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "python"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "python"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "js"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "js"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "html"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "html"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "erb"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "erb"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "css"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "css"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "coffee"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "coffee"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "bash"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "bash"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "json"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "json"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "yml"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "yml"
 						},
 						{
 							"Type": "NodeText",
 							"Data": ", "
 						},
 						{
-							"Type": "NodeCodeSpan",
-							"Data": "code",
-							"Children": [
-								{
-									"Type": "NodeCodeSpanOpenMarker"
-								},
-								{
-									"Type": "NodeCodeSpanContent",
-									"Data": "xml"
-								},
-								{
-									"Type": "NodeCodeSpanCloseMarker"
-								}
-							]
+							"Type": "NodeTextMark",
+							"TextMarkType": "code",
+							"TextMarkTextContent": "xml"
 						},
 						{
 							"Type": "NodeText",
@@ -2706,7 +2401,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20220312004712-5dfiars",
-				"updated": "20220312004723"
+				"updated": "20241018105327"
 			},
 			"Children": [
 				{
@@ -2718,10 +2413,10 @@
 		{
 			"ID": "20220312004730-udc38az",
 			"Type": "NodeHTMLBlock",
-			"Data": "\u003cruby\u003e\n你\u003crt\u003enǐ\u003c/rt\u003e\n　好\u003crt\u003e　hǎo\u003c/rt\u003e\n　世\u003crt\u003e　shì\u003c/rt\u003e\n　界\u003crt\u003e　jiè\u003c/rt\u003e\n\u003c/ruby\u003e\u003cbr\u003e\nHello World",
+			"Data": "\u003cdiv\u003e\n\u003cruby\u003e\n你\u003crt\u003enǐ\u003c/rt\u003e\n　好\u003crt\u003e　hǎo\u003c/rt\u003e\n　世\u003crt\u003e　shì\u003c/rt\u003e\n　界\u003crt\u003e　jiè\u003c/rt\u003e\n\u003c/ruby\u003e\u003cbr\u003e\nHello World\n\u003c/div\u003e",
 			"Properties": {
 				"id": "20220312004730-udc38az",
-				"updated": "20220312122027"
+				"updated": "20220828102621"
 			}
 		},
 		{
@@ -2729,28 +2424,23 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20220312122707-8258e11",
-				"updated": "20220312122802"
+				"updated": "20241018105327"
 			},
 			"Children": [
 				{
-					"Type": "NodeTag",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeTagOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "注意"
-						},
-						{
-							"Type": "NodeTagCloseMarker"
-						}
-					]
+					"Type": "NodeText",
+					"Data": "更多細節請參考 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20240427230732-snprakd",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "HTML 塊注意"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "：使用 HTML 塊時不會對其中的代碼進行安全過濾，請確認代碼安全後再使用，以免遭遇跨站腳本攻擊（XSS）。"
+					"Data": "。"
 				}
 			]
 		},
@@ -2765,7 +2455,7 @@
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "分割線"
+					"Data": "分隔線"
 				}
 			]
 		},
@@ -2832,12 +2522,12 @@
 			]
 		},
 		{
-			"ID": "20211226122008-3ga1cqf",
+			"ID": "20220909095422-c32trma",
 			"Type": "NodeIFrame",
-			"Data": "\u003ciframe src=\"https://player.bilibili.com/player.html?bvid=BV1kA411M7sJ\u0026amp;page=1\u0026amp;high_quality=1\u0026amp;as_wide=1\u0026amp;allowfullscreen=true\" data-src=\"\" scrolling=\"no\" border=\"0\" frameborder=\"no\" framespacing=\"0\" allowfullscreen=\"true\" sandbox=\"allow-top-navigation-by-user-activation allow-same-origin allow-forms allow-scripts allow-popups\" style=\"height: 360px; width: 640px;\"\u003e\u003c/iframe\u003e",
+			"Data": "\u003ciframe src=\"https://player.bilibili.com/player.html?bvid=BV1ov41187qM\u0026amp;page=1\u0026amp;high_quality=1\u0026amp;as_wide=1\u0026amp;allowfullscreen=true\u0026amp;aid=247401039\u0026amp;cid=319662466\u0026amp;autoplay=0\" data-src=\"//player.bilibili.com/player.html?aid=247401039\u0026amp;bvid=BV1ov41187qM\u0026amp;cid=319662466\u0026amp;page=1\" scrolling=\"no\" border=\"0\" frameborder=\"no\" framespacing=\"0\" allowfullscreen=\"true\" style=\"width: 981px; height: 440px;\" sandbox=\"allow-top-navigation-by-user-activation allow-same-origin allow-forms allow-scripts allow-popups\"\u003e\u003c/iframe\u003e",
 			"Properties": {
-				"id": "20211226122008-3ga1cqf",
-				"updated": "20210604223359"
+				"id": "20220909095422-c32trma",
+				"updated": "20220909095422"
 			}
 		},
 		{
@@ -2856,12 +2546,12 @@
 			]
 		},
 		{
-			"ID": "20211226122008-lt5e2r4",
+			"ID": "20220909095406-zjh29cs",
 			"Type": "NodeVideo",
-			"Data": "\u003cvideo controls=\"controls\" src=\"assets/formatting_elements-20210607225733-o1keasx.mp4\" data-src=\"assets/formatting_elements-20210607213508-y2r3y55-20210608113914-q11ou4j.mp4\" style=\"width: 360px; height: 267px;\"\u003e\u003c/video\u003e",
+			"Data": "\u003cvideo controls=\"controls\" src=\"assets/formatting_elements-20210607225733-o1keasx.mp4\" data-src=\"assets/formatting_elements-20210607213508-y2r3y55-20210608113914-q11ou4j.mp4\" style=\"width: 640px; height: 327px;\"\u003e\u003c/video\u003e",
 			"Properties": {
-				"id": "20211226122008-lt5e2r4",
-				"updated": "20211226122008"
+				"id": "20220909095406-zjh29cs",
+				"updated": "20220909095406"
 			}
 		},
 		{
@@ -3007,30 +2697,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Mermaid"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/mermaid-js/mermaid"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
 				},
 				{
 					"Type": "NodeText",
@@ -3097,30 +2767,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Mermaid"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/mermaid-js/mermaid"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
 				},
 				{
 					"Type": "NodeText",
@@ -3187,30 +2837,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Mermaid"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/mermaid-js/mermaid"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
 				},
 				{
 					"Type": "NodeText",
@@ -3277,30 +2907,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Mermaid"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/mermaid-js/mermaid"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
 				},
 				{
 					"Type": "NodeText",
@@ -3367,30 +2977,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Mermaid"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/mermaid-js/mermaid"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
 				},
 				{
 					"Type": "NodeText",
@@ -3453,30 +3043,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Mermaid"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/mermaid-js/mermaid"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
 				},
 				{
 					"Type": "NodeText",
@@ -3543,30 +3113,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Mermaid"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/mermaid-js/mermaid"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://mermaid.js.org/",
+					"TextMarkTextContent": "Mermaid"
 				},
 				{
 					"Type": "NodeText",
@@ -3595,7 +3145,7 @@
 			"IsFencedCodeBlock": true,
 			"Properties": {
 				"id": "20211226122154-fkkv2xm",
-				"updated": "20211226122154"
+				"updated": "20220820214459"
 			},
 			"Children": [
 				{
@@ -3607,16 +3157,226 @@
 					"CodeBlockInfo": "ZWNoYXJ0cw=="
 				},
 				{
-					"ID": "20220307092237-xk0wh9b",
 					"Type": "NodeCodeBlockCode",
-					"Data": "{\n  \"title\": { \"text\": \"最近 30 天\" },\n  \"tooltip\": { \"trigger\": \"axis\", \"axisPointer\": { \"lineStyle\": { \"width\": 0 } } },\n  \"legend\": { \"data\": [\"帖子\", \"用户\", \"回帖\"] },\n  \"xAxis\": [{\n      \"type\": \"category\",\n      \"boundaryGap\": false,\n      \"data\": [\"2019-05-08\",\"2019-05-09\",\"2019-05-10\",\"2019-05-11\",\"2019-05-12\",\"2019-05-13\",\"2019-05-14\",\"2019-05-15\",\"2019-05-16\",\"2019-05-17\",\"2019-05-18\",\"2019-05-19\",\"2019-05-20\",\"2019-05-21\",\"2019-05-22\",\"2019-05-23\",\"2019-05-24\",\"2019-05-25\",\"2019-05-26\",\"2019-05-27\",\"2019-05-28\",\"2019-05-29\",\"2019-05-30\",\"2019-05-31\",\"2019-06-01\",\"2019-06-02\",\"2019-06-03\",\"2019-06-04\",\"2019-06-05\",\"2019-06-06\",\"2019-06-07\"],\n      \"axisTick\": { \"show\": false },\n      \"axisLine\": { \"show\": false }\n  }],\n  \"yAxis\": [{ \"type\": \"value\", \"axisTick\": { \"show\": false }, \"axisLine\": { \"show\": false }, \"splitLine\": { \"lineStyle\": { \"color\": \"rgba(0, 0, 0, .38)\", \"type\": \"dashed\" } } }],\n  \"series\": [\n    {\n      \"name\": \"帖子\", \"type\": \"line\", \"smooth\": true, \"itemStyle\": { \"color\": \"#d23f31\" }, \"areaStyle\": { \"normal\": {} }, \"z\": 3,\n      \"data\": [\"18\",\"14\",\"22\",\"9\",\"7\",\"18\",\"10\",\"12\",\"13\",\"16\",\"6\",\"9\",\"15\",\"15\",\"12\",\"15\",\"8\",\"14\",\"9\",\"10\",\"29\",\"22\",\"14\",\"22\",\"9\",\"10\",\"15\",\"9\",\"9\",\"15\",\"0\"]\n    },\n    {\n      \"name\": \"用户\", \"type\": \"line\", \"smooth\": true, \"itemStyle\": { \"color\": \"#f1e05a\" }, \"areaStyle\": { \"normal\": {} }, \"z\": 2,\n      \"data\": [\"31\",\"33\",\"30\",\"23\",\"16\",\"29\",\"23\",\"37\",\"41\",\"29\",\"16\",\"13\",\"39\",\"23\",\"38\",\"136\",\"89\",\"35\",\"22\",\"50\",\"57\",\"47\",\"36\",\"59\",\"14\",\"23\",\"46\",\"44\",\"51\",\"43\",\"0\"]\n    },\n    {\n      \"name\": \"回帖\", \"type\": \"line\", \"smooth\": true, \"itemStyle\": { \"color\": \"#4285f4\" }, \"areaStyle\": { \"normal\": {} }, \"z\": 1,\n      \"data\": [\"35\",\"42\",\"73\",\"15\",\"43\",\"58\",\"55\",\"35\",\"46\",\"87\",\"36\",\"15\",\"44\",\"76\",\"130\",\"73\",\"50\",\"20\",\"21\",\"54\",\"48\",\"73\",\"60\",\"89\",\"26\",\"27\",\"70\",\"63\",\"55\",\"37\",\"0\"]\n    }\n  ]\n}",
-					"Properties": {
-						"id": "20220307092237-xk0wh9b"
-					}
+					"Data": "{\n  \u0026quot;title\u0026quot;: { \u0026quot;text\u0026quot;: \u0026quot;最近 30 天\u0026quot; },\n  \u0026quot;backgroundColor\u0026quot;: \u0026quot;transparent\u0026quot;,\n  \u0026quot;tooltip\u0026quot;: { \u0026quot;trigger\u0026quot;: \u0026quot;axis\u0026quot;, \u0026quot;axisPointer\u0026quot;: { \u0026quot;lineStyle\u0026quot;: { \u0026quot;width\u0026quot;: 0 } } },\n  \u0026quot;legend\u0026quot;: { \u0026quot;data\u0026quot;: [\u0026quot;帖子\u0026quot;, \u0026quot;用户\u0026quot;, \u0026quot;回帖\u0026quot;] },\n  \u0026quot;xAxis\u0026quot;: [{\n      \u0026quot;type\u0026quot;: \u0026quot;category\u0026quot;,\n      \u0026quot;boundaryGap\u0026quot;: false,\n      \u0026quot;data\u0026quot;: [\u0026quot;2019-05-08\u0026quot;,\u0026quot;2019-05-09\u0026quot;,\u0026quot;2019-05-10\u0026quot;,\u0026quot;2019-05-11\u0026quot;,\u0026quot;2019-05-12\u0026quot;,\u0026quot;2019-05-13\u0026quot;,\u0026quot;2019-05-14\u0026quot;,\u0026quot;2019-05-15\u0026quot;,\u0026quot;2019-05-16\u0026quot;,\u0026quot;2019-05-17\u0026quot;,\u0026quot;2019-05-18\u0026quot;,\u0026quot;2019-05-19\u0026quot;,\u0026quot;2019-05-20\u0026quot;,\u0026quot;2019-05-21\u0026quot;,\u0026quot;2019-05-22\u0026quot;,\u0026quot;2019-05-23\u0026quot;,\u0026quot;2019-05-24\u0026quot;,\u0026quot;2019-05-25\u0026quot;,\u0026quot;2019-05-26\u0026quot;,\u0026quot;2019-05-27\u0026quot;,\u0026quot;2019-05-28\u0026quot;,\u0026quot;2019-05-29\u0026quot;,\u0026quot;2019-05-30\u0026quot;,\u0026quot;2019-05-31\u0026quot;,\u0026quot;2019-06-01\u0026quot;,\u0026quot;2019-06-02\u0026quot;,\u0026quot;2019-06-03\u0026quot;,\u0026quot;2019-06-04\u0026quot;,\u0026quot;2019-06-05\u0026quot;,\u0026quot;2019-06-06\u0026quot;,\u0026quot;2019-06-07\u0026quot;],\n      \u0026quot;axisTick\u0026quot;: { \u0026quot;show\u0026quot;: false },\n      \u0026quot;axisLine\u0026quot;: { \u0026quot;show\u0026quot;: false }\n  }],\n  \u0026quot;yAxis\u0026quot;: [{ \u0026quot;type\u0026quot;: \u0026quot;value\u0026quot;, \u0026quot;axisTick\u0026quot;: { \u0026quot;show\u0026quot;: false }, \u0026quot;axisLine\u0026quot;: { \u0026quot;show\u0026quot;: false }, \u0026quot;splitLine\u0026quot;: { \u0026quot;lineStyle\u0026quot;: { \u0026quot;color\u0026quot;: \u0026quot;rgba(0, 0, 0, .38)\u0026quot;, \u0026quot;type\u0026quot;: \u0026quot;dashed\u0026quot; } } }],\n  \u0026quot;series\u0026quot;: [\n    {\n      \u0026quot;name\u0026quot;: \u0026quot;帖子\u0026quot;, \u0026quot;type\u0026quot;: \u0026quot;line\u0026quot;, \u0026quot;smooth\u0026quot;: true, \u0026quot;itemStyle\u0026quot;: { \u0026quot;color\u0026quot;: \u0026quot;#d23f31\u0026quot; }, \u0026quot;areaStyle\u0026quot;: { \u0026quot;normal\u0026quot;: {} }, \u0026quot;z\u0026quot;: 3,\n      \u0026quot;data\u0026quot;: [\u0026quot;18\u0026quot;,\u0026quot;14\u0026quot;,\u0026quot;22\u0026quot;,\u0026quot;9\u0026quot;,\u0026quot;7\u0026quot;,\u0026quot;18\u0026quot;,\u0026quot;10\u0026quot;,\u0026quot;12\u0026quot;,\u0026quot;13\u0026quot;,\u0026quot;16\u0026quot;,\u0026quot;6\u0026quot;,\u0026quot;9\u0026quot;,\u0026quot;15\u0026quot;,\u0026quot;15\u0026quot;,\u0026quot;12\u0026quot;,\u0026quot;15\u0026quot;,\u0026quot;8\u0026quot;,\u0026quot;14\u0026quot;,\u0026quot;9\u0026quot;,\u0026quot;10\u0026quot;,\u0026quot;29\u0026quot;,\u0026quot;22\u0026quot;,\u0026quot;14\u0026quot;,\u0026quot;22\u0026quot;,\u0026quot;9\u0026quot;,\u0026quot;10\u0026quot;,\u0026quot;15\u0026quot;,\u0026quot;9\u0026quot;,\u0026quot;9\u0026quot;,\u0026quot;15\u0026quot;,\u0026quot;0\u0026quot;]\n    },\n    {\n      \u0026quot;name\u0026quot;: \u0026quot;用户\u0026quot;, \u0026quot;type\u0026quot;: \u0026quot;line\u0026quot;, \u0026quot;smooth\u0026quot;: true, \u0026quot;itemStyle\u0026quot;: { \u0026quot;color\u0026quot;: \u0026quot;#f1e05a\u0026quot; }, \u0026quot;areaStyle\u0026quot;: { \u0026quot;normal\u0026quot;: {} }, \u0026quot;z\u0026quot;: 2,\n      \u0026quot;data\u0026quot;: [\u0026quot;31\u0026quot;,\u0026quot;33\u0026quot;,\u0026quot;30\u0026quot;,\u0026quot;23\u0026quot;,\u0026quot;16\u0026quot;,\u0026quot;29\u0026quot;,\u0026quot;23\u0026quot;,\u0026quot;37\u0026quot;,\u0026quot;41\u0026quot;,\u0026quot;29\u0026quot;,\u0026quot;16\u0026quot;,\u0026quot;13\u0026quot;,\u0026quot;39\u0026quot;,\u0026quot;23\u0026quot;,\u0026quot;38\u0026quot;,\u0026quot;136\u0026quot;,\u0026quot;89\u0026quot;,\u0026quot;35\u0026quot;,\u0026quot;22\u0026quot;,\u0026quot;50\u0026quot;,\u0026quot;57\u0026quot;,\u0026quot;47\u0026quot;,\u0026quot;36\u0026quot;,\u0026quot;59\u0026quot;,\u0026quot;14\u0026quot;,\u0026quot;23\u0026quot;,\u0026quot;46\u0026quot;,\u0026quot;44\u0026quot;,\u0026quot;51\u0026quot;,\u0026quot;43\u0026quot;,\u0026quot;0\u0026quot;]\n    },\n    {\n      \u0026quot;name\u0026quot;: \u0026quot;回帖\u0026quot;, \u0026quot;type\u0026quot;: \u0026quot;line\u0026quot;, \u0026quot;smooth\u0026quot;: true, \u0026quot;itemStyle\u0026quot;: { \u0026quot;color\u0026quot;: \u0026quot;#4285f4\u0026quot; }, \u0026quot;areaStyle\u0026quot;: { \u0026quot;normal\u0026quot;: {} }, \u0026quot;z\u0026quot;: 1,\n      \u0026quot;data\u0026quot;: [\u0026quot;35\u0026quot;,\u0026quot;42\u0026quot;,\u0026quot;73\u0026quot;,\u0026quot;15\u0026quot;,\u0026quot;43\u0026quot;,\u0026quot;58\u0026quot;,\u0026quot;55\u0026quot;,\u0026quot;35\u0026quot;,\u0026quot;46\u0026quot;,\u0026quot;87\u0026quot;,\u0026quot;36\u0026quot;,\u0026quot;15\u0026quot;,\u0026quot;44\u0026quot;,\u0026quot;76\u0026quot;,\u0026quot;130\u0026quot;,\u0026quot;73\u0026quot;,\u0026quot;50\u0026quot;,\u0026quot;20\u0026quot;,\u0026quot;21\u0026quot;,\u0026quot;54\u0026quot;,\u0026quot;48\u0026quot;,\u0026quot;73\u0026quot;,\u0026quot;60\u0026quot;,\u0026quot;89\u0026quot;,\u0026quot;26\u0026quot;,\u0026quot;27\u0026quot;,\u0026quot;70\u0026quot;,\u0026quot;63\u0026quot;,\u0026quot;55\u0026quot;,\u0026quot;37\u0026quot;,\u0026quot;0\u0026quot;]\n    }\n  ]\n}"
 				},
 				{
 					"Type": "NodeCodeBlockFenceCloseMarker",
 					"Data": "```"
+				}
+			]
+		},
+		{
+			"ID": "20221225012231-gx68k6u",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221225012231-gx68k6u",
+				"updated": "20221225012248"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "可使用如下三種格式定義："
+				}
+			]
+		},
+		{
+			"ID": "20221225012948-i6bceww",
+			"Type": "NodeList",
+			"ListData": {},
+			"Properties": {
+				"id": "20221225012948-i6bceww",
+				"updated": "20221225103315"
+			},
+			"Children": [
+				{
+					"ID": "20221225012948-g2nbl2p",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221225012948-g2nbl2p",
+						"updated": "20221225012948"
+					},
+					"Children": [
+						{
+							"ID": "20221225012948-bebbc68",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221225012948-bebbc68",
+								"updated": "20221225012948"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "JSON"
+								}
+							]
+						},
+						{
+							"ID": "20221225103257-i53ywyn",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"id": "20221225103257-i53ywyn",
+								"updated": "20221225103300"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "anNvbg=="
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "{\n    \"propName\": \"propValue\"\n}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20221225012948-5583jn8",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221225012948-5583jn8",
+						"updated": "20221225012948"
+					},
+					"Children": [
+						{
+							"ID": "20221225012948-axegxwv",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221225012948-axegxwv",
+								"updated": "20221225012948"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "JavaScript Object"
+								}
+							]
+						},
+						{
+							"ID": "20221225103303-e1cnv1n",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"id": "20221225103303-e1cnv1n",
+								"updated": "20221225103308"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "amF2YXNjcmlwdA=="
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "{\n    propName: 'propValue',\n}\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				},
+				{
+					"ID": "20221225012948-u5z9jmr",
+					"Type": "NodeListItem",
+					"ListData": {
+						"BulletChar": 42,
+						"Marker": "Kg=="
+					},
+					"Properties": {
+						"id": "20221225012948-u5z9jmr",
+						"updated": "20221225103315"
+					},
+					"Children": [
+						{
+							"ID": "20221225012948-7htzbq0",
+							"Type": "NodeParagraph",
+							"Properties": {
+								"id": "20221225012948-7htzbq0",
+								"updated": "20221225013013"
+							},
+							"Children": [
+								{
+									"Type": "NodeText",
+									"Data": "返回一個 JavaScript Object 的立即執行函數"
+								}
+							]
+						},
+						{
+							"ID": "20221225103311-4asih4h",
+							"Type": "NodeCodeBlock",
+							"IsFencedCodeBlock": true,
+							"Properties": {
+								"id": "20221225103311-4asih4h",
+								"updated": "20221225103315"
+							},
+							"Children": [
+								{
+									"Type": "NodeCodeBlockFenceOpenMarker",
+									"Data": "```"
+								},
+								{
+									"Type": "NodeCodeBlockFenceInfoMarker",
+									"CodeBlockInfo": "amF2YXNjcmlwdA=="
+								},
+								{
+									"Type": "NodeCodeBlockCode",
+									"Data": "(() =\u003e {\n    const option = {};\n    option.propName = `propValue`;\n    return option;\n})()\n"
+								},
+								{
+									"Type": "NodeCodeBlockFenceCloseMarker",
+									"Data": "```"
+								}
+							]
+						}
+					]
+				}
+			]
+		},
+		{
+			"ID": "20221105165104-31b4raz",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221105165104-31b4raz",
+				"updated": "20221225012323"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "具體語法請參考 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://echarts.apache.org/zh/index.html",
+					"TextMarkTextContent": "ECharts"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "。"
 				}
 			]
 		},
@@ -3641,7 +3401,7 @@
 			"IsFencedCodeBlock": true,
 			"Properties": {
 				"id": "20211226122008-fmtwnmi",
-				"updated": "20211226122008"
+				"updated": "20240429095726"
 			},
 			"Children": [
 				{
@@ -3653,12 +3413,8 @@
 					"CodeBlockInfo": "YWJj"
 				},
 				{
-					"ID": "20220307092237-j6rx1zq",
 					"Type": "NodeCodeBlockCode",
-					"Data": "X: 24\nT: Clouds Thicken\nC: Paul Rosen\nS: Copyright 2005, Paul Rosen\nM: 6/8\nL: 1/8\nQ: 3/8=116\nR: Creepy Jig\nK: Em\n|:\"Em\"EEE E2G|\"C7\"_B2A G2F|\"Em\"EEE E2G|\\\n\"C7\"_B2A \"B7\"=B3|\"Em\"EEE E2G|\n\"C7\"_B2A G2F|\"Em\"GFE \"D (Bm7)\"F2D|\\\n1\"Em\"E3-E3:|2\"Em\"E3-E2B|:\"Em\"e2e gfe|\n\"G\"g2ab3|\"Em\"gfeg2e|\"D\"fedB2A|\"Em\"e2e gfe|\\\n\"G\"g2ab3|\"Em\"gfe\"D\"f2d|\"Em\"e3-e3:|",
-					"Properties": {
-						"id": "20220307092237-j6rx1zq"
-					}
+					"Data": "%%params {tablature: [{instrument: \u0026quot;violin\u0026quot;}]}\nX: 24\nT: Clouds Thicken\nC: Paul Rosen\nS: Copyright 2005, Paul Rosen\nM: 6/8\nL: 1/8\nQ: 3/8=116\nR: Creepy Jig\nK: Em\n|:\u0026quot;Em\u0026quot;EEE E2G|\u0026quot;C7\u0026quot;_B2A G2F|\u0026quot;Em\u0026quot;EEE E2G|\\\n\u0026quot;C7\u0026quot;_B2A \u0026quot;B7\u0026quot;=B3|\u0026quot;Em\u0026quot;EEE E2G|\n\u0026quot;C7\u0026quot;_B2A G2F|\u0026quot;Em\u0026quot;GFE \u0026quot;D (Bm7)\u0026quot;F2D|\\\n1\u0026quot;Em\u0026quot;E3-E3:|2\u0026quot;Em\u0026quot;E3-E2B|:\u0026quot;Em\u0026quot;e2e gfe|\n\u0026quot;G\u0026quot;g2ab3|\u0026quot;Em\u0026quot;gfeg2e|\u0026quot;D\u0026quot;fedB2A|\u0026quot;Em\u0026quot;e2e gfe|\\\n\u0026quot;G\u0026quot;g2ab3|\u0026quot;Em\u0026quot;gfe\u0026quot;D\u0026quot;f2d|\u0026quot;Em\u0026quot;e3-e3:|"
 				},
 				{
 					"Type": "NodeCodeBlockFenceCloseMarker",
@@ -3667,46 +3423,57 @@
 			]
 		},
 		{
-			"ID": "20211226122008-nkonel6",
+			"ID": "20240429095753-7cen94p",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20211226122008-nkonel6",
-				"updated": "20211226002152"
+				"id": "20240429095753-7cen94p",
+				"updated": "20240429095806"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "語法請參考 "
+					"Data": "可在首行加入 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "abcjs"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/paulrosen/abcjs"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "%%params JSON"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "。"
+					"Data": "​ ，使 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "JSON"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 作為 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "renderAbc options"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 的參數。"
+				}
+			]
+		},
+		{
+			"ID": "20211226122008-nkonel6",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20211226122008-nkonel6",
+				"updated": "20230820185037"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "語法請參考 abcjs (github repo: paulrosen/abcjs)。"
 				}
 			]
 		},
@@ -3769,30 +3536,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "Graphviz"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://graphviz.org"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://graphviz.org",
+					"TextMarkTextContent": "Graphviz"
 				},
 				{
 					"Type": "NodeText",
@@ -3806,7 +3553,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226122008-lpqxxr3",
-				"updated": "20211226122008"
+				"updated": "20251203220637"
 			},
 			"Children": [
 				{
@@ -3851,7 +3598,7 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226122008-mt3lj36",
-				"updated": "20211226002205"
+				"updated": "20251203220637"
 			},
 			"Children": [
 				{
@@ -3859,30 +3606,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "flowchart.js"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://github.com/adrai/flowchart.js"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://flowchart.js.org/",
+					"TextMarkTextContent": "flowchart.js"
 				},
 				{
 					"Type": "NodeText",
@@ -3949,30 +3676,10 @@
 					"Data": "語法請參考 "
 				},
 				{
-					"Type": "NodeLink",
-					"Data": "span",
-					"Children": [
-						{
-							"Type": "NodeOpenBracket"
-						},
-						{
-							"Type": "NodeLinkText",
-							"Data": "PlantUML"
-						},
-						{
-							"Type": "NodeCloseBracket"
-						},
-						{
-							"Type": "NodeOpenParen"
-						},
-						{
-							"Type": "NodeLinkDest",
-							"Data": "https://plantuml.com"
-						},
-						{
-							"Type": "NodeCloseParen"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "a",
+					"TextMarkAHref": "https://plantuml.com",
+					"TextMarkTextContent": "PlantUML"
 				},
 				{
 					"Type": "NodeText",

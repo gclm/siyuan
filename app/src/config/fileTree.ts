@@ -1,4 +1,5 @@
 import {fetchPost} from "../util/fetch";
+import {genNotebookOption} from "../menus/onGetnotebookconf";
 
 export const fileTree = {
     element: undefined as Element,
@@ -21,6 +22,22 @@ export const fileTree = {
 </label>
 <label class="fn__flex b3-label">
     <div class="fn__flex-1">
+        ${window.siyuan.languages.fileTree9}
+        <div class="b3-label__text">${window.siyuan.languages.fileTree10}</div>
+    </div>
+    <span class="fn__space"></span>
+    <input class="b3-switch fn__flex-center" id="closeTabsOnStart" type="checkbox"${window.siyuan.config.fileTree.closeTabsOnStart ? " checked" : ""}/>
+</label>
+<label class="fn__flex b3-label">
+    <div class="fn__flex-1">
+        ${window.siyuan.languages.noSplitScreenWhenOpenTab}
+        <div class="b3-label__text">${window.siyuan.languages.noSplitScreenWhenOpenTabTip}</div>
+    </div>
+    <span class="fn__space"></span>
+    <input class="b3-switch fn__flex-center" id="noSplitScreenWhenOpenTab" type="checkbox"${window.siyuan.config.fileTree.noSplitScreenWhenOpenTab ? " checked" : ""}/>
+</label>
+<label class="fn__flex b3-label">
+    <div class="fn__flex-1">
         ${window.siyuan.languages.fileTree18}
         <div class="b3-label__text">${window.siyuan.languages.fileTree19}</div>
     </div>
@@ -37,62 +54,118 @@ export const fileTree = {
 </label>
 <label class="fn__flex b3-label">
     <div class="fn__flex-1">
-        ${window.siyuan.languages.fileTree12}
-        <div class="b3-label__text b3-typography">${window.siyuan.languages.fileTree13}</div>
+        ${window.siyuan.languages.fileTree20}
+        <div class="b3-label__text">${window.siyuan.languages.fileTree21}</div>
     </div>
     <span class="fn__space"></span>
-    <input class="b3-text-field fn__flex-center fn__size200" id="createDocNameTemplate" value="">
-</label>
-<label class="b3-label fn__flex">
-    <div class="fn__flex-1">
-        ${window.siyuan.languages.fileTree5}
-        <div class="b3-label__text b3-typography">${window.siyuan.languages.fileTree6}</div>
-    </div>
-    <span class="fn__space"></span>
-    <input class="b3-text-field fn__flex-center fn__size200" id="refCreateSavePath" value="${window.siyuan.config.fileTree.refCreateSavePath}">
+    <input class="b3-switch fn__flex-center" id="useSingleLineSave" type="checkbox"${window.siyuan.config.fileTree.useSingleLineSave ? " checked" : ""}/>
 </label>
 <label class="fn__flex b3-label">
+    <div class="fn__flex-1">
+        ${window.siyuan.languages.fileTree24}
+        <div class="b3-label__text">${window.siyuan.languages.fileTree25}</div>
+    </div>
+    <span class="fn__space"></span>
+    <input class="b3-switch fn__flex-center" id="createDocAtTop" type="checkbox"${window.siyuan.config.fileTree.createDocAtTop ? " checked" : ""}/>
+</label>
+<div class="fn__flex b3-label config__item">
+    <div class="fn__flex-1">
+        ${window.siyuan.languages.fileTree22}
+        <div class="b3-label__text">${window.siyuan.languages.fileTree23}</div>
+    </div>
+    <span class="fn__space"></span>
+    <div class="fn__size200 fn__flex-center fn__flex">
+        <input class="b3-text-field fn__flex-1" id="largeFileWarningSize" type="number" min="2" max="10240" value="${window.siyuan.config.fileTree.largeFileWarningSize}">
+        <span class="fn__space"></span>
+        <span class="ft__on-surface fn__flex-center">MB</span>
+    </div>
+</div>
+<div class="fn__flex b3-label config__item">
     <div class="fn__flex-1">
         ${window.siyuan.languages.fileTree16}
         <div class="b3-label__text">${window.siyuan.languages.fileTree17}</div>
     </div>
     <span class="fn__space"></span>
     <input class="b3-text-field fn__flex-center fn__size200" id="maxListCount" type="number" min="1" max="10240" value="${window.siyuan.config.fileTree.maxListCount}">
-</label>
-<label class="fn__flex b3-label">
+</div>
+<div class="fn__flex b3-label config__item">
     <div class="fn__flex-1">
         ${window.siyuan.languages.tabLimit}
         <div class="b3-label__text">${window.siyuan.languages.tabLimit1}</div>
     </div>
     <span class="fn__space"></span>
     <input class="b3-text-field fn__flex-center fn__size200" id="maxOpenTabCount" type="number" min="1" max="32" value="${window.siyuan.config.fileTree.maxOpenTabCount}">
-</label>`;
+</div>
+<div class="fn__flex b3-label config__item">
+    <div class="fn__flex-1">
+        ${window.siyuan.languages.recentDocsMaxListCount}
+        <div class="b3-label__text">${window.siyuan.languages.recentDocsMaxListCountTip}</div>
+    </div>
+    <span class="fn__space"></span>
+    <input class="b3-text-field fn__flex-center fn__size200" id="recentDocsMaxListCount" type="number" min="32" max="256" value="${window.siyuan.config.fileTree.recentDocsMaxListCount}">
+</div>
+<div class="b3-label config__item">
+    ${window.siyuan.languages.fileTree12}
+    <div class="b3-label__text">${window.siyuan.languages.fileTree13}</div>
+    <span class="fn__hr"></span>
+    <div class="fn__flex">
+        <select style="min-width: 200px" class="b3-select" id="docCreateSaveBox">${genNotebookOption(window.siyuan.config.fileTree.docCreateSaveBox)}</select>
+        <div class="fn__space"></div>
+        <input class="b3-text-field fn__flex-1" id="docCreateSavePath" value="">
+    </div>
+</div>
+<div class="b3-label config__item">
+    ${window.siyuan.languages.fileTree5}
+    <div class="b3-label__text">${window.siyuan.languages.fileTree6}</div>
+    <span class="fn__hr"></span>
+    <div class="fn__flex">
+        <select style="min-width: 200px" class="b3-select" id="refCreateSaveBox">${genNotebookOption(window.siyuan.config.fileTree.refCreateSaveBox)}</select>
+        <div class="fn__space"></div>
+        <input class="b3-text-field fn__flex-1" id="refCreateSavePath" value="${window.siyuan.config.fileTree.refCreateSavePath}">
+    </div>
+</div>`;
     },
     _send() {
+        // 限制页签最大打开数量为 `32` https://github.com/siyuan-note/siyuan/issues/6303
+        let inputMaxOpenTabCount = parseInt((fileTree.element.querySelector("#maxOpenTabCount") as HTMLInputElement).value);
+        if (32 < inputMaxOpenTabCount) {
+            inputMaxOpenTabCount = 32;
+            (fileTree.element.querySelector("#maxOpenTabCount") as HTMLInputElement).value = "32";
+        }
+        if (1 > inputMaxOpenTabCount) {
+            inputMaxOpenTabCount = 1;
+            (fileTree.element.querySelector("#maxOpenTabCount") as HTMLInputElement).value = "1";
+        }
+
         fetchPost("/api/setting/setFiletree", {
             sort: window.siyuan.config.fileTree.sort,
             alwaysSelectOpenedFile: (fileTree.element.querySelector("#alwaysSelectOpenedFile") as HTMLInputElement).checked,
             refCreateSavePath: (fileTree.element.querySelector("#refCreateSavePath") as HTMLInputElement).value,
-            createDocNameTemplate: (fileTree.element.querySelector("#createDocNameTemplate") as HTMLInputElement).value,
+            refCreateSaveBox: (fileTree.element.querySelector("#refCreateSaveBox") as HTMLInputElement).value,
+            docCreateSavePath: (fileTree.element.querySelector("#docCreateSavePath") as HTMLInputElement).value,
+            docCreateSaveBox: (fileTree.element.querySelector("#docCreateSaveBox") as HTMLInputElement).value,
             openFilesUseCurrentTab: (fileTree.element.querySelector("#openFilesUseCurrentTab") as HTMLInputElement).checked,
+            closeTabsOnStart: (fileTree.element.querySelector("#closeTabsOnStart") as HTMLInputElement).checked,
+            noSplitScreenWhenOpenTab: (fileTree.element.querySelector("#noSplitScreenWhenOpenTab") as HTMLInputElement).checked,
             allowCreateDeeper: (fileTree.element.querySelector("#allowCreateDeeper") as HTMLInputElement).checked,
             removeDocWithoutConfirm: (fileTree.element.querySelector("#removeDocWithoutConfirm") as HTMLInputElement).checked,
+            useSingleLineSave: (fileTree.element.querySelector("#useSingleLineSave") as HTMLInputElement).checked,
+            createDocAtTop: (fileTree.element.querySelector("#createDocAtTop") as HTMLInputElement).checked,
+            largeFileWarningSize: parseInt((fileTree.element.querySelector("#largeFileWarningSize") as HTMLInputElement).value),
             maxListCount: parseInt((fileTree.element.querySelector("#maxListCount") as HTMLInputElement).value),
-            maxOpenTabCount: parseInt((fileTree.element.querySelector("#maxOpenTabCount") as HTMLInputElement).value),
+            maxOpenTabCount: inputMaxOpenTabCount,
+            recentDocsMaxListCount: parseInt((fileTree.element.querySelector("#recentDocsMaxListCount") as HTMLInputElement).value),
         }, response => {
-            fileTree.onSetfiletree(response.data);
+            window.siyuan.config.fileTree = response.data;
         });
     },
     bindEvent: () => {
-        (fileTree.element.querySelector("#createDocNameTemplate") as HTMLInputElement).value = window.siyuan.config.fileTree.createDocNameTemplate;
+        (fileTree.element.querySelector("#docCreateSavePath") as HTMLInputElement).value = window.siyuan.config.fileTree.docCreateSavePath;
         (fileTree.element.querySelector("#refCreateSavePath") as HTMLInputElement).value = window.siyuan.config.fileTree.refCreateSavePath;
-        fileTree.element.querySelectorAll("input").forEach((item) => {
+        fileTree.element.querySelectorAll("input, select").forEach((item) => {
             item.addEventListener("change", () => {
                 fileTree._send();
             });
         });
-    },
-    onSetfiletree: (fileTree: IFileTree) => {
-        window.siyuan.config.fileTree = fileTree;
     }
 };
