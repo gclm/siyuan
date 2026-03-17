@@ -1,11 +1,12 @@
 {
 	"ID": "20200813131152-0wk5akh",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20200813131152-0wk5akh",
 		"title": "在内容块中遨游",
 		"type": "doc",
-		"updated": "20220312233009"
+		"updated": "20250115164127"
 	},
 	"Children": [
 		{
@@ -16,10 +17,6 @@
 				"id": "20210104090757-ig8gk5o"
 			},
 			"Children": [
-				{
-					"Type": "NodeHeadingC8hMarker",
-					"Data": "## "
-				},
 				{
 					"Type": "NodeText",
 					"Data": "链接"
@@ -50,7 +47,8 @@
 				"Num": -1
 			},
 			"Properties": {
-				"id": "20210104090757-w6to47w"
+				"id": "20210104090757-w6to47w",
+				"updated": "20221105215950"
 			},
 			"Children": [
 				{
@@ -96,7 +94,8 @@
 						"Num": -1
 					},
 					"Properties": {
-						"id": "20210104090757-z6d1fdd"
+						"id": "20210104090757-z6d1fdd",
+						"updated": "20221105215950"
 					},
 					"Children": [
 						{
@@ -104,34 +103,23 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20210205172718-uuj8gsc",
-								"updated": "20210428224949"
+								"updated": "20221105215950"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "通过 "
+									"Data": "通过"
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"CodeMarkerLen": 1,
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker",
-											"Data": "`"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "((id))"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker",
-											"Data": "`"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20200813013559-sgbzl5k",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "引用"
 								},
 								{
 									"Type": "NodeText",
-									"Data": " 建立的内容块链接，用于在思源内部进行双链"
+									"Data": "建立的内容块链接，用于在思源内部进行双链"
 								}
 							]
 						}
@@ -243,7 +231,8 @@
 			"Type": "NodeHeading",
 			"HeadingLevel": 2,
 			"Properties": {
-				"id": "20210104090757-xwom8ia"
+				"id": "20210104090757-xwom8ia",
+				"updated": "20250115164127"
 			},
 			"Children": [
 				{
@@ -275,7 +264,7 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20210428225151-3kj13k3",
-				"updated": "20210428225504"
+				"updated": "20250115164127"
 			},
 			"Children": [
 				{
@@ -283,26 +272,13 @@
 					"Data": "按住 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "Ctrl"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " 单击节点：跳转到该节点。"
+					"Data": "​ 单击节点：跳转到该节点。"
 				}
 			]
 		},
@@ -396,7 +372,7 @@
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "鼠标悬浮引用块前面的标识会弹出预览浮窗"
+									"Data": "鼠标悬浮块引用前面的标识会弹出预览浮窗"
 								}
 							]
 						}
@@ -428,7 +404,7 @@
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "单击反链列表中的引用块进行跳转"
+									"Data": "单击反链列表中的块引用进行跳转"
 								}
 							]
 						}
@@ -458,34 +434,74 @@
 			"ID": "20210106201743-z1iz0ce",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210106201743-z1iz0ce"
+				"id": "20210106201743-z1iz0ce",
+				"updated": "20221026221118"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "提及使用当前文档中内容块名称和别名作为关键字进行搜索，搜索结果为包含这些关键字的内容块。可以通过链接按钮将提及转换为链接：提及处会使用 "
+					"Data": "提及使用当前文档中内容块命名、别名、引用锚文本和文档名作为关键字进行搜索（可在 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"CodeMarkerLen": 1,
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker",
-							"Data": "`"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "((id \"内容块名称\"))"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker",
-							"Data": "`"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "设置"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " 进行替换。"
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "搜索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "反链提及"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 中设置搜索范围），搜索结果为包含这些关键字的内容块。"
+				}
+			]
+		},
+		{
+			"ID": "20221026221105-dyj8l8n",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20221026221105-dyj8l8n",
+				"updated": "20221026222004"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​：提及搜索仅会在普通文本中搜索，不会在粗体、斜体等行级元素和代码块、图表等块级元素中搜索，这一点和"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211010211708-0qn8cpl",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "虚拟引用探测规则"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "是相同的。"
 				}
 			]
 		}

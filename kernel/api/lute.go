@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -22,12 +22,15 @@ import (
 	"strings"
 
 	"github.com/88250/gulu"
+	"github.com/88250/lute"
 	"github.com/88250/lute/ast"
 	"github.com/88250/lute/parse"
 	"github.com/88250/lute/render"
-	"github.com/88250/protyle"
 	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/model"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
@@ -41,7 +44,35 @@ func copyStdMarkdown(c *gin.Context) {
 	}
 
 	id := arg["id"].(string)
-	ret.Data = model.CopyStdMarkdown(id)
+	assetsDestSpace2Underscore := false
+	if nil != arg["assetsDestSpace2Underscore"] {
+		assetsDestSpace2Underscore = arg["assetsDestSpace2Underscore"].(bool)
+	}
+
+	fillCSSVar := false
+	if nil != arg["fillCSSVar"] {
+		fillCSSVar = arg["fillCSSVar"].(bool)
+	}
+
+	adjustHeadingLevel := false
+	if nil != arg["adjustHeadingLevel"] {
+		adjustHeadingLevel = arg["adjustHeadingLevel"].(bool)
+	}
+
+	imgTag := false
+	if nil != arg["imgTag"] {
+		imgTag = arg["imgTag"].(bool)
+	}
+
+	markdownContent := model.ExportStdMarkdown(id, assetsDestSpace2Underscore, fillCSSVar, adjustHeadingLevel, imgTag)
+	if model.IsReadOnlyRoleContext(c) {
+		bt := treenode.GetBlockTree(id)
+		if bt != nil {
+			publishAccess := model.GetPublishAccess()
+			markdownContent = model.FilterContentByPublishAccess(c, publishAccess, bt.BoxID, bt.Path, markdownContent, true)
+		}
+	}
+	ret.Data = markdownContent
 }
 
 func html2BlockDOM(c *gin.Context) {
@@ -54,22 +85,23 @@ func html2BlockDOM(c *gin.Context) {
 	}
 
 	dom := arg["dom"].(string)
-	luteEngine := model.NewLute()
-	markdown, err := luteEngine.HTML2Markdown(dom)
-	if nil != err {
+	luteEngine := util.NewLute()
+	luteEngine.SetHTMLTag2TextMark(true)
+	luteEngine.SetHTML2MarkdownAttrs([]string{"alias", "memo", "bookmark", "custom-*"})
+	tree, _ := model.HTML2Tree(dom, luteEngine)
+	if nil == tree {
 		ret.Data = "Failed to convert"
 		return
 	}
 
 	var unlinks []*ast.Node
-	tree := parse.Parse("", []byte(markdown), luteEngine.ParseOptions)
 	ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
 		if !entering {
 			return ast.WalkContinue
 		}
 
 		if ast.NodeListItem == n.Type && nil == n.FirstChild {
-			newNode := protyle.NewParagraph()
+			newNode := treenode.NewParagraph("")
 			n.AppendChild(newNode)
 			n.SetIALAttr("updated", util.TimeFromID(newNode.ID))
 			return ast.WalkSkipChildren
@@ -82,7 +114,33 @@ func html2BlockDOM(c *gin.Context) {
 		n.Unlink()
 	}
 
-	if "std" == model.Conf.System.Container {
+	// 表格只包含一个单元格时，将其转换为段落
+	// Copy one cell from Excel/HTML table and paste it using the cell's content https://github.com/siyuan-note/siyuan/issues/9614
+	unlinks = nil
+	if nil != tree.Root.FirstChild && ast.NodeTable == tree.Root.FirstChild.Type && (nil == tree.Root.FirstChild.Next ||
+		(ast.NodeKramdownBlockIAL == tree.Root.FirstChild.Next.Type && nil == tree.Root.FirstChild.Next.Next)) {
+		if nil != tree.Root.FirstChild.FirstChild && ast.NodeTableHead == tree.Root.FirstChild.FirstChild.Type {
+			head := tree.Root.FirstChild.FirstChild
+			if nil == head.Next && nil != head.FirstChild && nil == head.FirstChild.Next {
+				row := head.FirstChild
+				if nil != row.FirstChild && nil == row.FirstChild.Next {
+					cell := row.FirstChild
+					p := treenode.NewParagraph("")
+					var contents []*ast.Node
+					for c := cell.FirstChild; nil != c; c = c.Next {
+						contents = append(contents, c)
+					}
+					for _, c := range contents {
+						p.AppendChild(c)
+					}
+					tree.Root.FirstChild.Unlink()
+					tree.Root.PrependChild(p)
+				}
+			}
+		}
+	}
+
+	if util.ContainerStd == model.Conf.System.Container {
 		// 处理本地资源文件复制
 		ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
 			if !entering || ast.NodeLinkDest != n.Type {
@@ -97,12 +155,17 @@ func html2BlockDOM(c *gin.Context) {
 			if strings.HasPrefix(localPath, "http") {
 				return ast.WalkContinue
 			}
-
-			localPath = strings.TrimPrefix(localPath, "file://")
-			if gulu.OS.IsWindows() {
-				localPath = strings.TrimPrefix(localPath, "/")
+			localPath = util.FileURLToLocalPath(localPath)
+			if !filepath.IsAbs(localPath) {
+				// Kernel crash when copy-pasting from some browsers https://github.com/siyuan-note/siyuan/issues/9203
+				return ast.WalkContinue
 			}
 			if !gulu.File.IsExist(localPath) {
+				return ast.WalkContinue
+			}
+
+			if util.IsSensitivePath(localPath) {
+				logging.LogWarnf("skip copying asset [%s] due to sensitive path", localPath)
 				return ast.WalkContinue
 			}
 
@@ -111,8 +174,8 @@ func html2BlockDOM(c *gin.Context) {
 			name = name[0 : len(name)-len(ext)]
 			name = name + "-" + ast.NewNodeID() + ext
 			targetPath := filepath.Join(util.DataDir, "assets", name)
-			if err = gulu.File.CopyFile(localPath, targetPath); nil != err {
-				util.LogErrorf("copy asset from [%s] to [%s] failed: %s", localPath, targetPath, err)
+			if err := filelock.Copy(localPath, targetPath); err != nil {
+				logging.LogErrorf("copy asset from [%s] to [%s] failed: %s", localPath, targetPath, err)
 				return ast.WalkStop
 			}
 			n.Tokens = gulu.Str.ToBytes("assets/" + name)
@@ -120,7 +183,17 @@ func html2BlockDOM(c *gin.Context) {
 		})
 	}
 
-	renderer := render.NewBlockRenderer(tree, luteEngine.RenderOptions)
+	parse.TextMarks2Inlines(tree) // 先将 TextMark 转换为 Inlines https://github.com/siyuan-note/siyuan/issues/13056
+	parse.NestedInlines2FlattedSpansHybrid(tree, false)
+
+	md, err := lute.FormatNodeSync(tree.Root, luteEngine.ParseOptions, luteEngine.RenderOptions)
+	if nil != err {
+		ret.Data = "Failed to convert"
+		return
+	}
+
+	tree = parse.Parse("", []byte(md), luteEngine.ParseOptions)
+	renderer := render.NewProtyleRenderer(tree, luteEngine.RenderOptions, luteEngine.ParseOptions)
 	output := renderer.Render()
 	ret.Data = gulu.Str.FromBytes(output)
 }
