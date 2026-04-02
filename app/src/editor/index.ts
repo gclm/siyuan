@@ -1,9 +1,14 @@
 import {Tab} from "../layout/Tab";
-import Protyle from "../protyle";
+import {Protyle} from "../protyle";
 import {Model} from "../layout/Model";
-import {disabledProtyle} from "../protyle/util/onGet";
 import {setPadding} from "../protyle/ui/initUI";
-import {getAllModels} from "../layout/getAll";
+/// #if !BROWSER
+import {setModelsHash} from "../window/setHeader";
+/// #endif
+import {countBlockWord} from "../layout/status";
+import {App} from "../index";
+import {fullscreen} from "../protyle/breadcrumb/action";
+import {fetchPost} from "../util/fetch";
 
 export class Editor extends Model {
     public element: HTMLElement;
@@ -11,13 +16,17 @@ export class Editor extends Model {
     public headElement: HTMLElement;
 
     constructor(options: {
+        app: App,
         tab: Tab,
         blockId: string,
+        rootId: string,
         mode?: TEditorMode,
-        hasContext?: boolean
-        action?: string[]
+        action?: TProtyleAction[],
+        afterInitProtyle?: (editor: Protyle) => void,
+        scrollPosition?: ScrollLogicalPosition
     }) {
         super({
+            app: options.app,
             id: options.tab.id,
         });
         if (window.siyuan.config.fileTree.openFilesUseCurrentTab) {
@@ -26,42 +35,45 @@ export class Editor extends Model {
         this.headElement = options.tab.headElement;
         this.element = options.tab.panelElement;
         this.initProtyle(options);
+        // 当文档第一次加载到页签时更新 openAt 时间
+        fetchPost("/api/storage/updateRecentDocOpenTime", {rootID: options.rootId});
     }
 
-    private initProtyle(options:  {
+    private initProtyle(options: {
         blockId: string,
-        hasContext?: boolean
-        action?: string[]
+        action?: TProtyleAction[]
+        rootId: string,
         mode?: TEditorMode,
+        scrollPosition?: ScrollLogicalPosition,
+        afterInitProtyle?: (editor: Protyle) => void,
     }) {
-        this.editor = new Protyle(this.element, {
-            action: options.action,
+        this.editor = new Protyle(this.app, this.element, {
+            action: options.action || [],
             blockId: options.blockId,
+            rootId: options.rootId,
             mode: options.mode,
-            hasContext: options.hasContext,
             render: {
                 title: true,
                 background: true,
                 scroll: true,
             },
             typewriterMode: true,
+            scrollPosition: options.scrollPosition,
             after: (editor) => {
-                editor.protyle.model = this;
-                if (window.siyuan.config.readonly) {
-                    disabledProtyle(editor.protyle);
-                }
-
                 if (window.siyuan.editorIsFullscreen) {
-                    editor.protyle.element.classList.add("fullscreen");
+                    fullscreen(editor.protyle.element);
                     setPadding(editor.protyle);
-                    getAllModels().editor.forEach(item => {
-                        if (!editor.protyle.element.isSameNode(item.element) && item.element.classList.contains("fullscreen")) {
-                            item.element.classList.remove("fullscreen");
-                            setPadding(item.editor.protyle);
-                        }
-                    });
+                }
+                countBlockWord([], editor.protyle.block.rootID);
+                /// #if !BROWSER
+                setModelsHash();
+                /// #endif
+                if (options.afterInitProtyle) {
+                    options.afterInitProtyle(editor);
                 }
             },
         });
+        // 需在 after 回调之前，否则不会聚焦 https://github.com/siyuan-note/siyuan/issues/5303
+        this.editor.protyle.model = this;
     }
 }

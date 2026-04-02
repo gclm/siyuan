@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -43,7 +43,25 @@ func getTag(c *gin.Context) {
 	model.Conf.Tag.Sort = sortMode
 	model.Conf.Save()
 
-	ret.Data = model.BuildTags()
+	// API `getTag` add an optional parameter `ignoreMaxListHint` https://github.com/siyuan-note/siyuan/issues/16000
+	ignoreMaxListHint := false
+	ignoreMaxListHintArg := arg["ignoreMaxListHint"]
+	if nil != ignoreMaxListHintArg {
+		ignoreMaxListHint = ignoreMaxListHintArg.(bool)
+	}
+
+	var app string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("app", true, &app)) {
+		return
+	}
+	tags := model.BuildTags(ignoreMaxListHint, app)
+
+	if model.IsReadOnlyRoleContext(c) {
+		publishAccess := model.GetPublishAccess()
+		publishIgnore := model.GetInvisiblePublishAccess(publishAccess)
+		tags = model.FilterTagsByPublishIgnore(publishIgnore, tags)
+	}
+	ret.Data = tags
 }
 
 func renameTag(c *gin.Context) {
@@ -55,9 +73,14 @@ func renameTag(c *gin.Context) {
 		return
 	}
 
-	oldLabel := arg["oldLabel"].(string)
-	newLabel := arg["newLabel"].(string)
-	if err := model.RenameTag(oldLabel, newLabel); nil != err {
+	var oldLabel, newLabel string
+	if !util.ParseJsonArgs(arg, ret,
+		util.BindJsonArg("oldLabel", true, &oldLabel),
+		util.BindJsonArg("newLabel", true, &newLabel),
+	) {
+		return
+	}
+	if err := model.RenameTag(oldLabel, newLabel); err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 5000}
@@ -74,8 +97,11 @@ func removeTag(c *gin.Context) {
 		return
 	}
 
-	label := arg["label"].(string)
-	if err := model.RemoveTag(label); nil != err {
+	var label string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("label", true, &label)) {
+		return
+	}
+	if err := model.RemoveTag(label); err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 5000}

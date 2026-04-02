@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 package sql
 
 import (
-	"github.com/siyuan-note/siyuan/kernel/util"
+	"github.com/siyuan-note/logging"
 )
 
 type FileAnnotationRef struct {
@@ -32,22 +32,21 @@ type FileAnnotationRef struct {
 	Type         string
 }
 
-func QueryRefIDsByAnnotationID(annotationID string) (refIDs, refTexts []string) {
+func QueryRefIDsByAnnotationID(annotationID string) (refIDs []string) {
 	refIDs = []string{}
-	rows, err := query("SELECT block_id, content FROM file_annotation_refs WHERE annotation_id = ?", annotationID)
-	if nil != err {
-		util.LogErrorf("sql query failed: %s", err)
+	rows, err := query("SELECT block_id FROM file_annotation_refs WHERE annotation_id = ?", annotationID)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var id, content string
-		if err = rows.Scan(&id, &content); nil != err {
-			util.LogErrorf("query scan field failed: %s", err)
+		var id string
+		if err = rows.Scan(&id); err != nil {
+			logging.LogErrorf("query scan field failed: %s", err)
 			return
 		}
 		refIDs = append(refIDs, id)
-		refTexts = append(refTexts, content)
 	}
 	return
 }

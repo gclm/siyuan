@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,6 +18,7 @@ package api
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/88250/gulu"
 	"github.com/gin-gonic/gin"
@@ -33,14 +34,24 @@ func pushMsg(c *gin.Context) {
 		return
 	}
 
-	msg := arg["msg"].(string)
+	var msg string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("msg", true, &msg)) {
+		return
+	}
+	msg = strings.TrimSpace(msg)
+	if "" == msg {
+		ret.Code = -1
+		ret.Msg = "Field [msg] must not be empty"
+		return
+	}
+
 	timeout := 7000
 	if nil != arg["timeout"] {
 		timeout = int(arg["timeout"].(float64))
 	}
 	msgId := util.PushMsg(msg, timeout)
 
-	ret.Data = map[string]interface{}{
+	ret.Data = map[string]any{
 		"id": msgId,
 	}
 }
@@ -54,14 +65,24 @@ func pushErrMsg(c *gin.Context) {
 		return
 	}
 
-	msg := arg["msg"].(string)
+	var msg string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("msg", true, &msg)) {
+		return
+	}
+	msg = strings.TrimSpace(msg)
+	if "" == msg {
+		ret.Code = -1
+		ret.Msg = "Field [msg] must not be empty"
+		return
+	}
+
 	timeout := 7000
 	if nil != arg["timeout"] {
 		timeout = int(arg["timeout"].(float64))
 	}
 	msgId := util.PushErrMsg(msg, timeout)
 
-	ret.Data = map[string]interface{}{
+	ret.Data = map[string]any{
 		"id": msgId,
 	}
 }

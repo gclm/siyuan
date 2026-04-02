@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,20 @@ func getBookmark(c *gin.Context) {
 	ret := gulu.Ret.NewResult()
 	defer c.JSON(http.StatusOK, ret)
 
-	ret.Data = model.BuildBookmark()
+	bookmarks := model.BuildBookmark()
+	if model.IsReadOnlyRoleContext(c) {
+		publishAccess := model.GetPublishAccess()
+		tempBookmarks := &model.Bookmarks{}
+		for _, bookmark := range *bookmarks {
+			bookmark.Blocks = model.FilterBlocksByPublishAccess(c, publishAccess, bookmark.Blocks)
+			bookmark.Count = len(bookmark.Blocks)
+			if bookmark.Count > 0 {
+				*tempBookmarks = append(*tempBookmarks, bookmark)
+			}
+		}
+		bookmarks = tempBookmarks
+	}
+	ret.Data = bookmarks
 }
 
 func removeBookmark(c *gin.Context) {
@@ -41,8 +54,11 @@ func removeBookmark(c *gin.Context) {
 		return
 	}
 
-	bookmark := arg["bookmark"].(string)
-	if err := model.RemoveBookmark(bookmark); nil != err {
+	var bookmark string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("bookmark", true, &bookmark)) {
+		return
+	}
+	if err := model.RemoveBookmark(bookmark); err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 5000}
@@ -59,9 +75,14 @@ func renameBookmark(c *gin.Context) {
 		return
 	}
 
-	oldBookmark := arg["oldBookmark"].(string)
-	newBookmark := arg["newBookmark"].(string)
-	if err := model.RenameBookmark(oldBookmark, newBookmark); nil != err {
+	var oldBookmark, newBookmark string
+	if !util.ParseJsonArgs(arg, ret,
+		util.BindJsonArg("oldBookmark", true, &oldBookmark),
+		util.BindJsonArg("newBookmark", true, &newBookmark),
+	) {
+		return
+	}
+	if err := model.RenameBookmark(oldBookmark, newBookmark); err != nil {
 		ret.Code = -1
 		ret.Msg = err.Error()
 		ret.Data = map[string]interface{}{"closeTimeout": 5000}
