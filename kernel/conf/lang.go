@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,5 +18,5 @@ package conf
 
 type Lang struct {
 	Label string `json:"label"` // 简体中文
-	Name  string `json:"name"`  // zh_CN
+	Name  string `json:"name"`  // BCP 47 标准语言代码，例如 zh-CN
 }

@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -19,137 +19,221 @@ package util
 import (
 	"os"
 	"sort"
+	"strconv"
 	"strings"
+	"sync"
+	"time"
 
-	"github.com/88250/gulu"
 	"github.com/ConradIrwin/font/sfnt"
 	"github.com/flopp/go-findfont"
-	ttc "golang.org/x/image/font/sfnt"
+	"github.com/siyuan-note/logging"
 	textUnicode "golang.org/x/text/encoding/unicode"
 	"golang.org/x/text/transform"
 )
 
-func GetSysFonts(currentLanguage string) (ret []string) {
-	fonts := loadFonts(currentLanguage)
-	ret = gulu.Str.RemoveDuplicatedElem(fonts)
-	ret = removeUnusedFonts(ret)
-	sort.Strings(ret)
+var (
+	sysFonts     []*Font
+	sysFontsLock = sync.Mutex{}
+)
+
+func LoadSysFonts() []*Font {
+	sysFontsLock.Lock()
+	defer sysFontsLock.Unlock()
+
+	if 0 < len(sysFonts) {
+		return sysFonts
+	}
+
+	start := time.Now()
+	sysFonts = loadFonts()
+
+	sort.Slice(sysFonts, func(i, j int) bool {
+		return sysFonts[i].DisplayName < sysFonts[j].DisplayName
+	})
+
+	logging.LogInfof("loaded system fonts [%d] in [%dms]", len(sysFonts), time.Since(start).Milliseconds())
+	return sysFonts
+}
+
+type Font struct {
+	Family      string `json:"family"`      // 对应 CSS font-family
+	Weight      int    `json:"weight"`      // 对应 CSS font-weight
+	DisplayName string `json:"displayName"` // 给人看的名称 (Family + Subfamily)
+}
+
+func loadFonts() (ret []*Font) {
+	ret = []*Font{}
+	for _, fontPath := range findfont.List() {
+		if strings.HasSuffix(strings.ToLower(fontPath), ".ttc") {
+			families := parseTTCFontFamily(fontPath)
+			for _, f := range families {
+				if existFont(f, ret) {
+					continue
+				}
+
+				ret = append(ret, f)
+				//LogInfof("[%s] [%s]", fontPath, family)
+			}
+		} else if strings.HasSuffix(strings.ToLower(fontPath), ".otf") || strings.HasSuffix(strings.ToLower(fontPath), ".ttf") {
+			f := parseTTFFontFamily(fontPath)
+			if nil != f {
+				if existFont(f, ret) {
+					continue
+				}
+
+				ret = append(ret, f)
+				//logging.LogInfof("[%s] [%s]", fontPath, family)
+			}
+		}
+	}
 	return
 }
 
-func removeUnusedFonts(fonts []string) (ret []string) {
-	ret = []string{}
+func existFont(f *Font, fonts []*Font) bool {
 	for _, font := range fonts {
-		if strings.HasPrefix(font, "Noto Sans") {
-			continue
+		if strings.EqualFold(f.Family, font.Family) && f.Weight == font.Weight {
+			return true
 		}
-		ret = append(ret, font)
 	}
-	return
+	return false
 }
 
-func loadFonts(currentLanguage string) (ret []string) {
-	ret = []string{}
-	for _, f := range findfont.List() {
-		if strings.HasSuffix(strings.ToLower(f), ".ttc") {
-			data, err := os.ReadFile(f)
-			if nil != err {
-				LogErrorf("read font file [%s] failed: %s", f, err)
-				continue
-			}
-			collection, err := ttc.ParseCollection(data)
-			if nil != err {
-				//LogErrorf("parse font collection [%s] failed: %s", f, err)
-				continue
-			}
+func parseTTCFontFamily(fontPath string) (ret []*Font) {
+	defer logging.Recover()
 
-			for i := 0; i < collection.NumFonts(); i++ {
-				font, err := collection.Font(i)
-				if nil != err {
-					//LogErrorf("get font [%s] failed: %s", f, err)
-					continue
-				}
-				if family := parseFontFamily(font); "" != family {
-					ret = append(ret, family)
-					//LogInfof("[%s] [%s]", f, family)
-				}
-			}
-		} else if strings.HasSuffix(strings.ToLower(f), ".otf") || strings.HasSuffix(strings.ToLower(f), ".ttf") {
-			fontFile, err := os.Open(f)
-			if nil != err {
-				//LogErrorf("open font file [%s] failed: %s", f, err)
-				continue
-			}
-			font, err := sfnt.Parse(fontFile)
-			if nil != err {
-				//LogErrorf("parse font [%s] failed: %s", f, err)
-				continue
-			}
+	fontFile, err := os.Open(fontPath)
+	if err != nil {
+		//logging.LogErrorf("read font file [%s] failed: %s", fontPath, err)
+		return
+	}
+	defer fontFile.Close()
 
-			t, err := font.NameTable()
-			if nil != err {
-				//LogErrorf("parse font name table [%s] failed: %s", f, err)
-				return
-			}
-			fontFile.Close()
-			var family, familyChinese string
-			for _, e := range t.List() {
-				if sfnt.NameFontFamily != e.NameID && sfnt.NamePreferredFamily != e.NameID {
-					continue
-				}
+	fonts, err := sfnt.ParseCollection(fontFile)
+	if err != nil {
+		//LogErrorf("parse font collection [%s] failed: %s", fontPath, err)
+		return
+	}
 
-				if sfnt.PlatformLanguageID(1033) == e.LanguageID {
-					v, _, err := transform.Bytes(textUnicode.UTF16(textUnicode.BigEndian, textUnicode.IgnoreBOM).NewDecoder(), e.Value)
-					if nil != err {
-						//LogErrorf("decode font family [%s] failed: %s", f, err)
-						continue
-					}
-					val := string(v)
-					if sfnt.NameFontFamily == e.NameID && "" != val {
-						family = val
-					}
-					if sfnt.NamePreferredFamily == e.NameID && "" != val {
-						family = val
-					}
-				} else if sfnt.PlatformLanguageID(2052) == e.LanguageID {
-					if "zh_CN" != currentLanguage {
-						continue
-					}
-
-					v, _, err := transform.Bytes(textUnicode.UTF16(textUnicode.BigEndian, textUnicode.IgnoreBOM).NewDecoder(), e.Value)
-					if nil != err {
-						//LogErrorf("decode font family [%s] failed: %s", f, err)
-						continue
-					}
-					val := string(v)
-					if sfnt.NameFontFamily == e.NameID && "" != val {
-						familyChinese = val
-					}
-					if sfnt.NamePreferredFamily == e.NameID && "" != val {
-						familyChinese = val
-					}
-				}
-			}
-			if "" != family && !strings.HasPrefix(family, ".") {
-				ret = append(ret, family)
-				//LogInfof("[%s] [%s]", f, family)
-			}
-			if "" != familyChinese && !strings.HasPrefix(familyChinese, ".") {
-				ret = append(ret, familyChinese)
-				//LogInfof("[%s] [%s]", f, family)
-			}
+	for _, f := range fonts {
+		font := parseFont(f)
+		if nil != font {
+			ret = append(ret, font)
 		}
 	}
 	return
 }
 
-func parseFontFamily(font *ttc.Font) string {
-	family, _ := font.Name(nil, ttc.NameIDTypographicFamily)
-	if "" == family {
-		family, _ = font.Name(nil, ttc.NameIDFamily)
+func parseTTFFontFamily(fontPath string) *Font {
+	defer logging.Recover()
+
+	fontFile, err := os.Open(fontPath)
+	if err != nil {
+		//LogErrorf("open font file [%s] failed: %s", fontPath, err)
+		return nil
 	}
-	if strings.HasPrefix(family, ".") {
-		return ""
+	defer fontFile.Close()
+
+	font, err := sfnt.Parse(fontFile)
+	if err != nil {
+		//logging.LogErrorf("parse font [%s] failed: %s", fontFile.Name(), err)
+		return nil
 	}
-	return family
+	return parseFont(font)
+}
+
+func parseFont(font *sfnt.Font) *Font {
+	t, err := font.NameTable()
+	if err != nil {
+		//logging.LogErrorf("parse font name table failed: %s", err)
+		return nil
+	}
+
+	var family, subfamily string
+	for _, e := range t.List() {
+		if sfnt.NameFontFamily == e.NameID && (sfnt.PlatformLanguageID(1033) == e.LanguageID || sfnt.PlatformLanguageID(2052) == e.LanguageID) {
+			v, _, err := transform.Bytes(textUnicode.UTF16(textUnicode.BigEndian, textUnicode.IgnoreBOM).NewDecoder(), e.Value)
+			if err == nil {
+				family = strings.TrimSpace(string(v))
+			}
+		}
+		if sfnt.NamePreferredFamily == e.NameID && (sfnt.PlatformLanguageID(1033) == e.LanguageID || sfnt.PlatformLanguageID(2052) == e.LanguageID) {
+			v, _, err := transform.Bytes(textUnicode.UTF16(textUnicode.BigEndian, textUnicode.IgnoreBOM).NewDecoder(), e.Value)
+			if err == nil {
+				family = strings.TrimSpace(string(v))
+			}
+		}
+		if sfnt.NameFontSubfamily == e.NameID && (sfnt.PlatformLanguageID(1033) == e.LanguageID || sfnt.PlatformLanguageID(2052) == e.LanguageID) {
+			v, _, err := transform.Bytes(textUnicode.UTF16(textUnicode.BigEndian, textUnicode.IgnoreBOM).NewDecoder(), e.Value)
+			if err == nil {
+				subfamily = strings.TrimSpace(string(v))
+			}
+		}
+		if sfnt.NamePreferredSubfamily == e.NameID && (sfnt.PlatformLanguageID(1033) == e.LanguageID || sfnt.PlatformLanguageID(2052) == e.LanguageID) {
+			v, _, err := transform.Bytes(textUnicode.UTF16(textUnicode.BigEndian, textUnicode.IgnoreBOM).NewDecoder(), e.Value)
+			if err == nil {
+				subfamily = strings.TrimSpace(string(v))
+			}
+		}
+	}
+
+	weight := 400
+	os2, err := font.OS2Table()
+	if nil == err {
+		weight = int(os2.USWeightClass)
+	}
+
+	if weight == 400 && subfamily != "" {
+		s := strings.ToLower(subfamily)
+		// 自动匹配 W01-W09
+		for i := 1; i <= 9; i++ {
+			wStr := "w0" + strconv.Itoa(i)
+			if strings.Contains(s, wStr) {
+				weight = i * 100
+				break
+			}
+		}
+
+		// 自动匹配 W1-W9（部分字体使用不带前导零的缩写）
+		if weight == 400 {
+			for i := 1; i <= 9; i++ {
+				wStr := "w" + strconv.Itoa(i)
+				if strings.Contains(s, wStr) {
+					weight = i * 100
+					break
+				}
+			}
+		}
+
+		// 自动匹配标准关键词
+		if weight == 400 { // 如果 W 系列没匹配到
+			switch {
+			case strings.Contains(s, "thin"):
+				weight = 100
+			case strings.Contains(s, "light"):
+				weight = 300
+			case strings.Contains(s, "medium"):
+				weight = 500
+			case strings.Contains(s, "semibold") || strings.Contains(s, "demi"):
+				weight = 600
+			case strings.Contains(s, "bold"):
+				weight = 700
+			case strings.Contains(s, "black") || strings.Contains(s, "heavy"):
+				weight = 900
+			}
+		}
+	}
+
+	if family != "" && !strings.HasPrefix(family, ".") {
+		displayName := family
+		if subfamily != "" && !strings.EqualFold(subfamily, "Regular") {
+			displayName = family + " " + subfamily
+		}
+
+		return &Font{
+			Family:      family,
+			Weight:      weight,
+			DisplayName: displayName,
+		}
+	}
+	return nil
 }

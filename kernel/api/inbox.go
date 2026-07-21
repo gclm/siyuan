@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -34,18 +34,40 @@ func removeShorthands(c *gin.Context) {
 		return
 	}
 
-	idsArg := arg["ids"].([]interface{})
+	idsArg := arg["ids"].([]any)
 	var ids []string
 	for _, id := range idsArg {
 		ids = append(ids, id.(string))
 	}
 
 	err := model.RemoveCloudShorthands(ids)
-	if nil != err {
+	if err != nil {
 		ret.Code = 1
 		ret.Msg = err.Error()
 		return
 	}
+}
+
+func getShorthand(c *gin.Context) {
+	ret := gulu.Ret.NewResult()
+	defer c.JSON(http.StatusOK, ret)
+
+	arg, ok := util.JsonArg(c, ret)
+	if !ok {
+		return
+	}
+
+	var id string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("id", &id, true, true)) {
+		return
+	}
+	data, err := model.GetCloudShorthand(id)
+	if err != nil {
+		ret.Code = 1
+		ret.Msg = err.Error()
+		return
+	}
+	ret.Data = data
 }
 
 func getShorthands(c *gin.Context) {
@@ -57,9 +79,12 @@ func getShorthands(c *gin.Context) {
 		return
 	}
 
-	page := int(arg["page"].(float64))
-	data, err := model.GetCloudShorthands(page)
-	if nil != err {
+	var page float64
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("page", &page, true, false)) {
+		return
+	}
+	data, err := model.GetCloudShorthands(int(page))
+	if err != nil {
 		ret.Code = 1
 		ret.Msg = err.Error()
 		return

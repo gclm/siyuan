@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,98 +18,70 @@ package model
 
 import (
 	"bytes"
-	"os"
-	"path/filepath"
 
-	"github.com/88250/gulu"
 	"github.com/88250/lute/ast"
-	"github.com/88250/lute/parse"
+	"github.com/88250/lute/editor"
 	"github.com/88250/lute/render"
-	"github.com/siyuan-note/filelock"
-	"github.com/siyuan-note/siyuan/kernel/sql"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/treenode"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 func AutoSpace(rootID string) (err error) {
-	tree, err := loadTreeByBlockID(rootID)
-	if nil != err {
+	tree, err := LoadTreeByBlockID(rootID)
+	if err != nil {
 		return
 	}
 
-	util.PushEndlessProgress(Conf.Language(116))
-	defer util.ClearPushProgress(100)
+	logging.LogInfof("formatting tree [%s]...", rootID)
+	util.PushProtyleLoading(rootID, Conf.Language(116))
+	defer ReloadProtyle(rootID)
 
-	generateFormatHistory(tree)
+	FlushTxQueue()
 
-	var blocks []*ast.Node
-	var rootIAL [][]string
-	// 添加 block ial，后面格式化渲染需要
+	generateOpTypeHistory(tree, HistoryOpFormat)
+	luteEngine := NewLute()
 	ast.Walk(tree.Root, func(n *ast.Node, entering bool) ast.WalkStatus {
-		if !entering || !n.IsBlock() {
+		if !entering {
 			return ast.WalkContinue
 		}
 
-		if ast.NodeDocument == n.Type {
-			rootIAL = n.KramdownIAL
-			return ast.WalkContinue
-		}
-
-		if ast.NodeBlockQueryEmbed == n.Type {
-			if script := n.ChildByType(ast.NodeBlockQueryEmbedScript); nil != script {
-				script.Tokens = bytes.ReplaceAll(script.Tokens, []byte("\n"), []byte(" "))
-			}
-		}
-
-		if 0 < len(n.KramdownIAL) {
-			blocks = append(blocks, n)
+		switch n.Type {
+		case ast.NodeTextMark:
+			luteEngine.MergeSameTextMark(n) // 合并相邻的同类行级节点
+		case ast.NodeCodeBlockCode:
+			// 代码块中包含 ``` 时 `优化排版` 异常 `Optimize typography` exception when code block contains ``` https://github.com/siyuan-note/siyuan/issues/15843
+			n.Tokens = bytes.ReplaceAll(n.Tokens, []byte(editor.Zwj+"```"), []byte("```"))
+			n.Tokens = bytes.ReplaceAll(n.Tokens, []byte("```"), []byte(editor.Zwj+"```"))
 		}
 		return ast.WalkContinue
 	})
-	for _, block := range blocks {
-		block.InsertAfter(&ast.Node{Type: ast.NodeKramdownBlockIAL, Tokens: parse.IAL2Tokens(block.KramdownIAL)})
-	}
 
-	luteEngine := NewLute()
-	luteEngine.SetAutoSpace(true)
-	formatRenderer := render.NewFormatRenderer(tree, luteEngine.RenderOptions)
+	rootIAL := tree.Root.KramdownIAL
+	addBlockIALNodes(tree, false)
+
+	// 第一次格式化为了合并相邻的文本节点
+	formatRenderer := render.NewFormatRenderer(tree, luteEngine.RenderOptions, luteEngine.ParseOptions)
 	md := formatRenderer.Render()
 	newTree := parseKTree(md)
+	newTree.Root.Spec = treenode.CurrentSpec
+	// 第二次格式化启用自动空格
+	luteEngine.SetAutoSpace(true)
+	formatRenderer = render.NewFormatRenderer(newTree, luteEngine.RenderOptions, luteEngine.ParseOptions)
+	md = formatRenderer.Render()
+	newTree = parseKTree(md)
+	newTree.Root.Spec = treenode.CurrentSpec
 	newTree.Root.ID = tree.ID
 	newTree.Root.KramdownIAL = rootIAL
 	newTree.ID = tree.ID
 	newTree.Path = tree.Path
 	newTree.HPath = tree.HPath
 	newTree.Box = tree.Box
-	err = writeJSONQueue(newTree)
-	if nil != err {
+	err = writeTreeUpsertQueue(newTree)
+	if err != nil {
 		return
 	}
-	sql.WaitForWritingDatabase()
+	logging.LogInfof("formatted tree [%s]", rootID)
+	util.RandomSleep(500, 700)
 	return
-}
-
-func generateFormatHistory(tree *parse.Tree) {
-	historyDir, err := util.GetHistoryDir("format")
-	if nil != err {
-		util.LogErrorf("get history dir failed: %s", err)
-		return
-	}
-
-	historyPath := filepath.Join(historyDir, tree.Box, tree.Path)
-	if err = os.MkdirAll(filepath.Dir(historyPath), 0755); nil != err {
-		util.LogErrorf("generate history failed: %s", err)
-		return
-	}
-
-	var data []byte
-	if data, err = filelock.NoLockFileRead(filepath.Join(util.DataDir, tree.Box, tree.Path)); err != nil {
-		util.LogErrorf("generate history failed: %s", err)
-		return
-	}
-
-	if err = gulu.File.WriteFileSafer(historyPath, data, 0644); err != nil {
-		util.LogErrorf("generate history failed: %s", err)
-		return
-	}
-
 }

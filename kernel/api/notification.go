@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,14 +33,20 @@ func pushMsg(c *gin.Context) {
 		return
 	}
 
-	msg := arg["msg"].(string)
+	var msg string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("msg", &msg, true, true)) {
+		return
+	}
+
 	timeout := 7000
 	if nil != arg["timeout"] {
 		timeout = int(arg["timeout"].(float64))
 	}
+
+	msg = util.SanitizeHTML(msg)
 	msgId := util.PushMsg(msg, timeout)
 
-	ret.Data = map[string]interface{}{
+	ret.Data = map[string]any{
 		"id": msgId,
 	}
 }
@@ -54,14 +60,20 @@ func pushErrMsg(c *gin.Context) {
 		return
 	}
 
-	msg := arg["msg"].(string)
+	var msg string
+	if !util.ParseJsonArgs(arg, ret, util.BindJsonArg("msg", &msg, true, true)) {
+		return
+	}
+
 	timeout := 7000
 	if nil != arg["timeout"] {
 		timeout = int(arg["timeout"].(float64))
 	}
+
+	msg = util.SanitizeHTML(msg)
 	msgId := util.PushErrMsg(msg, timeout)
 
-	ret.Data = map[string]interface{}{
+	ret.Data = map[string]any{
 		"id": msgId,
 	}
 }

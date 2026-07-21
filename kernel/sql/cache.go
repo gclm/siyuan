@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,117 +17,185 @@
 package sql
 
 import (
-	"runtime/debug"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/88250/lute/ast"
 	"github.com/88250/lute/parse"
 	"github.com/dgraph-io/ristretto"
+	"github.com/jinzhu/copier"
 	gcache "github.com/patrickmn/go-cache"
+	"github.com/siyuan-note/logging"
+	"github.com/siyuan-note/siyuan/kernel/search"
 )
 
-var memCache, _ = ristretto.NewCache(&ristretto.Config{
-	NumCounters: 100000,           // 10W
-	MaxCost:     1024 * 1024 * 10, // 10MB
+var cacheDisabled = true
+
+func enableCache() {
+	cacheDisabled = false
+}
+
+func disableCache() {
+	cacheDisabled = true
+}
+
+var blockCache, _ = ristretto.NewCache(&ristretto.Config{
+	NumCounters: 100000,
+	MaxCost:     10240,
 	BufferItems: 64,
+	OnExit: func(value any) {
+		if entry, ok := value.(*blockCacheEntry); ok {
+			removeBlockCacheKey(entry.block.ID, entry.key)
+		}
+	},
 })
-var disabled = true
 
-func EnableCache() {
-	disabled = false
+var blockCacheKeys = map[string]map[string]struct{}{}
+var blockCacheKeysMu sync.Mutex
+
+type blockCacheEntry struct {
+	key   string
+	block *Block
 }
 
-func DisableCache() {
-	disabled = true
+// blockCacheKey 为加密笔记本使用 box 维度缓存键；普通笔记本保持原有全局键，避免影响既有查询路径。
+func blockCacheKey(id, boxID string) string {
+	if IsEncryptedBoxFn != nil && IsEncryptedBoxFn(boxID) {
+		return boxID + "\x00" + id
+	}
+	return id
 }
 
-func ClearBlockCache() {
-	memCache.Clear()
-	debug.FreeOSMemory()
+func ClearCache() {
+	blockCache.Clear()
+	blockCacheKeysMu.Lock()
+	blockCacheKeys = map[string]map[string]struct{}{}
+	blockCacheKeysMu.Unlock()
+	clearRefCache()
 }
 
 func putBlockCache(block *Block) {
-	if disabled {
+	if cacheDisabled {
 		return
 	}
-	memCache.Set(block.ID, block, 1)
+
+	cloned := &Block{}
+	if err := copier.Copy(cloned, block); err != nil {
+		logging.LogErrorf("clone block failed: %v", err)
+		return
+	}
+	cloned.Content = strings.ReplaceAll(cloned.Content, search.SearchMarkLeft, "")
+	cloned.Content = strings.ReplaceAll(cloned.Content, search.SearchMarkRight, "")
+	key := blockCacheKey(cloned.ID, cloned.Box)
+	addBlockCacheKey(cloned.ID, key)
+	if !blockCache.Set(key, &blockCacheEntry{key: key, block: cloned}, 1) {
+		removeBlockCacheKey(cloned.ID, key)
+	}
 }
 
 func getBlockCache(id string) (ret *Block) {
-	if disabled {
+	return getBlockCacheInBox(id, "")
+}
+
+func getBlockCacheInBox(id, boxID string) (ret *Block) {
+	if cacheDisabled {
 		return
 	}
 
-	b, _ := memCache.Get(id)
+	b, _ := blockCache.Get(blockCacheKey(id, boxID))
 	if nil != b {
-		ret = b.(*Block)
+		if entry, ok := b.(*blockCacheEntry); ok {
+			ret = entry.block
+		}
 	}
 	return
 }
 
 func removeBlockCache(id string) {
-	memCache.Del(id)
+	blockCacheKeysMu.Lock()
+	keys := blockCacheKeys[id]
+	delete(blockCacheKeys, id)
+	blockCacheKeysMu.Unlock()
+	for key := range keys {
+		blockCache.Del(key)
+	}
 	removeRefCacheByDefID(id)
 }
 
-func getVirtualRefKeywordsCache() ([]string, bool) {
-	if disabled {
-		return nil, false
+func addBlockCacheKey(id, key string) {
+	blockCacheKeysMu.Lock()
+	defer blockCacheKeysMu.Unlock()
+	keys := blockCacheKeys[id]
+	if keys == nil {
+		keys = map[string]struct{}{}
+		blockCacheKeys[id] = keys
 	}
-
-	if val, ok := memCache.Get("virtual_ref"); ok {
-		return val.([]string), true
-	}
-	return nil, false
+	keys[key] = struct{}{}
 }
 
-func setVirtualRefKeywords(keywords []string) {
-	if disabled {
-		return
+func removeBlockCacheKey(id, key string) {
+	blockCacheKeysMu.Lock()
+	defer blockCacheKeysMu.Unlock()
+	if keys := blockCacheKeys[id]; keys != nil {
+		delete(keys, key)
+		if len(keys) == 0 {
+			delete(blockCacheKeys, id)
+		}
 	}
-
-	memCache.Set("virtual_ref", keywords, 1)
 }
 
-func ClearVirtualRefKeywords() {
-	memCache.Del("virtual_ref")
+var defIDRefsCache = gcache.New(30*time.Minute, 5*time.Minute)
+
+func refCacheKey(defBlockID, boxID string) string {
+	return boxID + "\x00" + defBlockID
 }
 
 func GetRefsCacheByDefID(defID string) (ret []*Ref) {
-	for defBlockID, refs := range defIDRefsCache.Items() {
-		if defBlockID == defID {
+	return GetRefsCacheByDefIDInBox(defID, "")
+}
+
+func GetRefsCacheByDefIDInBox(defID, boxID string) (ret []*Ref) {
+	key := refCacheKey(defID, boxID)
+	for k, refs := range defIDRefsCache.Items() {
+		if k == key {
 			for _, ref := range refs.Object.(map[string]*Ref) {
 				ret = append(ret, ref)
 			}
 		}
 	}
 	if 1 > len(ret) {
-		ret = QueryRefsByDefID(defID, false)
-		for _, ref := range ret {
-			putRefCache(ref)
+		allRefs := QueryRefsByDefID(defID, false)
+		for _, ref := range allRefs {
+			// 按 box 过滤：boxID 非空时只选同 box 的 Ref，boxID 为空时全部保留
+			if boxID == "" || ref.Box == boxID {
+				ret = append(ret, ref)
+				putRefCache(boxID, ref)
+			}
 		}
 	}
 	return
 }
 
-var (
-	defIDRefsCache = gcache.New(30*time.Minute, 5*time.Minute) // [defBlockID]map[refBlockID]*Ref
-)
-
-func CacheRef(tree *parse.Tree, refIDNode *ast.Node) {
-	ref := buildRef(tree, refIDNode)
-	putRefCache(ref)
+func CacheRef(tree *parse.Tree, refNode *ast.Node) {
+	ref := buildRef(tree, refNode)
+	putRefCache(tree.Box, ref)
 }
 
-func putRefCache(ref *Ref) {
-	defBlockRefs, ok := defIDRefsCache.Get(ref.DefBlockID)
+func putRefCache(boxID string, ref *Ref) {
+	key := refCacheKey(ref.DefBlockID, boxID)
+	defBlockRefs, ok := defIDRefsCache.Get(key)
 	if !ok {
 		defBlockRefs = map[string]*Ref{}
 	}
 	defBlockRefs.(map[string]*Ref)[ref.BlockID] = ref
-	defIDRefsCache.SetDefault(ref.DefBlockID, defBlockRefs)
+	defIDRefsCache.SetDefault(key, defBlockRefs)
 }
 
 func removeRefCacheByDefID(defID string) {
-	defIDRefsCache.Delete(defID)
+	defIDRefsCache.Delete(refCacheKey(defID, ""))
+}
+
+func clearRefCache() {
+	defIDRefsCache.Flush()
 }

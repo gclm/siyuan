@@ -1,132 +1,140 @@
-import {editor} from "./editor";
-import {about} from "./about";
-import {appearance} from "./appearance";
-import {image} from "./image";
-import {initConfigSearch} from "./search";
-import {fileTree} from "./fileTree";
-import {exportConfig} from "./exportConfig";
-import {account} from "./account";
-import {repos} from "./repos";
-import {keymap} from "./keymap";
-import {bazaar} from "./bazaar";
-import {query} from "./query";
+/// #if MOBILE
+import {popMenu} from "../mobile/menu";
+/// #else
+import {initSettingSearch, switchSettingTab} from "./search/dialog";
+import {bindSettingSaveDelegation} from "./setting/save";
 import {Dialog} from "../dialog";
+import {Constants} from "../constants";
+import {focusByRange} from "../protyle/util/selection";
+import {bazaar, renderReadme} from "./bazaar";
+import {fetchSyncPost} from "../util/fetch";
+import {getFrontend} from "../util/functions";
+import {showMessage} from "../dialog/message";
+import {escapeHtml} from "../util/escape";
+/// #endif
+import {getSettingTabDefs, settingTabToMenuId} from "./setting/tabs";
+import {clearAccessTabElement} from "./tabs/accessRuntime";
+import {clearSyncTabElement} from "./tabs/syncRuntime";
+import type {TSettingTab} from "./setting/tabs";
+import type {App} from "../index";
 
-export const openSetting = () => {
-    const exitDialog = window.siyuan.dialogs.find((item) => {
-        if (item.element.querySelector(".b3-tab-container")) {
-            item.destroy();
-            return true;
-        }
-    });
-    if (exitDialog) {
-        return exitDialog;
+/// #if !MOBILE
+const openSettingDialog = (app: App, initialTab: TSettingTab = "editor") => {
+    window.siyuan.dialogs.find((item) => item.element.querySelector(".config__tab-container"))?.destroy();
+    let range: Range;
+    if (getSelection().rangeCount > 0) {
+        range = getSelection().getRangeAt(0);
     }
-    const height = Math.min(window.innerHeight * .9, Math.max(window.innerHeight * .7, 52 * 11));
+    const tabListItems: string[] = [];
+    const tabPanels: string[] = [];
+    for (const def of getSettingTabDefs()) {
+        const isActive = def.id === initialTab;
+        tabListItems.push(`<li data-name="${def.id}" class="b3-list-item${isActive ? " b3-list-item--focus" : ""}${def.hidden ? " fn__none" : ""}"><svg class="b3-list-item__graphic"><use xlink:href="#${def.icon}"></use></svg><span class="b3-list-item__text">${def.title}</span></li>`);
+        tabPanels.push(`<div class="config__tab-container${isActive ? "" : " fn__none"}" data-name="${def.id}"></div>`);
+    }
     const dialog = new Dialog({
-        content: `<div class="fn__flex-column" style="border-radius: 4px;overflow: hidden;position: relative">
-<div class="b3-form__icon search__header"><svg class="b3-form__icon-icon"><use xlink:href="#iconSearch"></use></svg><input class="b3-text-field b3-text-field--text fn__block b3-form__icon-input"></div>
-<div class="fn__flex-1 fn__flex">
-  <ul class="b3-tab-bar b3-list b3-list--background" style="user-select:none;width: 180px;height:${height}px;overflow: auto">
-    <li data-name="editor" class="b3-list-item--focus b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconEdit"></use></svg>${window.siyuan.languages.editor}</li>
-    <li data-name="filetree" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconFiles"></use></svg>${window.siyuan.languages.fileTree}</li>
-    <li data-name="image" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconImage"></use></svg>${window.siyuan.languages.assets}</li>
-    <li data-name="export" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconUpload"></use></svg>${window.siyuan.languages.export}</li>
-    <li data-name="appearance" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconTheme"></use></svg>${window.siyuan.languages.appearance}</li>
-    <li data-name="bazaar" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconBazaar"></use></svg>${window.siyuan.languages.bazaar}</li>
-    <li data-name="search" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconSearch"></use></svg>${window.siyuan.languages.search}</li>
-    <li data-name="keymap" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconKeymap"></use></svg>${window.siyuan.languages.keymap}</li>
-    <li data-name="account" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconAccount"></use></svg>${window.siyuan.languages.account}</li>
-    <li data-name="repos" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconCloud"></use></svg>${window.siyuan.languages.cloud}</li>
-    <li data-name="about" class="b3-list-item b3-list-item--big"><svg class="b3-list-item__graphic"><use xlink:href="#iconInfo"></use></svg>${window.siyuan.languages.about}</li>
-  </ul>
-  <div class="b3-tab-container" style="height:${height}px" data-name="editor">${editor.genHTML()}</div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="filetree"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="image"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="export"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="appearance"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="bazaar"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="search"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="keymap"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="account"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="repos"></div>
-  <div class="b3-tab-container fn__none" style="height:${height}px" data-name="about"></div>
-</div>
+        content: `<div class="fn__flex-1 fn__flex config__panel" style="overflow: hidden;position: relative">
+    <div class="config__side b3-list b3-list--background">
+        <div class="config__tab-head">
+            <div class="config__tab-title resize__move">
+                <svg class="b3-list-item__graphic"><use xlink:href="#iconSettings"></use></svg>
+                <span class="b3-list-item__text">${window.siyuan.languages.config}</span>
+            </div>
+            <input placeholder="${window.siyuan.languages.search}" class="b3-text-field fn__block">
+        </div>
+        <ul class="config__tab-scroll">
+            ${tabListItems.join("")}
+        </ul>
+    </div>
+    <div class="config__tab-wrap">
+        ${tabPanels.join("")}
+    </div>
 </div>`,
-        width: "80vw",
-    });
-
-    initConfigSearch(dialog.element);
-
-    dialog.element.querySelectorAll(".b3-tab-bar .b3-list-item").forEach(item => {
-        item.addEventListener("click", () => {
-            const type = item.getAttribute("data-name");
-            const containerElement = dialog.element.querySelector(`.b3-tab-container[data-name="${type}"]`);
-            dialog.element.querySelectorAll(".b3-tab-container").forEach((container) => {
-                container.classList.add("fn__none");
-            });
-            dialog.element.querySelector(".b3-tab-bar .b3-list-item.b3-list-item--focus").classList.remove("b3-list-item--focus");
-            item.classList.add("b3-list-item--focus");
-            containerElement.classList.remove("fn__none");
-            if (containerElement.innerHTML === "" || type === "repos") {
-                switch (type) {
-                    case "filetree":
-                        containerElement.innerHTML = fileTree.genHTML();
-                        fileTree.element = dialog.element.querySelector('.b3-tab-container[data-name="filetree"]');
-                        fileTree.bindEvent();
-                        break;
-                    case "image":
-                        containerElement.innerHTML = image.genHTML();
-                        image.element = dialog.element.querySelector('.b3-tab-container[data-name="image"]');
-                        image.bindEvent();
-                        break;
-                    case "export":
-                        containerElement.innerHTML = exportConfig.genHTML();
-                        exportConfig.element = dialog.element.querySelector('.b3-tab-container[data-name="export"]');
-                        exportConfig.bindEvent();
-                        break;
-                    case "appearance":
-                        containerElement.innerHTML = appearance.genHTML();
-                        appearance.element = dialog.element.querySelector('.b3-tab-container[data-name="appearance"]');
-                        appearance.bindEvent();
-                        break;
-                    case "keymap":
-                        containerElement.innerHTML = keymap.genHTML();
-                        keymap.element = dialog.element.querySelector('.b3-tab-container[data-name="keymap"]');
-                        keymap.bindEvent();
-                        break;
-                    case "bazaar":
-                        bazaar.element = dialog.element.querySelector('.b3-tab-container[data-name="bazaar"]');
-                        containerElement.innerHTML = bazaar.genHTML();
-                        bazaar.bindEvent();
-                        break;
-                    case "account":
-                        containerElement.innerHTML = account.genHTML();
-                        account.element = dialog.element.querySelector('.b3-tab-container[data-name="account"]');
-                        account.bindEvent();
-                        break;
-                    case "repos":
-                        containerElement.innerHTML = repos.genHTML();
-                        repos.element = dialog.element.querySelector('.b3-tab-container[data-name="repos"]');
-                        repos.bindEvent();
-                        break;
-                    case "about":
-                        containerElement.innerHTML = about.genHTML();
-                        about.element = dialog.element.querySelector('.b3-tab-container[data-name="about"]');
-                        about.bindEvent();
-                        break;
-                    case "search":
-                        containerElement.innerHTML = query.genHTML();
-                        query.element = dialog.element.querySelector('.b3-tab-container[data-name="search"]');
-                        query.bindEvent();
-                        break;
-                    default:
-                        break;
-                }
+        width: "max(70vw, min(90vw, 900px))",
+        height: "90vh",
+        destroyCallback() {
+            clearSyncTabElement();
+            clearAccessTabElement();
+            if (range) {
+                focusByRange(range);
             }
+        },
+    });
+    dialog.element.setAttribute("data-key", Constants.DIALOG_SETTING);
+
+    const tabWrap = dialog.element.querySelector(".config__tab-wrap") as HTMLElement;
+    bindSettingSaveDelegation(tabWrap);
+    initSettingSearch(dialog.element, app);
+    (dialog.element.querySelector(".b3-dialog__container") as HTMLElement).style.maxWidth = "1280px";
+    dialog.element.querySelectorAll(".config__side .b3-list-item").forEach(item => {
+        // 兼容社区 JS 代码片段模拟点击，不做事件委托
+        item.addEventListener("click", () => {
+            const tabId = item.getAttribute("data-name") as TSettingTab;
+            switchSettingTab(dialog.element, app, tabId);
         });
     });
-    editor.element = dialog.element.querySelector('.b3-tab-container[data-name="editor"]');
-    editor.bindEvent();
+    switchSettingTab(dialog.element, app, initialTab);
     return dialog;
+};
+/// #endif
+
+export const openSetting = (app: App, tab?: TSettingTab) => {
+    /// #if MOBILE
+    popMenu();
+    if (tab) {
+        window.setTimeout(() => {
+            document.getElementById(settingTabToMenuId(tab))?.dispatchEvent(new MouseEvent("click", {bubbles: true}));
+        }, 200);
+    }
+    /// #else
+    return openSettingDialog(app, tab);
+    /// #endif
+};
+
+export const openBazaarReadme = async (app: App, bazaarType: TBazaarType, itemName: string, from: "bazaar" | "downloaded") => {
+    /// #if !MOBILE
+    if (!window.siyuan.config.bazaar.trust) {
+        openSettingDialog(app, "bazaar");
+        return;
+    }
+
+    const isDownloaded = from === "downloaded";
+    let getResourcesUrl: string;
+    switch (bazaarType) {
+        case "templates":
+            getResourcesUrl = isDownloaded ? "/api/bazaar/getInstalledTemplate" : "/api/bazaar/getBazaarTemplate";
+            break;
+        case "icons":
+            getResourcesUrl = isDownloaded ? "/api/bazaar/getInstalledIcon" : "/api/bazaar/getBazaarIcon";
+            break;
+        case "widgets":
+            getResourcesUrl = isDownloaded ? "/api/bazaar/getInstalledWidget" : "/api/bazaar/getBazaarWidget";
+            break;
+        case "themes":
+            getResourcesUrl = isDownloaded ? "/api/bazaar/getInstalledTheme" : "/api/bazaar/getBazaarTheme";
+            break;
+        case "plugins":
+            getResourcesUrl = isDownloaded ? "/api/bazaar/getInstalledPlugin" : "/api/bazaar/getBazaarPlugin";
+            break;
+        default:
+            return;
+    }
+
+    const response = await fetchSyncPost(getResourcesUrl, {
+        frontend: getFrontend(),
+        // 完整包名作 keyword 可缩小请求响应列表；最终仍按 name 精确匹配
+        keyword: itemName,
+    });
+    if (response.code !== 0) return;
+
+    const resource = (response.data.packages as IBazaarItem[]).find((item: IBazaarItem) => item.name === itemName);
+    if (!resource) {
+        showMessage(`Package not found: ${escapeHtml(itemName)}`);
+        return;
+    }
+
+    openSettingDialog(app, "bazaar");
+    bazaar.switchBazaarTab(app, bazaarType, from);
+    renderReadme(bazaarType, from, resource);
+    /// #endif
 };

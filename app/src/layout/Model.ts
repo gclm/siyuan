@@ -1,21 +1,40 @@
 import {Constants} from "../constants";
-import {Tab} from "./Tab";
+/// #if !MOBILE
+import type {Tab} from "./Tab";
+/// #endif
+import type {App} from "../index";
+import {kernelError} from "../util/kernelFault";
 import {processMessage} from "../util/processMessage";
-import {kernelError} from "../dialog/processSystem";
-import {exportLayout} from "./util";
+import {reloadSync} from "../util/reloadSync";
+
+interface IConnectOptions {
+    id: string,
+    type?: TWS,
+    callback?: () => void,
+    msgCallback?: (data: IWebSocketData) => void
+}
 
 export class Model {
     public ws: WebSocket;
     public reqId: number;
-    public parent: Tab;
 
-    constructor(options: { id: string, type?: TWS, callback?: () => void, msgCallback?: (data: IWebSocketData) => void }) {
-        if (options.msgCallback) {
-            this.connect(options);
-        }
+    public parent:
+
+        /// #if !MOBILE
+        Tab;
+    /// #else
+    // @ts-ignore
+    null;
+    /// #endif
+    public app: App;
+
+    constructor(options: {
+        app: App,
+    }) {
+        this.app = options.app;
     }
 
-    private connect(options: { id: string, type?: TWS, callback?: () => void, msgCallback?: (data: IWebSocketData) => void }) {
+    public connect(options: IConnectOptions) {
         const websocketURL = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
         const ws = new WebSocket(`${websocketURL}?app=${Constants.SIYUAN_APPID}&id=${options.id}${options.type ? "&type=" + options.type : ""}`);
         ws.onopen = () => {
@@ -25,11 +44,19 @@ export class Model {
             const logElement = document.getElementById("errorLog");
             if (logElement) {
                 // 内核中断后无法 catch fetch 请求错误，重连会导致无法执行 transactionsTimeout
-                exportLayout(true);
+                reloadSync(this.app, {upsertRootIDs: [], removeRootIDs: []});
+                window.siyuan.dialogs.find(item => {
+                    if (item.element.id === "errorLog") {
+                        item.destroy();
+                        return true;
+                    }
+                });
             }
         };
         ws.onmessage = (event) => {
-            if (options.msgCallback) {
+            if (options.msgCallback &&
+                // 等待 config 加载完成才接受推送 https://github.com/siyuan-note/siyuan/issues/17508
+                window.siyuan.config) {
                 const data = processMessage(JSON.parse(event.data));
                 options.msgCallback.call(this, data);
             }
@@ -51,11 +78,14 @@ export class Model {
             }
         };
         ws.onerror = (err: Event & { target: { url: string, readyState: number } }) => {
-            const logElement = document.getElementById("errorLog");
-            if (err.target.url.endsWith("&type=main") && err.target.readyState === 3 && !logElement) {
+            if (err.target.url.endsWith("&type=main") && err.target.readyState === 3) {
                 kernelError();
             }
         };
+        if (this.ws) {
+            this.ws.onclose = null;
+            this.ws.close();
+        }
         this.ws = ws;
     }
 
@@ -63,13 +93,18 @@ export class Model {
         if (!this.ws) { // Inbox 无 ws
             return;
         }
-        this.reqId = process ? 0 : new Date().getTime();
+        this.reqId = process ? 0 : Date.now();
         this.ws.send(JSON.stringify({
             cmd,
             reqId: this.reqId,
             param,
-            // pushMode  0: 广播，1：单播(默认)，2：广播（不包含自己）
-            // reloadPushMode 是否需要 reload  0: 广播，1：单播(默认)，2：广播（不包含自己），3：不推送
+            // pushMode
+            // 0: 所有应用所有会话广播
+            // 1：自我应用会话单播
+            // 2：非自我会话广播
+            // 4：非自我应用所有会话广播
+            // 5：单个应用内所有会话广播
+            // 6：非自我应用主会话广播
         }));
     }
 }

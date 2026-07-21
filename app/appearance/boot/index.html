@@ -6,130 +6,276 @@
     <style>
         html {
             overflow: hidden;
+            height: 100%;
         }
 
         body {
+            height: 100%;
             margin: 0;
-            color: #000;
-            text-shadow: 0 0 2px #fff;
+            background: #1e1e1e;
             font-size: 12px;
             font-family: "Helvetica Neue", "Luxi Sans", "DejaVu Sans", "Hiragino Sans GB", "Microsoft Yahei", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", "Android Emoji", "EmojiSymbols";
         }
 
-        #image {
-            position: fixed;
-            top: 32px;
-            left: 0;
+        #bg {
             width: 100%;
-            bottom: 32px;
-            background-position: center center;
-            background-repeat: no-repeat;
-            background-size: contain;
+            display: flex;
+            justify-content: space-around;
+            height: 100%;
+        }
+
+        #bg svg {
+            width: 24vh;
+            height: 24vh;
+            align-self: center;
+        }
+
+        /* 斜向发光光带：从屏幕四周汇聚飞向 logo 区域，到位后淡出 */
+        #bg svg .streak {
+            opacity: 0;
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: bootStreakConverge 1.8s cubic-bezier(0.33, 0, 0.2, 1) var(--delay, 0s) forwards,
+                       bootStreakFade 0.6s ease 1.6s forwards;
+        }
+
+        @keyframes bootStreakConverge {
+            0% {
+                opacity: 0;
+                transform: translate(var(--dx, 0), var(--dy, 0));
+            }
+            20% {
+                opacity: 0.9;
+            }
+            100% {
+                opacity: 0.9;
+                transform: translate(0, 0);
+            }
+        }
+
+        @keyframes bootStreakFade {
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* logo 碎片成型：光带汇聚末期柔和浮现，之后静止 */
+        #bg svg .logo path {
+            opacity: 0;
+            transform-box: fill-box;
+            transform-origin: center;
+            transform: scale(0.94);
+            animation: bootLogoForm 1s cubic-bezier(0.22, 1, 0.36, 1) 1.5s forwards;
+        }
+
+        @keyframes bootLogoForm {
+            0% {
+                opacity: 0;
+                transform: scale(0.94);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* 底部进度区，预留安全区域防止移动端手势条遮挡 */
+        #progressWrap {
+            position: absolute;
+            bottom: env(safe-area-inset-bottom);
+            width: 100%;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        #progressTrack {
+            position: absolute;
+            height: 2px;
+            background-color: #2a2c2f;
+            width: 100%;
+            top: 0;
+        }
+
+        #progress {
+            position: absolute;
+            height: 2px;
+            background-color: #3b3e43;
+            box-shadow: 0 0 8px rgba(59, 62, 67, 0.6);
+            transition: width 0.6s cubic-bezier(0, 0, 0.2, 1);
+            top: 0;
+            width: 0;
+        }
+
+        #details {
+            color: #9aa0a6;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            padding: 8px;
+            height: 16px;
+            line-height: 16px;
         }
     </style>
 </head>
 <body>
-<div id="bg"
-     style="opacity:0.68;background-image: linear-gradient(-225deg, #69EACB 0%, #EACCF8 48%, #6654F1 100%);height: 100%;position: fixed;width: 100%;box-sizing: border-box;"></div>
-<div id="image" style="background-image: url(images/boot1.svg)"></div>
-<div style="position: fixed;bottom: 34px;width: 100%;height: 2px;background-color: #3b3e43;">
-    <div id="progress"
-         style="position: absolute;height: 2px;background-color: #d23f31;transition: width 50ms cubic-bezier(0, 0, 0.2, 1);bottom: 0;"></div>
-    <div style="position: absolute;bottom: -26px;left: 16px;display: flex;align-items: center;right: 16px;">
-        <svg style="width: 16px;height: 16px;margin-right: 8px;flex-shrink: 0;" version="1.1"
-             xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-            <path fill="#d23e31"
-                  d="M26.99 22.989c-0.151 0.15-0.271 0.285-0.267 0.299s-0.003 0.021-0.015 0.014c-0.032-0.020-0.272 0.23-0.247 0.257 0.011 0.012 0.007 0.015-0.009 0.006-0.031-0.017-0.167 0.118-0.167 0.166 0 0.015-0.009 0.023-0.020 0.016-0.025-0.015-0.087 0.050-0.066 0.071 0.009 0.009 0.001 0.016-0.016 0.016-0.041 0-0.16 0.119-0.16 0.16 0 0.017-0.007 0.025-0.016 0.016-0.016-0.016-0.23 0.18-0.514 0.473-0.479 0.492-0.878 0.882-0.891 0.87-0.008-0.008-0.014 0.006-0.014 0.031s-0.012 0.038-0.026 0.029c-0.024-0.014-0.037 0.020-0.029 0.072 0.002 0.011-0.012 0.017-0.029 0.013s-0.029 0.009-0.025 0.028c0.004 0.019-0.004 0.028-0.017 0.020s-0.087 0.051-0.164 0.132c-0.216 0.227-0.492 0.502-0.7 0.695-0.104 0.097-0.181 0.176-0.171 0.176s-0.021 0.032-0.069 0.072c-0.17 0.14-0.471 0.463-0.498 0.535-0.010 0.025-0.035 0.046-0.058 0.046s-0.040 0.018-0.040 0.041-0.009 0.035-0.021 0.028c-0.027-0.016-0.504 0.442-0.483 0.463 0.009 0.009 0.001 0.016-0.016 0.016s-0.091 0.062-0.163 0.137c-0.343 0.358-0.548 0.568-0.556 0.568-0.005 0-0.11 0.1-0.233 0.223l-0.224 0.223-0 6.171c-0 4.22 0.008 6.187 0.027 6.222 0.039 0.074 0.081 0.061 0.169-0.052 0.043-0.055 0.087-0.095 0.098-0.088s0.020-0.009 0.020-0.034 0.006-0.039 0.014-0.031c0.014 0.014 1.981-1.926 3.371-3.325 0.118-0.119 0.544-0.544 0.945-0.944s0.723-0.739 0.713-0.754c-0.009-0.015-0.006-0.020 0.008-0.011 0.035 0.022 0.171-0.109 0.149-0.144-0.010-0.017-0.006-0.021 0.011-0.011 0.029 0.018 0.136-0.078 0.136-0.123 0-0.014 0.006-0.019 0.014-0.011 0.049 0.049 0.59-0.569 0.575-0.658-0.008-0.050-0.015-2.859-0.015-6.243s-0.009-6.15-0.020-6.149-0.143 0.125-0.293 0.275zM36.246 23.045c-0.183 0.183-0.333 0.349-0.333 0.369s-0.007 0.029-0.016 0.020c-0.013-0.013-0.84 0.796-1.889 1.847-0.057 0.058-0.527 0.529-1.043 1.047l-0.939 0.943v6.252c0 3.439 0.006 6.252 0.014 6.252 0.029 0 0.139-0.125 0.123-0.141-0.009-0.009 0.001-0.016 0.021-0.017s0.113-0.085 0.207-0.188c0.093-0.102 0.245-0.258 0.336-0.345s0.333-0.327 0.535-0.533c0.203-0.206 0.442-0.447 0.533-0.535 0.464-0.451 0.788-0.773 0.778-0.773-0.006 0 0.096-0.109 0.227-0.243s0.248-0.239 0.258-0.233 0.020-0.010 0.020-0.035 0.007-0.038 0.016-0.029c0.020 0.020 0.088-0.046 0.088-0.086 0-0.016 0.009-0.024 0.020-0.018 0.019 0.011 0.157-0.116 0.143-0.131-0.004-0.004 0.002-0.010 0.013-0.013 0.036-0.010 0.079-0.060 0.067-0.080-0.007-0.011 0.007-0.020 0.031-0.020s0.035-0.012 0.026-0.026c-0.009-0.014-0.006-0.026 0.008-0.026s0.278-0.252 0.589-0.56l0.565-0.56v-6.196c0-3.408-0.007-6.214-0.016-6.237-0.024-0.064-0.028-0.061-0.382 0.293z"></path>
-            <path fill="#3b3e43"
-                  d="M27.303 22.685c0 0.014 0.018 0.026 0.039 0.026s0.039-0.012 0.039-0.026c0-0.014-0.018-0.026-0.039-0.026s-0.039 0.012-0.039 0.026zM27.373 22.729c-0.010 0.010-0.017 2.825-0.016 6.256l0.001 6.238 1.111 1.096c0.929 0.916 2.33 2.3 2.885 2.849 0.075 0.074 0.237 0.241 0.359 0.37s0.236 0.236 0.254 0.236c0.026 0.001 0.032-1.265 0.032-6.248v-6.25l-0.12-0.11c-0.066-0.060-0.192-0.184-0.28-0.273-0.139-0.142-0.518-0.521-1.064-1.066-0.084-0.084-0.318-0.321-0.519-0.526s-0.365-0.366-0.365-0.358-0.079-0.068-0.176-0.17c-0.097-0.102-0.358-0.366-0.581-0.588-0.447-0.445-0.547-0.546-1.091-1.096-0.367-0.371-0.396-0.395-0.431-0.36zM36.687 22.77c-0.009 0.032-0.016 2.845-0.016 6.251l-0 6.193 3.066 3.063c2.43 2.428 3.079 3.063 3.131 3.063h0.065v-12.448l-3.092-3.091c-1.7-1.7-3.102-3.091-3.115-3.091s-0.030 0.027-0.039 0.059z"></path>
-            <path fill="#3b3e43"
-                  d="M36.644 22.705c-0.012 2.232-0.007 12.496 0.006 12.483 0.025-0.025 0.039-12.502 0.013-12.502-0.011 0-0.020 0.009-0.020 0.020zM27.306 28.889c0.001 3.397 0.012 6.207 0.023 6.243s0.025-2.744 0.030-6.178c0.007-4.981 0.003-6.243-0.023-6.243s-0.032 1.251-0.030 6.178zM32.013 33.526c0 3.444 0.003 4.849 0.007 3.123s0.004-4.545 0-6.262c-0.004-1.717-0.007-0.304-0.007 3.14zM35.861 35.96l-0.169 0.176 0.176-0.169c0.164-0.157 0.188-0.184 0.169-0.184-0.004 0-0.083 0.079-0.176 0.176z"></path>
-            <path fill="#3b3e43"
-                  d="M23.878 26.077c-0.025 0.029-0.036 0.052-0.025 0.052s0.040-0.024 0.065-0.052c0.025-0.029 0.036-0.052 0.025-0.052s-0.040 0.024-0.065 0.052zM22.829 27.119c-0.010 0.015-0.008 0.028 0.004 0.028s0.004 0.012-0.018 0.026c-0.027 0.018-0.029 0.025-0.006 0.026 0.018 0 0.040-0.018 0.049-0.040 0.018-0.048-0.004-0.079-0.029-0.040zM34.801 37.001c-0.132 0.134-0.231 0.248-0.222 0.252s0.125-0.1 0.258-0.234c0.132-0.133 0.232-0.247 0.222-0.252s-0.126 0.1-0.258 0.234zM23.662 38.869l-0.077 0.085 0.085-0.077c0.047-0.042 0.085-0.080 0.085-0.085 0-0.020-0.021-0.002-0.093 0.077zM21.237 41.263c-0.026 0.029-0.041 0.052-0.034 0.052s0.040-0.024 0.073-0.052 0.049-0.052 0.034-0.052c-0.014 0-0.047 0.024-0.073 0.052z"></path>
-            <circle cx="32" cy="32" fill="none"
-                    stroke-linecap="round" r="31" stroke-width="1" stroke="#3b3e43"
-                    stroke-dasharray="40 64">
-                <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 32 32;360 32 32"
-                                  keyTimes="0;1" dur="1.5s" begin="0s" repeatCount="indefinite"></animateTransform>
-            </circle>
-            <circle cx="32" cy="32" fill="none" stroke-linecap="round" r="29"
-                    stroke-width="1" stroke="#d23f31" stroke-dasharray="40 64">
-                <animateTransform attributeName="transform" type="rotate" calcMode="linear" values="0 32 32;-360 32 32"
-                                  keyTimes="0;1" dur="1.5s" begin="0s" repeatCount="indefinite"></animateTransform>
-            </circle>
-        </svg>
-        <span id="details" style="text-overflow: ellipsis;white-space: nowrap;overflow: hidden;"></span>
-    </div>
+<div id="bg">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+        <g class="streaks"></g>
+        <g class="logo">
+            <path fill="#d23f31" d="M37.052 371.676l269.857-269.857v550.507l-269.857 269.857z"></path>
+            <path fill="#3b3e43" d="M306.909 101.818l205.091 205.091v550.507l-205.091-205.091z"></path>
+            <path fill="#d23f31" d="M512 306.909l205.091-205.091v550.507l-205.091 205.091z"></path>
+            <path fill="#3b3e43" d="M717.091 101.818l269.857 269.857v550.507l-269.857-269.857z"></path>
+        </g>
+    </svg>
+</div>
+<div id="progressWrap">
+    <div id="progressTrack"></div>
+    <div id="progress"></div>
+    <div id="details"></div>
 </div>
 <script>
-  const bgs = [
-    'linear-gradient(to top, #a18cd1 0%, #fbc2eb 100%)',
-    'linear-gradient(to top, #fbc2eb 0%, #a6c1ee 100%)',
-    'linear-gradient(120deg, #a6c0fe 0%, #f68084 100%)',
-    'linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%)',
-    'linear-gradient(to right, #fa709a 0%, #fee140 100%)',
-    'linear-gradient(to top, #30cfd0 0%, #330867 100%)',
-    'linear-gradient(to top, #a8edea 0%, #fed6e3 100%)',
-    'linear-gradient(to top, #d299c2 0%, #fef9d7 100%)',
-    'linear-gradient(to top, #fddb92 0%, #d1fdff 100%)',
-    'linear-gradient(to top, #9890e3 0%, #b1f4cf 100%)',
-    'linear-gradient(to top, #96fbc4 0%, #f9f586 100%)',
-    'linear-gradient(to right, #eea2a2 0%, #bbc1bf 19%, #57c6e1 42%, #b49fda 79%, #7ac5d8 100%)',
-    'linear-gradient(to top, #9795f0 0%, #fbc8d4 100%)',
-    'linear-gradient(to top, #3f51b1 0%, #5a55ae 13%, #7b5fac 25%, #8f6aae 38%, #a86aa4 50%, #cc6b8e 62%, #f18271 75%, #f3a469 87%, #f7c978 100%)',
-    'linear-gradient(to top, #f43b47 0%, #453a94 100%)',
-    'linear-gradient(to top, #88d3ce 0%, #6e45e2 100%)',
-    'linear-gradient(to top, #d9afd9 0%, #97d9e1 100%)',
-    'linear-gradient(-20deg, #b721ff 0%, #21d4fd 100%)',
-    'linear-gradient(60deg, #abecd6 0%, #fbed96 100%)',
-    'linear-gradient(to top, #3b41c5 0%, #a981bb 49%, #ffc8a9 100%)',
-    'linear-gradient(to top, #0fd850 0%, #f9f047 100%)',
-    'linear-gradient(to top, #d5dee7 0%, #ffafbd 0%, #c9ffbf 100%)',
-    'linear-gradient(to top, #65bd60 0%, #5ac1a8 25%, #3ec6ed 50%, #b7ddb7 75%, #fef381 100%)',
-    'linear-gradient(to top, #50cc7f 0%, #f5d100 100%)',
-    'linear-gradient(to top, #df89b5 0%, #bfd9fe 100%)',
-    'linear-gradient(to top, #e14fad 0%, #f9d423 100%)',
-    'linear-gradient(to right, #ec77ab 0%, #7873f5 100%)',
-    'linear-gradient(-225deg, #2CD8D5 0%, #C5C1FF 56%, #FFBAC3 100%)',
-    'linear-gradient(-225deg, #5271C4 0%, #B19FFF 48%, #ECA1FE 100%)',
-    'linear-gradient(-225deg, #FF3CAC 0%, #562B7C 52%, #2B86C5 100%)',
-    'linear-gradient(-225deg, #69EACB 0%, #EACCF8 48%, #6654F1 100%)',
-    'linear-gradient(-225deg, #231557 0%, #44107A 29%, #FF1361 67%, #FFF800 100%)',
-  ]
-  const sleep = (ms) => {
-    return new Promise(resolve => setTimeout(resolve, ms))
-  }
-  const redirect = () => {
-    const uri = 'http://127.0.0.1:6806'
-    if (navigator.userAgent.match(/Android/i))
-      document.location = uri
-    else
-      window.location.replace(uri)
-  }
-  (async () => {
-    document.getElementById('bg').style.backgroundImage = bgs[(new Date()).getDate()]
-    document.getElementById('image').style.backgroundImage = `url(images/boot${(new Date()).getDate()}.svg)`
-    document.getElementById('details').textContent = 'Booting...'
-    let progressing = false
-    while (!progressing) {
-      try {
-        const progressResult = await fetch('http://127.0.0.1:6806/api/system/bootProgress')
-        const progressData = await progressResult.json()
-        document.getElementById('progress').style.width = progressData.data.progress + '%'
-        document.getElementById('details').textContent = progressData.data.details
-        if (progressData.data.progress >= 100) {
-          progressing = true
-          if (navigator.userAgent.indexOf('Electron') === -1) {
-            redirect()
-          }
-        } else {
-          await sleep(100)
+    // 生成斜向发光光带，沿 logo 折页的斜边排布，汇聚到位时勾勒出 logo 形状
+    (() => {
+        const streaksG = document.querySelector("#bg svg .streaks");
+        if (!streaksG) {
+            return;
         }
-      } catch (e) {
-        await sleep(100)
-      }
+        const svgNS = "http://www.w3.org/2000/svg";
+        // logo 4 块碎片的斜边：每条 [x1,y1,x2,y2] + 主色，方向沿该块折页的倾斜
+        const edges = [
+            // 块1（红）：右上倾斜，顶/底两条斜边
+            {x1: 37, y1: 372, x2: 307, y2: 102, color: "#d23f31"},
+            {x1: 37, y1: 922, x2: 307, y2: 652, color: "#d23f31"},
+            // 块2（灰）：右下倾斜
+            {x1: 307, y1: 102, x2: 512, y2: 307, color: "#3b3e43"},
+            {x1: 307, y1: 652, x2: 512, y2: 857, color: "#3b3e43"},
+            // 块3（红）：右上倾斜
+            {x1: 512, y1: 307, x2: 717, y2: 102, color: "#d23f31"},
+            {x1: 512, y1: 857, x2: 717, y2: 652, color: "#d23f31"},
+            // 块4（灰）：右下倾斜
+            {x1: 717, y1: 102, x2: 987, y2: 372, color: "#3b3e43"},
+            {x1: 717, y1: 652, x2: 987, y2: 922, color: "#3b3e43"},
+        ];
+        const perEdge = 12; // 每条斜边上的光带数
+        edges.forEach((e) => {
+            for (let i = 0; i < perEdge; i++) {
+                // 沿斜边均匀采样终点（带轻微抖动，避免过于规整）
+                const t = (i + 0.5) / perEdge + (Math.random() - 0.5) * 0.08;
+                const ex = e.x1 + (e.x2 - e.x1) * t;
+                const ey = e.y1 + (e.y2 - e.y1) * t;
+                // 光带沿斜边方向延伸（长度为该斜边方向上的一小段）
+                const len = 60 + Math.random() * 80;
+                const ux = (e.x2 - e.x1);
+                const uy = (e.y2 - e.y1);
+                const ul = Math.sqrt(ux * ux + uy * uy);
+                // 起点沿斜边反方向延伸 len
+                const sx = ex - ux / ul * len;
+                const sy = ey - uy / ul * len;
+                const line = document.createElementNS(svgNS, "line");
+                line.setAttribute("x1", sx);
+                line.setAttribute("y1", sy);
+                line.setAttribute("x2", ex);
+                line.setAttribute("y2", ey);
+                line.setAttribute("stroke", e.color);
+                line.setAttribute("stroke-width", 3 + Math.random() * 3);
+                line.setAttribute("stroke-linecap", "round");
+                line.setAttribute("class", "streak");
+                line.style.filter = "drop-shadow(0 0 4px rgba(210,63,49,.5))";
+                // 光带初始从该斜边的法向外侧远处出发，汇聚时平移回斜边
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 600 + Math.random() * 800;
+                line.style.setProperty("--dx", Math.cos(angle) * dist + "px");
+                line.style.setProperty("--dy", Math.sin(angle) * dist + "px");
+                line.style.setProperty("--delay", (Math.random() * 0.6) + "s");
+                streaksG.appendChild(line);
+            }
+        });
+    })();
+
+    const getSearch = (key) => {
+        if (window.location.search.indexOf('?') === -1) {
+            return ''
+        }
+        let value = ''
+        const data = window.location.search.split('?')[1].split('&')
+        data.find(item => {
+            const keyValue = item.split('=')
+            if (keyValue[0] === key) {
+                value = keyValue[1]
+                return true
+            }
+        })
+        return value
     }
-  })()
+
+    // 进度文案直接使用内核推送的原始英文
+    const redirect = () => {
+        const uri = 'http://127.0.0.1:' + location.port
+        window.location.replace(uri)
+    }
+    (async () => {
+        const v = getSearch('v')
+        const progressEl = document.getElementById('progress')
+        const detailsEl = document.getElementById('details')
+        detailsEl.textContent = "v" + v + ' Booting kernel...'
+        const bootShowStart = Date.now()
+
+        // 随机起始基数（15~25），等待内核进度时先平滑填充到此值
+        const baseProgress = 15 + Math.random() * 10
+        // 当前进度只增不减，避免内核首帧进度小于初始基数时进度条倒退回 0
+        let currentDisplay = 0
+        const setProgress = (target) => {
+            if (target > currentDisplay) {
+                currentDisplay = target
+                progressEl.style.width = target + '%'
+            }
+        }
+        // 先平滑填充到随机基数
+        setProgress(baseProgress)
+
+        let progressing = false
+        const subscribe = () => {
+            const es = new EventSource('http://127.0.0.1:' + location.port + '/api/system/bootProgressSSE')
+            es.onmessage = (event) => {
+                const progressData = JSON.parse(event.data)
+                // 内核进度按比例映射到 baseProgress~100 区间，从当前显示值继续递增
+                const display = baseProgress + progressData.progress * (100 - baseProgress) / 100
+                setProgress(display)
+                detailsEl.textContent = progressData.details
+                if (progressData.progress >= 100) {
+                    progressing = true
+                    es.close()
+                    if (navigator.userAgent.indexOf('Electron') === -1) {
+                        // 内核完成后尽快结束动画，把剩余动画快进到终态（200ms 收尾）
+                        const animTotalMs = 2500
+                        const elapsed = Date.now() - bootShowStart
+                        const remaining = animTotalMs - elapsed
+                        const bootSvg = document.querySelector("#bg svg")
+                        if (remaining > 0 && bootSvg) {
+                            const rate = remaining / 200
+                            bootSvg.querySelectorAll(".streak, .logo path").forEach((el) => {
+                                el.getAnimations().forEach((a) => {
+                                    a.playbackRate = rate
+                                })
+                            })
+                            setTimeout(redirect, 200)
+                        } else {
+                            redirect()
+                        }
+                    }
+                }
+            }
+            es.onerror = () => {
+                es.close()
+                // 内核启动早期 HTTP 服务可能尚未就绪，EventSource 原生重连间隔较长（约 3s），
+                // 这里主动短延迟重连，保持与原轮询一致的快速重试语义
+                if (!progressing) {
+                    setTimeout(subscribe, 100)
+                }
+            }
+        }
+        subscribe()
+    })()
 </script>
 </body>
 </html>

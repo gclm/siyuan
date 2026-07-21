@@ -1,19 +1,24 @@
 import {Wnd} from "./Wnd";
 import {genUUID} from "../util/genID";
-import {addResize, resizeTabs} from "./util";
+import {addResize, fixWndFlex1} from "./util";
+import {resizeTabs} from "./tabUtil";
+/// #if MOBILE
+// 检测移动端是否引入了桌面端的代码
+console.error("Need remove unused code");
+/// #endif
 
 export class Layout {
     public element: HTMLElement;
     public children?: Array<Layout | Wnd>;
     public parent?: Layout;
-    public direction: TDirection;
-    public type?: TLayout;
+    public direction: Config.TUILayoutDirection;
+    public type?: Config.TUILayoutType;
     public id?: string;
-    public resize?: TDirection;
+    public resize?: Config.TUILayoutDirection;
     public size?: string;
 
     constructor(options?: ILayoutOptions) {
-        const mergedOptions = Object.assign({
+        const mergedOptions: ILayoutOptions = Object.assign({
             direction: "tb",
             size: "auto",
             type: "normal"
@@ -35,12 +40,9 @@ export class Layout {
         } else {
             this.element.classList.add("fn__flex");
         }
-        if (mergedOptions.type === "left") {
-            this.element.classList.add("fn__flex-shrink");
-        }
     }
 
-    addLayout(child: Layout, id?: string) {
+    addLayout(child: Layout, id?: string, after = true) {
         if (!id) {
             this.children.splice(this.children.length, 0, child);
             if (this) {
@@ -49,8 +51,12 @@ export class Layout {
         } else {
             this.children.find((item, index) => {
                 if (item.id === id) {
-                    this.children.splice(index + 1, 0, child);
-                    item.element.after(child.element);
+                    this.children.splice(after ? index + 1 : index, 0, child);
+                    if (after) {
+                        item.element.after(child.element);
+                    } else {
+                        item.element.before(child.element);
+                    }
                     return true;
                 }
             });
@@ -60,28 +66,46 @@ export class Layout {
         } else {
             child.element.style[(this && this.direction === "lr") ? "width" : "height"] = child.size;
         }
-        addResize(child);
+        addResize(child, after);
         child.parent = this;
     }
 
-    addWnd(child: Wnd, id?: string) {
+    addWnd(child: Wnd, id?: string, after = true) {
         if (!id) {
             this.children.splice(this.children.length, 0, child);
             this.element.append(child.element);
         } else {
             this.children.find((item, index) => {
                 if (item.id === id) {
-                    this.children.splice(index + 1, 0, child);
-                    item.element.style.width = "";
-                    item.element.style.height = "";
-                    item.element.classList.add("fn__flex-1");
-                    item.element.after(child.element);
+                    if (after) {
+                        this.children.splice(index + 1, 0, child);
+                    } else {
+                        this.children.splice(index, 0, child);
+                    }
+                    if (this.direction === "lr") {
+                        // 向右分屏，左侧文档抖动，移除动画和边距
+                        item.element.querySelectorAll(".protyle-content").forEach((element: HTMLElement) => {
+                            if (!element.parentElement.classList.contains("fn__none")) {
+                                element.classList.remove("protyle-content--transition");
+                                (element.querySelector(".protyle-wysiwyg") as HTMLElement).style.padding = "";
+                                element.classList.add("protyle-content--transition");
+                            }
+                        });
+                    }
+                    if (after) {
+                        item.element.after(child.element);
+                    } else {
+                        item.element.before(child.element);
+                    }
                     return true;
                 }
             });
         }
-        addResize(child);
-        resizeTabs();
+        if (id) {
+            fixWndFlex1(this);
+        }
+        addResize(child, after);
+        resizeTabs(false);
         child.parent = this;
     }
 }

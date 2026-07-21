@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,22 +17,43 @@
 package util
 
 import (
+	"strings"
+
 	"github.com/88250/gulu"
 	ginSessions "github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/logging"
 )
+
+var WrongAuthCount int
+
+func NeedCaptcha() bool {
+	return 3 < WrongAuthCount
+}
 
 // SessionData represents the session.
 type SessionData struct {
-	ID             int
+	Workspaces map[string]*WorkspaceSession // <WorkspacePath, WorkspaceSession>
+}
+
+type WorkspaceSession struct {
 	AccessAuthCode string
+	Captcha        string
+}
+
+func (sd *SessionData) Clear(c *gin.Context) {
+	session := ginSessions.Default(c)
+	session.Delete("data")
+	if err := session.Save(); err != nil {
+		logging.LogErrorf("clear session failed: %v", err)
+	}
 }
 
 // Save saves the current session of the specified context.
 func (sd *SessionData) Save(c *gin.Context) error {
 	session := ginSessions.Default(c)
 	sessionDataBytes, err := gulu.JSON.MarshalJSON(sd)
-	if nil != err {
+	if err != nil {
 		return err
 	}
 	session.Set("data", string(sessionDataBytes))
@@ -50,10 +71,35 @@ func GetSession(c *gin.Context) *SessionData {
 	}
 
 	err := gulu.JSON.UnmarshalJSON([]byte(sessionDataStr.(string)), ret)
-	if nil != err {
+	if err != nil {
 		return ret
 	}
 
 	c.Set("session", ret)
 	return ret
+}
+
+func GetWorkspaceSession(session *SessionData) (ret *WorkspaceSession) {
+	ret = &WorkspaceSession{}
+	if nil == session.Workspaces {
+		session.Workspaces = map[string]*WorkspaceSession{}
+	}
+	ret = session.Workspaces[WorkspaceDir]
+	if nil == ret {
+		ret = &WorkspaceSession{}
+		session.Workspaces[WorkspaceDir] = ret
+	}
+	return
+}
+
+func RemoveWorkspaceSession(session *SessionData) {
+	delete(session.Workspaces, WorkspaceDir)
+}
+
+// IsBrowserRequest 判断请求是否来自浏览器（非 SiYuan 原生客户端）。
+// 原生客户端（桌面 Electron、Android/iOS/Harmony）的 User-Agent 均以 "SiYuan/" 开头，
+// 其余视为浏览器。该口径与前端 getFrontend()、electron/main.js 设置的 UA 前缀、
+// 以及 session 鉴权中既有的 HasPrefix(ua, "SiYuan/") 判断保持一致。
+func IsBrowserRequest(c *gin.Context) bool {
+	return !strings.HasPrefix(c.GetHeader("User-Agent"), "SiYuan/")
 }

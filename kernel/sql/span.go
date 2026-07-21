@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -22,8 +22,20 @@ import (
 	"strings"
 
 	"github.com/88250/vitess-sqlparser/sqlparser"
-	"github.com/siyuan-note/siyuan/kernel/util"
+	"github.com/siyuan-note/logging"
 )
+
+func escapeLikePattern(s string) string {
+	var b strings.Builder
+	b.Grow(len(s))
+	for _, r := range s {
+		if r == '%' || r == '_' || r == '\\' {
+			b.WriteRune('\\')
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
+}
 
 type Span struct {
 	ID       string
@@ -39,8 +51,8 @@ type Span struct {
 
 func SelectSpansRawStmt(stmt string, limit int) (ret []*Span) {
 	parsedStmt, err := sqlparser.Parse(stmt)
-	if nil != err {
-		//util.LogErrorf("select [%s] failed: %s", stmt, err)
+	if err != nil {
+		//logging.LogErrorf("select [%s] failed: %s", stmt, err)
 		return
 	}
 	switch parsedStmt.(type) {
@@ -65,11 +77,33 @@ func SelectSpansRawStmt(stmt string, limit int) (ret []*Span) {
 	stmt = strings.ReplaceAll(stmt, "\\\\*", "\\*")
 	stmt = strings.ReplaceAll(stmt, "from dual", "")
 	rows, err := query(stmt)
-	if nil != err {
+	if err != nil {
 		if strings.Contains(err.Error(), "syntax error") {
 			return
 		}
-		util.LogWarnf("sql query [%s] failed: %s", stmt, err)
+		logging.LogWarnf("sql query [%s] failed: %s", stmt, err)
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		span := scanSpanRows(rows)
+		ret = append(ret, span)
+	}
+	return
+}
+
+func QueryTagSpansByLabel(label string) (ret []*Span) {
+	var stmt string
+	var args []any
+	if "" != label {
+		stmt = "SELECT * FROM spans WHERE type LIKE '%tag%' AND content LIKE ? ESCAPE '\\' GROUP BY block_id"
+		args = append(args, "%"+escapeLikePattern(label)+"%")
+	} else {
+		stmt = "SELECT * FROM spans WHERE type LIKE '%tag%' AND content = '' GROUP BY block_id"
+	}
+	rows, err := query(stmt, args...)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
 		return
 	}
 	defer rows.Close()
@@ -81,11 +115,23 @@ func SelectSpansRawStmt(stmt string, limit int) (ret []*Span) {
 }
 
 func QueryTagSpansByKeyword(keyword string, limit int) (ret []*Span) {
-	stmt := "SELECT * FROM spans WHERE type = 'tag' AND content LIKE '%" + keyword + "%'"
-	stmt += " LIMIT " + strconv.Itoa(limit)
-	rows, err := query(stmt)
-	if nil != err {
-		util.LogErrorf("sql query failed: %s", err)
+	// 标签搜索支持空格分隔关键字 Tag search supports space-separated keywords https://github.com/siyuan-note/siyuan/issues/14580
+	keywords := strings.Fields(keyword)
+	var stmt string
+	var args []any
+	if len(keywords) == 0 {
+		stmt = "SELECT * FROM spans WHERE type LIKE '%tag%' AND content != '' GROUP BY markdown LIMIT " + strconv.Itoa(limit)
+	} else {
+		var likes []string
+		for _, k := range keywords {
+			likes = append(likes, "content LIKE ? ESCAPE '\\'")
+			args = append(args, "%"+escapeLikePattern(k)+"%")
+		}
+		stmt = "SELECT * FROM spans WHERE type LIKE '%tag%' AND (" + strings.Join(likes, " AND ") + ") GROUP BY markdown LIMIT " + strconv.Itoa(limit)
+	}
+	rows, err := query(stmt, args...)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
 		return
 	}
 	defer rows.Close()
@@ -96,15 +142,16 @@ func QueryTagSpansByKeyword(keyword string, limit int) (ret []*Span) {
 	return
 }
 
-func QueryTagSpans(p string, limit int) (ret []*Span) {
-	stmt := "SELECT * FROM spans WHERE type = 'tag'"
+func QueryTagSpans(p string) (ret []*Span) {
+	stmt := "SELECT * FROM spans WHERE type LIKE '%tag%'"
+	var args []any
 	if "" != p {
-		stmt += " AND path = '" + p + "'"
+		stmt += " AND path = ?"
+		args = append(args, p)
 	}
-	stmt += " LIMIT " + strconv.Itoa(limit)
-	rows, err := query(stmt)
-	if nil != err {
-		util.LogErrorf("sql query failed: %s", err)
+	rows, err := query(stmt, args...)
+	if err != nil {
+		logging.LogErrorf("sql query failed: %s", err)
 		return
 	}
 	defer rows.Close()
@@ -117,8 +164,8 @@ func QueryTagSpans(p string, limit int) (ret []*Span) {
 
 func scanSpanRows(rows *sql.Rows) (ret *Span) {
 	var span Span
-	if err := rows.Scan(&span.ID, &span.BlockID, &span.RootID, &span.Box, &span.Path, &span.Content, &span.Markdown, &span.Type, &span.IAL); nil != err {
-		util.LogErrorf("query scan field failed: %s", err)
+	if err := rows.Scan(&span.ID, &span.BlockID, &span.RootID, &span.Box, &span.Path, &span.Content, &span.Markdown, &span.Type, &span.IAL); err != nil {
+		logging.LogErrorf("query scan field failed: %s", err)
 		return
 	}
 	ret = &span

@@ -1,12 +1,17 @@
-# 安全报告 Security report
+# Security report
 
-如果你发现安全相关漏洞请通过如下任意一种方式告知我们：\
-If you find security-related vulnerabilities, please inform us in any of the following ways:
+If you find security-related vulnerabilities, please create a Security Advisories:
 
-* 直接开 Issue（请隐去站点、实际项目等敏感信息）\
-  Open Issue directly (please hide sensitive information such as site and actual project)
-* 发邮件至 845765@qq.com\
-  Send an email to 845765@qq.com
+https://github.com/siyuan-note/siyuan/security/advisories/new
 
-非常感谢！\
+Some areas we don't consider security vulnerabilities:
+
+* Arbitrary file write: Writing files outside the workspace path (e.g., exporting files) is a common user need
+* Chart/Formula/ABC rendering code injection: This is a common user need, for details please refer to https://github.com/siyuan-note/siyuan/pull/6917
+* SQL injection
+* Pandoc Argument Injection: Allowing the setting of `--lua-filter` is a common user need
+* SSRF: SiYuan supports user-configured network proxies and outbound requests to user-specified URLs. Outbound requests initiated by authenticated users through features such as `netImg2LocalAssets`, `netAssets2LocalAssets`, and MCP tools are expected behavior. This exclusion does not apply to unauthenticated access or authentication/authorization bypasses
+* Sync storage tampering: SiYuan treats user-configured sync storage and principals with write access to the sync repository as trusted. Data loss, rollback, or sync corruption caused by a malicious or compromised storage operator or a principal with write access is outside the security boundary. This exclusion does not apply when an attacker can tamper with sync data without storage write access, such as through an authentication/authorization bypass or a transport security failure
+* `/public/` unauthenticated access: The `/public/` route serves files without authentication because it is designed for public sharing (https://github.com/siyuan-note/siyuan/issues/8593), and users are responsible for the security of files they place in the `data/public/` directory
+
 Thank you very much!

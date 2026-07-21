@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -72,6 +72,7 @@ type TypeFilter struct {
 	ListItem   bool `json:"listItem"`
 	Blockquote bool `json:"blockquote"`
 	Super      bool `json:"super"`
+	Callout    bool `json:"callout"`
 }
 
 type D3 struct {

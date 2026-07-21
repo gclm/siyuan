@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - Refactor your thinking
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,5 +16,5 @@
 
 package conf
 
-type UILayout map[string]interface{} // 界面布局
-type Keymap map[string]interface{}   // 快捷键
+type UILayout map[string]any // 界面布局
+type Keymap map[string]any   // 快捷键
