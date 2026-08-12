@@ -1,0 +1,6 @@
+interface:
+  display_name: "Siyuan"
+  short_description: "Repo-specific patterns and workflows for siyuan"
+  default_prompt: "Use the siyuan repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
