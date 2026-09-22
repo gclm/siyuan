@@ -13,6 +13,11 @@
  * limitations under the License.
  */
 
+/** @typedef {import("./interfaces").IRenderableView} IRenderableView */
+/** @typedef {import("./pdf_viewer").PDFViewer} PDFViewer */
+// eslint-disable-next-line max-len
+/** @typedef {import("./pdf_thumbnail_viewer").PDFThumbnailViewer} PDFThumbnailViewer */
+
 import { RenderingCancelledException } from "./pdfjs";
 import { RenderingStates } from "./ui_utils.js";
 
@@ -31,6 +36,12 @@ class PDFRenderingQueue {
     this.idleTimeout = null;
     this.printing = false;
     this.isThumbnailViewEnabled = false;
+
+    if (typeof PDFJSDev === "undefined" || PDFJSDev.test("GENERIC")) {
+      Object.defineProperty(this, "hasViewer", {
+        value: () => !!this.pdfViewer,
+      });
+    }
   }
 
   /**
@@ -53,13 +64,6 @@ class PDFRenderingQueue {
    */
   isHighestPriority(view) {
     return this.highestPriorityPage === view.renderingId;
-  }
-
-  /**
-   * @returns {boolean}
-   */
-  hasViewer() {
-    return !!this.pdfViewer;
   }
 
   /**
@@ -189,16 +193,16 @@ class PDFRenderingQueue {
       case RenderingStates.INITIAL:
         this.highestPriorityPage = view.renderingId;
         view
-        .draw()
-        .finally(() => {
-          this.renderHighestPriority();
-        })
-        .catch(reason => {
-          if (reason instanceof RenderingCancelledException) {
-            return;
-          }
-          console.error(`renderView: "${reason}"`);
-        });
+          .draw()
+          .finally(() => {
+            this.renderHighestPriority();
+          })
+          .catch(reason => {
+            if (reason instanceof RenderingCancelledException) {
+              return;
+            }
+            console.error(`renderView: "${reason}"`);
+          });
         break;
     }
     return true;

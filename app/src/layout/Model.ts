@@ -1,21 +1,58 @@
 import {Constants} from "../constants";
-import {Tab} from "./Tab";
-import {processMessage} from "../util/processMessage";
-import {kernelError} from "../dialog/processSystem";
-import {exportLayout} from "./util";
+/// #if !MOBILE
+import type {Tab} from "./Tab";
+/// #endif
+import type {App} from "../index";
+
+interface IConnectOptions {
+    id: string,
+    type?: TWS,
+    callback?: () => void,
+    msgCallback?: (data: IWebSocketData) => void
+}
 
 export class Model {
     public ws: WebSocket;
     public reqId: number;
-    public parent: Tab;
+    private mainMessageQueue: {
+        data: string,
+        callback: (data: IWebSocketData) => void
+    }[] = [];
 
-    constructor(options: { id: string, type?: TWS, callback?: () => void, msgCallback?: (data: IWebSocketData) => void }) {
-        if (options.msgCallback) {
-            this.connect(options);
-        }
+    public parent:
+
+        /// #if !MOBILE
+        Tab;
+    /// #else
+    // @ts-ignore
+    null;
+    /// #endif
+    public app: App;
+
+    constructor(options: {
+        app: App,
+    }) {
+        this.app = options.app;
     }
 
-    private connect(options: { id: string, type?: TWS, callback?: () => void, msgCallback?: (data: IWebSocketData) => void }) {
+    private processWebSocketMessage(data: string, callback: (data: IWebSocketData) => void) {
+        // 消息处理依赖面板子类，调用时加载以避免基类初始化期间形成循环依赖。
+        const {processMessage}: typeof import("../util/processMessage") = require("../util/processMessage");
+        callback.call(this, processMessage(JSON.parse(data)));
+    }
+
+    public flushMainMessages() {
+        const messages = this.mainMessageQueue.splice(0);
+        messages.forEach((message) => {
+            try {
+                this.processWebSocketMessage(message.data, message.callback);
+            } catch (error) {
+                console.error("Failed to process queued WebSocket message:", error);
+            }
+        });
+    }
+
+    public connect(options: IConnectOptions) {
         const websocketURL = `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws`;
         const ws = new WebSocket(`${websocketURL}?app=${Constants.SIYUAN_APPID}&id=${options.id}${options.type ? "&type=" + options.type : ""}`);
         ws.onopen = () => {
@@ -24,14 +61,31 @@ export class Model {
             }
             const logElement = document.getElementById("errorLog");
             if (logElement) {
+                const {reloadSync}: typeof import("../util/reloadSync") = require("../util/reloadSync");
                 // 内核中断后无法 catch fetch 请求错误，重连会导致无法执行 transactionsTimeout
-                exportLayout(true);
+                reloadSync(this.app, {upsertRootIDs: [], removeRootIDs: []});
+                window.siyuan.dialogs.find(item => {
+                    if (item.element.id === "errorLog") {
+                        item.destroy();
+                        return true;
+                    }
+                });
             }
         };
         ws.onmessage = (event) => {
-            if (options.msgCallback) {
-                const data = processMessage(JSON.parse(event.data));
-                options.msgCallback.call(this, data);
+            if (!options.msgCallback) {
+                return;
+            }
+            if (options.type === "main" && !window.siyuan.isReady) {
+                this.mainMessageQueue.push({
+                    data: event.data,
+                    callback: options.msgCallback,
+                });
+                return;
+            }
+            // 非主 WebSocket 在界面初始化后创建，保留配置保护以避免异常连接提前处理消息。
+            if (window.siyuan.config) {
+                this.processWebSocketMessage(event.data, options.msgCallback);
             }
         };
         ws.onclose = (ev) => {
@@ -51,25 +105,40 @@ export class Model {
             }
         };
         ws.onerror = (err: Event & { target: { url: string, readyState: number } }) => {
-            const logElement = document.getElementById("errorLog");
-            if (err.target.url.endsWith("&type=main") && err.target.readyState === 3 && !logElement) {
+            if (err.target.url.endsWith("&type=main") && err.target.readyState === 3) {
+                const {kernelError}: typeof import("../util/kernelFault") = require("../util/kernelFault");
                 kernelError();
             }
         };
+        if (this.ws) {
+            this.ws.onclose = null;
+            this.ws.close();
+        }
         this.ws = ws;
     }
 
     public send(cmd: string, param: Record<string, unknown>, process = false) {
-        if (!this.ws) { // Inbox 无 ws
+        if (!this.ws ||
+            this.ws.readyState === WebSocket.CLOSING ||
+            this.ws.readyState === WebSocket.CLOSED) { // Inbox 无 WebSocket，关闭中的连接不能继续发送
             return;
         }
-        this.reqId = process ? 0 : new Date().getTime();
+        this.reqId = process ? 0 : Date.now();
         this.ws.send(JSON.stringify({
             cmd,
             reqId: this.reqId,
             param,
-            // pushMode  0: 广播，1：单播(默认)，2：广播（不包含自己）
-            // reloadPushMode 是否需要 reload  0: 广播，1：单播(默认)，2：广播（不包含自己），3：不推送
+            // pushMode
+            // 0: 所有应用所有会话广播
+            // 1：自我应用会话单播
+            // 2：非自我会话广播
+            // 4：非自我应用所有会话广播
+            // 5：单个应用内所有会话广播
+            // 6：非自我应用主会话广播
         }));
+    }
+
+    public destroy() {
+        // 子类按需释放模型持有的资源。
     }
 }

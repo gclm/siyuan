@@ -1,10 +1,12 @@
 {
 	"ID": "20211226123130-jpeg5b2",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20211226123130-jpeg5b2",
 		"title": "書籤和標籤",
-		"updated": "20211228134927"
+		"type": "doc",
+		"updated": "20260810212846"
 	},
 	"Children": [
 		{
@@ -13,7 +15,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226123145-atmx4pn",
-				"updated": "20211226013955"
+				"updated": "20260810212846"
 			},
 			"Children": [
 				{
@@ -27,26 +29,12 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226123145-786ipku",
-				"updated": "20211226013955"
+				"updated": "20260730184353"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "如果你需要“收藏”內容塊，請通過塊標菜單打開屬性面板，然後就可以在屬性面板中設置書簽了。"
-				}
-			]
-		},
-		{
-			"ID": "20211226123145-zmdn03f",
-			"Type": "NodeParagraph",
-			"Properties": {
-				"id": "20211226123145-zmdn03f",
-				"updated": "20211226013955"
-			},
-			"Children": [
-				{
-					"Type": "NodeText",
-					"Data": "內置的書簽標識是 ✨💡️⏳，可以通過新建其他文本作為書簽標識。"
+					"Data": "如果你需要“收藏”內容區塊，請通過區塊標菜單打開屬性面板，然後就可以在屬性面板中設置書簽了。"
 				}
 			]
 		},
@@ -55,52 +43,48 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226123145-3rhy0b6",
-				"updated": "20211226014020"
+				"updated": "20260810212846"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "所有收藏過的內容塊會在書簽分頁（ "
+					"Data": "所有收藏過的內容區塊會在書簽分頁（"
 				},
 				{
-					"Type": "NodeKbd",
-					"Data": "kbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "Alt 3"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "3"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " / "
 				},
 				{
-					"Type": "NodeKbd",
-					"Data": "kbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "⌘ 3"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "⌃"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "）中列出。如果要取消收藏，在該內容塊標識下拉菜單中選擇刪除即可。"
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "3"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​）中列出。如果要取消收藏，在該內容區塊標識下拉菜單中選擇刪除即可。"
 				}
 			]
 		},
@@ -110,7 +94,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226123145-fgyfo0x",
-				"updated": "20211226013955"
+				"updated": "20260810212846"
 			},
 			"Children": [
 				{
@@ -124,48 +108,26 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226123145-nxlldt1",
-				"updated": "20211226013955"
+				"updated": "20260730184353"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "標簽用於在內容塊中對該塊進行標記。語法是通過一前一後兩個 "
+					"Data": "標簽用於在內容區塊中對該區塊進行標記。語法是通過一前一後兩個 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "#"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " 將標簽標識包裹起來，像這樣 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "#標簽#"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#標簽#"
 				},
 				{
 					"Type": "NodeText",
@@ -178,48 +140,26 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226123145-fvftrvl",
-				"updated": "20211228134927"
+				"updated": "20260730184353"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "標簽支援層級，這樣可以更方便地對內容塊進行分類整理。不同層級之間使用 "
+					"Data": "標簽支援層級，這樣可以更方便地對內容區塊進行分類整理。不同層級之間使用 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "/"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "/"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " 分隔，像這樣 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "#A/B/C#"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#A/B/C#"
 				},
 				{
 					"Type": "NodeText",
@@ -232,52 +172,248 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226123145-ucilhpd",
-				"updated": "20211226014104"
+				"updated": "20260810212846"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "所有打過標簽的內容塊會在標簽分頁（"
+					"Data": "所有打過標簽的內容區塊會在標簽分頁（"
 				},
 				{
-					"Type": "NodeKbd",
-					"Data": "kbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "Alt 4"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Alt"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "4"
 				},
 				{
 					"Type": "NodeText",
 					"Data": " / "
 				},
 				{
-					"Type": "NodeKbd",
-					"Data": "kbd",
-					"Children": [
-						{
-							"Type": "NodeKbdOpenMarker"
-						},
-						{
-							"Type": "NodeText",
-							"Data": "⌘ 4"
-						},
-						{
-							"Type": "NodeKbdCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "⌃"
 				},
 				{
 					"Type": "NodeText",
-					"Data": "）中列出。如果需要取消標簽，在內容塊中刪掉該標簽即可。"
+					"Data": "+"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "4"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​）中列出。如果需要取消標簽，在內容區塊中刪掉該標簽即可。"
+				}
+			]
+		},
+		{
+			"ID": "20230928114735-uks4kf5",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20230928114735-uks4kf5",
+				"updated": "20230928114758"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				}
+			]
+		},
+		{
+			"ID": "20230928114731-0nurd8j",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20230928114731-0nurd8j",
+				"updated": "20231205225753"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "請勿在書籤或標籤中使用特殊符號，否則會導致無法全域搜索，也無法在書籤/標籤面板中重新命名和刪除。 這裡的「特殊符號」包括："
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "*"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "_"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "["
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "]"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "!"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "\\"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "`"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&lt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&gt;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "&amp;"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "~ "
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "$"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "("
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": ")"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "{"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "}"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​、"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "="
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ 和"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "code",
+					"TextMarkTextContent": "#"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​。"
 				}
 			]
 		}

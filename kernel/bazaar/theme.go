@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - From thought to insight, with agents
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,132 +16,16 @@
 
 package bazaar
 
-import (
-	"errors"
-	"os"
-	"sort"
-	"strings"
-	"sync"
-
-	"github.com/dustin/go-humanize"
-	ants "github.com/panjf2000/ants/v2"
-	"github.com/siyuan-note/httpclient"
-	"github.com/siyuan-note/siyuan/kernel/util"
-)
-
-type Theme struct {
-	Author  string   `json:"author"`
-	URL     string   `json:"url"`
-	Version string   `json:"version"`
-	Modes   []string `json:"modes"`
-
-	Name            string `json:"name"`
-	RepoURL         string `json:"repoURL"`
-	RepoHash        string `json:"repoHash"`
-	PreviewURL      string `json:"previewURL"`
-	PreviewURLThumb string `json:"previewURLThumb"`
-
-	README string `json:"readme"`
-
-	Installed  bool   `json:"installed"`
-	Outdated   bool   `json:"outdated"`
-	Current    bool   `json:"current"`
-	Updated    string `json:"updated"`
-	Stars      int    `json:"stars"`
-	OpenIssues int    `json:"openIssues"`
-	Size       int64  `json:"size"`
-	HSize      string `json:"hSize"`
-	HUpdated   string `json:"hUpdated"`
-	Downloads  int    `json:"downloads"`
-}
-
-func Themes(proxyURL string) (ret []*Theme) {
-	ret = []*Theme{}
-	result, err := util.GetRhyResult(false, proxyURL)
-	if nil != err {
-		return
+// IsIncompatibleTheme 判断主题是否与当前前端不兼容
+func IsIncompatibleTheme(theme *Package, frontend string) bool {
+	// frontend 为空时不检查兼容性（视为兼容）
+	if "" == frontend {
+		return false
+	}
+	// 移动端主题需要显式声明兼容性，避免旧主题破坏移动端界面
+	if len(theme.Frontends) == 0 && ("mobile" == frontend || "browser-mobile" == frontend) {
+		return true
 	}
 
-	bazaarIndex := getBazaarIndex(proxyURL)
-	bazaarHash := result["bazaar"].(string)
-	result = map[string]interface{}{}
-	request := httpclient.NewBrowserRequest(proxyURL)
-	u := util.BazaarOSSServer + "/bazaar@" + bazaarHash + "/stage/themes.json"
-	resp, reqErr := request.SetResult(&result).Get(u)
-	if nil != reqErr {
-		util.LogErrorf("get community stage index [%s] failed: %s", u, reqErr)
-		return
-	}
-	if 200 != resp.StatusCode {
-		util.LogErrorf("get community stage index [%s] failed: %d", u, resp.StatusCode)
-		return
-	}
-
-	repos := result["repos"].([]interface{})
-	waitGroup := &sync.WaitGroup{}
-	lock := &sync.Mutex{}
-	p, _ := ants.NewPoolWithFunc(8, func(arg interface{}) {
-		defer waitGroup.Done()
-
-		repo := arg.(map[string]interface{})
-		repoURL := repo["url"].(string)
-
-		theme := &Theme{}
-		innerU := util.BazaarOSSServer + "/package/" + repoURL + "/theme.json"
-		innerResp, innerErr := httpclient.NewBrowserRequest(proxyURL).SetResult(theme).Get(innerU)
-		if nil != innerErr {
-			util.LogErrorf("get bazaar package [%s] failed: %s", innerU, innerErr)
-			return
-		}
-		if 200 != innerResp.StatusCode {
-			util.LogErrorf("get bazaar package [%s] failed: %d", innerU, resp.StatusCode)
-			return
-		}
-
-		repoURLHash := strings.Split(repoURL, "@")
-		theme.RepoURL = "https://github.com/" + repoURLHash[0]
-		theme.RepoHash = repoURLHash[1]
-		theme.PreviewURL = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageslim"
-		theme.PreviewURLThumb = util.BazaarOSSServer + "/package/" + repoURL + "/preview.png?imageView2/2/w/436/h/232"
-		theme.Updated = repo["updated"].(string)
-		theme.Stars = int(repo["stars"].(float64))
-		theme.OpenIssues = int(repo["openIssues"].(float64))
-		theme.Size = int64(repo["size"].(float64))
-		theme.HSize = humanize.Bytes(uint64(theme.Size))
-		theme.HUpdated = formatUpdated(theme.Updated)
-		pkg := bazaarIndex[strings.Split(repoURL, "@")[0]]
-		if nil != pkg {
-			theme.Downloads = pkg.Downloads
-		}
-		lock.Lock()
-		ret = append(ret, theme)
-		lock.Unlock()
-	})
-	for _, repo := range repos {
-		waitGroup.Add(1)
-		p.Invoke(repo)
-	}
-	waitGroup.Wait()
-	p.Release()
-
-	sort.Slice(ret, func(i, j int) bool { return ret[i].Updated > ret[j].Updated })
-	return
-}
-
-func InstallTheme(repoURL, repoHash, installPath, proxyURL string, chinaCDN bool, systemID string) error {
-	repoURLHash := repoURL + "@" + repoHash
-	data, err := downloadPackage(repoURLHash, proxyURL, chinaCDN, true, systemID)
-	if nil != err {
-		return err
-	}
-	return installPackage(data, installPath)
-}
-
-func UninstallTheme(installPath string) error {
-	if err := os.RemoveAll(installPath); nil != err {
-		util.LogErrorf("remove theme [%s] failed: %s", installPath, err)
-		return errors.New("remove community theme failed")
-	}
-	//util.Logger.Infof("uninstalled theme [%s]", installPath)
-	return nil
+	return !IsTargetSupported(theme.Frontends, frontend)
 }

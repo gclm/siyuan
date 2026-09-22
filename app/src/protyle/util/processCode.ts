@@ -1,14 +1,21 @@
-import {abcRender} from "../markdown/abcRender";
-import {chartRender} from "../markdown/chartRender";
-import {graphvizRender} from "../markdown/graphvizRender";
-import {mathRender} from "../markdown/mathRender";
-import {mermaidRender} from "../markdown/mermaidRender";
-import {mindmapRender} from "../markdown/mindmapRender";
-import {flowchartRender} from "../markdown/flowchartRender";
-import {plantumlRender} from "../markdown/plantumlRender";
-import {Constants} from "../../constants";
+import {abcRender} from "../render/abcRender";
+import {chartRender} from "../render/chartRender";
+import {graphvizRender} from "../render/graphvizRender";
+import {mathRender} from "../render/mathRender";
+import {mermaidRender} from "../render/mermaidRender";
+import {mindmapRender} from "../render/mindmapRender";
+import {flowchartRender} from "../render/flowchartRender";
+import {plantumlRender} from "../render/plantumlRender";
+import {htmlRender} from "../render/htmlRender";
+import {escapeHtml} from "../../util/escape";
+import {customBlockRender} from "../../plugin/customBlockRender";
+import {buildSemanticInlineHTML} from "./inlineElementMarker";
+import {renderTableCellRichElements} from "../render/tableCellRich";
+import {renderEmbedHeadings} from "../render/embedHeading";
+import {normalizeInlineElementBoundaries} from "./inlineElementBoundary";
+import {renderLongTextRuns} from "./longTextWrap";
 
-export const processPasteCode = (html: string, text: string) => {
+export const processPasteCode = (html: string, text: string, originalTextHTML: string, protyle: IProtyle) => {
     const tempElement = document.createElement("div");
     tempElement.innerHTML = html;
     let isCode = false;
@@ -16,62 +23,68 @@ export const processPasteCode = (html: string, text: string) => {
         (tempElement.lastElementChild as HTMLElement).style.fontFamily.indexOf("monospace") > -1) {
         // VS Code
         isCode = true;
-    }
-    const pres = tempElement.querySelectorAll("pre");
-    if (tempElement.childElementCount === 1 && pres.length === 1
-        && pres[0].className !== "protyle-sv") {
+    } else if (tempElement.childElementCount === 1 && tempElement.querySelectorAll("pre").length === 1) {
         // IDE
         isCode = true;
-    }
-    if (html.indexOf('\n<p class="p1">') === 0) {
-        // Xcode
-        isCode = true;
-    }
-    if (tempElement.childElementCount === 1 && tempElement.firstElementChild.tagName === "TABLE" &&
+    } else if (tempElement.childElementCount === 1 && tempElement.firstElementChild.tagName === "TABLE" &&
         tempElement.querySelector(".line-number") && tempElement.querySelector(".line-content")) {
         // 网页源码
         isCode = true;
     }
+    /* Mac 上不好识别，先统一移除代码标识 https://github.com/siyuan-note/siyuan/issues/17818
+    else if (originalTextHTML.indexOf('<meta name="Generator" content="Cocoa HTML Writer">') > -1 &&
+        html.indexOf('\n<p class="p1">') === 0 &&
+        //  ChatGPT app 目前没有此标识
+        originalTextHTML.indexOf('<style type="text/css">\np.p1') > -1) {
+        // Xcode
+        isCode = true;
+    }*/
 
     if (isCode) {
         const code = text || html;
-        if (/\n/.test(code) || pres.length === 1) {
-            return `<div data-type="NodeCodeBlock" class="code-block" data-node-id="${Lute.NewNodeID()}"><div class="protyle-action"><span class="protyle-action--first protyle-action__language" contenteditable="false">${localStorage.getItem(Constants.LOCAL_CODELANG) || ""}</span><span class="fn__flex-1"></span><span class="protyle-icon protyle-icon--first protyle-action__copy"><svg><use xlink:href="#iconCopy"></use></svg></span><span class="protyle-icon protyle-icon--last protyle-action__menu"><svg><use xlink:href="#iconMore"></use></svg></span></div><div contenteditable="true" spellcheck="false">${code.replace(/&/g, "&amp;").replace(/</g, "&lt;")}<wbr></div><div class="protyle-attr" contenteditable="false">${Constants.ZWSP}</div></div>`;
+        if (/\n/.test(code)) {
+            return protyle.lute.Md2BlockDOM(code);
         } else {
-            return code;
+            // Paste code <&lt;div class="b3-dialog__action"&gt;> WithAll<XXX>() <div class="b3-dialog__action">
+            return buildSemanticInlineHTML("code", escapeHtml(code), ' spellcheck="false"');
         }
     }
     return false;
 };
 
+const RENDER_MAP: Record<string, (previewPanel: Element) => void> = {
+    abc: abcRender,
+    plantuml: plantumlRender,
+    mermaid: mermaidRender,
+    flowchart: flowchartRender,
+    echarts: chartRender,
+    graphviz: graphvizRender,
+    math: mathRender,
+};
+
 export const processRender = (previewPanel: Element) => {
-    const language = previewPanel.getAttribute("data-subtype");
-    if (!language) {
-        abcRender(previewPanel);
-        plantumlRender(previewPanel);
-        mermaidRender(previewPanel);
-        flowchartRender(previewPanel);
-        chartRender(previewPanel);
-        mindmapRender(previewPanel);
-        graphvizRender(previewPanel);
+    normalizeInlineElementBoundaries(previewPanel);
+    renderLongTextRuns(previewPanel);
+    renderEmbedHeadings(previewPanel);
+    renderTableCellRichElements(previewPanel);
+    // 受限 Lite 编辑器只渲染公式，代码围栏始终作为源码编辑，不能执行图表或 HTML。
+    if (previewPanel.closest('[data-protyle-lite-render="safe"]')) {
         mathRender(previewPanel);
         return;
     }
-    if (language === "abc") {
-        abcRender(previewPanel);
-    } else if (language === "plantuml") {
-        plantumlRender(previewPanel);
-    } else if (language === "mermaid") {
-        mermaidRender(previewPanel);
-    } else if (language === "flowchart") {
-        flowchartRender(previewPanel);
-    } else if (language === "echarts") {
-        chartRender(previewPanel);
-    } else if (language === "mindmap") {
-        mindmapRender(previewPanel);
-    } else if (language === "graphviz") {
-        graphvizRender(previewPanel);
-    } else if (language === "math") {
-        mathRender(previewPanel);
+    customBlockRender(previewPanel);
+    mindmapRender(previewPanel);
+    const language = previewPanel.getAttribute("data-subtype");
+    if (RENDER_MAP[language]) {
+        RENDER_MAP[language](previewPanel);
+        return;
     }
+    if (previewPanel.getAttribute("data-type") === "NodeHTMLBlock") {
+        htmlRender(previewPanel);
+        return;
+    }
+    for (const render of Object.values(RENDER_MAP)) {
+        render(previewPanel);
+    }
+    htmlRender(previewPanel);
 };

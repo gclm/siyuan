@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - From thought to insight, with agents
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -25,30 +25,45 @@ import (
 )
 
 type Search struct {
-	Document   bool `json:"document"`
-	Heading    bool `json:"heading"`
-	List       bool `json:"list"`
-	ListItem   bool `json:"listItem"`
-	CodeBlock  bool `json:"codeBlock"`
-	MathBlock  bool `json:"mathBlock"`
-	Table      bool `json:"table"`
-	Blockquote bool `json:"blockquote"`
-	SuperBlock bool `json:"superBlock"`
-	Paragraph  bool `json:"paragraph"`
-	HTMLBlock  bool `json:"htmlBlock"`
+	CustomBlock *bool `json:"customBlock"`
 
-	Limit         int  `json:"limit"`
-	CaseSensitive bool `json:"caseSensitive"`
+	Document      bool `json:"document"`
+	Heading       bool `json:"heading"`
+	List          bool `json:"list"`
+	ListItem      bool `json:"listItem"`
+	CodeBlock     bool `json:"codeBlock"`
+	MathBlock     bool `json:"mathBlock"`
+	Table         bool `json:"table"`
+	Blockquote    bool `json:"blockquote"`
+	SuperBlock    bool `json:"superBlock"`
+	Paragraph     bool `json:"paragraph"`
+	HTMLBlock     bool `json:"htmlBlock"`
+	EmbedBlock    bool `json:"embedBlock"`
+	DatabaseBlock bool `json:"databaseBlock"`
+	AudioBlock    bool `json:"audioBlock"`
+	VideoBlock    bool `json:"videoBlock"`
+	IFrameBlock   bool `json:"iframeBlock"`
+	WidgetBlock   bool `json:"widgetBlock"`
+	Callout       bool `json:"callout"`
+	Tabs          bool `json:"tabs"`
+	TabItem       bool `json:"tabItem"`
 
-	Name   bool `json:"name"`
-	Alias  bool `json:"alias"`
-	Memo   bool `json:"memo"`
-	Custom bool `json:"custom"`
+	Limit         int   `json:"limit"`
+	CaseSensitive bool  `json:"caseSensitive"`
+	HanSensitive  *bool `json:"hanSensitive"` // 区分繁简：默认开启（与既往行为一致）；关闭后全文搜索不区分简体/繁体中文字形
 
-	BacklinkMentionName   bool `json:"backlinkMentionName"`
-	BacklinkMentionAlias  bool `json:"backlinkMentionAlias"`
-	BacklinkMentionAnchor bool `json:"backlinkMentionAnchor"`
-	BacklinkMentionDoc    bool `json:"backlinkMentionDoc"`
+	Name  bool `json:"name"`
+	Alias bool `json:"alias"`
+	Memo  bool `json:"memo"`
+	IAL   bool `json:"ial"`
+
+	IndexAssetPath bool `json:"indexAssetPath"`
+
+	BacklinkMentionName          bool `json:"backlinkMentionName"`
+	BacklinkMentionAlias         bool `json:"backlinkMentionAlias"`
+	BacklinkMentionAnchor        bool `json:"backlinkMentionAnchor"`
+	BacklinkMentionDoc           bool `json:"backlinkMentionDoc"`
+	BacklinkMentionKeywordsLimit int  `json:"backlinkMentionKeywordsLimit"`
 
 	VirtualRefName   bool `json:"virtualRefName"`
 	VirtualRefAlias  bool `json:"virtualRefAlias"`
@@ -58,30 +73,44 @@ type Search struct {
 
 func NewSearch() *Search {
 	return &Search{
-		Document:   true,
-		Heading:    true,
-		List:       true,
-		ListItem:   true,
-		CodeBlock:  true,
-		MathBlock:  true,
-		Table:      true,
-		Blockquote: true,
-		SuperBlock: true,
-		Paragraph:  true,
-		HTMLBlock:  true,
+		CustomBlock:   new(true),
+		Document:      true,
+		Heading:       true,
+		List:          false,
+		ListItem:      false,
+		CodeBlock:     true,
+		MathBlock:     true,
+		Table:         true,
+		Blockquote:    false,
+		SuperBlock:    false,
+		Paragraph:     true,
+		HTMLBlock:     true,
+		EmbedBlock:    false,
+		DatabaseBlock: true,
+		AudioBlock:    false,
+		VideoBlock:    false,
+		IFrameBlock:   false,
+		WidgetBlock:   false,
+		Callout:       false,
+		Tabs:          false,
+		TabItem:       false,
 
 		Limit:         64,
 		CaseSensitive: false,
+		HanSensitive:  new(true),
 
-		Name:   true,
-		Alias:  true,
-		Memo:   true,
-		Custom: false,
+		Name:  true,
+		Alias: true,
+		Memo:  true,
+		IAL:   false,
 
-		BacklinkMentionName:   true,
-		BacklinkMentionAlias:  false,
-		BacklinkMentionAnchor: true,
-		BacklinkMentionDoc:    true,
+		IndexAssetPath: true,
+
+		BacklinkMentionName:          true,
+		BacklinkMentionAlias:         false,
+		BacklinkMentionAnchor:        true,
+		BacklinkMentionDoc:           true,
+		BacklinkMentionKeywordsLimit: 512,
 
 		VirtualRefName:   true,
 		VirtualRefAlias:  false,
@@ -90,22 +119,48 @@ func NewSearch() *Search {
 	}
 }
 
+//go:fix inline
+func boolPtr(v bool) *bool { return new(v) }
+
+// HanSensitiveVal 返回 HanSensitive 的 bool 值；nil 视为 true（与既往行为一致）。
+func (s *Search) HanSensitiveVal() bool {
+	if s.HanSensitive == nil {
+		return true
+	}
+	return *s.HanSensitive
+}
+
+// SetHanSensitive 设置 HanSensitive 字段。
+func (s *Search) SetHanSensitive(v bool) {
+	s.HanSensitive = new(v)
+}
+
+func SearchLikePattern(keyword string) string {
+	return "'%" + EscapeSearchLikePattern(keyword) + "%' ESCAPE '\\'"
+}
+
+func EscapeSearchLikePattern(keyword string) string {
+	return strings.NewReplacer("\\", "\\\\", "%", "\\%", "_", "\\_", "'", "''").Replace(keyword)
+}
+
 func (s *Search) NAMFilter(keyword string) string {
-	keyword = strings.TrimSpace(keyword)
+	pattern := SearchLikePattern(strings.TrimSpace(keyword))
 	buf := bytes.Buffer{}
 	if s.Name {
-		buf.WriteString(" OR name LIKE '%" + keyword + "%'")
+		buf.WriteString(" OR name LIKE " + pattern)
 	}
 	if s.Alias {
-		buf.WriteString(" OR alias LIKE '%" + keyword + "%'")
+		buf.WriteString(" OR alias LIKE " + pattern)
 	}
 	if s.Memo {
-		buf.WriteString(" OR memo LIKE '%" + keyword + "%'")
-	}
-	if s.Custom {
-		buf.WriteString(" OR ial LIKE '%=%" + keyword + "%'")
+		buf.WriteString(" OR memo LIKE " + pattern)
 	}
 	return buf.String()
+}
+
+// CustomBlockEnabled 为缺少新字段的配置启用自定义块搜索。
+func (s *Search) CustomBlockEnabled() bool {
+	return s.CustomBlock == nil || *s.CustomBlock
 }
 
 func (s *Search) TypeFilter() string {
@@ -176,11 +231,58 @@ func (s *Search) TypeFilter() string {
 		buf.WriteByte('\'')
 		buf.WriteString(",")
 	}
-	// 无法搜索到 iframe 块、视频块和音频块 https://github.com/siyuan-note/siyuan/issues/3604
-	buf.WriteString("'iframe','query_embed','video','audio',")
-	// 挂件块支持内置属性搜索 https://github.com/siyuan-note/siyuan/issues/4497
-	buf.WriteString("'widget',")
+	if s.EmbedBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeBlockQueryEmbed.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.DatabaseBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeAttributeView.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.AudioBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeAudio.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.VideoBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeVideo.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.IFrameBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeIFrame.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.WidgetBlock {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeWidget.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
+	if s.Callout {
+		buf.WriteByte('\'')
+		buf.WriteString(treenode.TypeAbbr(ast.NodeCallout.String()))
+		buf.WriteByte('\'')
+		buf.WriteString(",")
+	}
 
+	if s.Tabs {
+		buf.WriteString("'tabs',")
+	}
+	if s.TabItem {
+		buf.WriteString("'tab',")
+	}
+	if s.CustomBlockEnabled() {
+		buf.WriteString("'custom',")
+	}
 	ret := buf.String()
 	if "" == ret {
 		return ret

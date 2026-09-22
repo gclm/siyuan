@@ -13,6 +13,13 @@
  * limitations under the License.
  */
 
+/** @typedef {import("../src/display/api").PDFDocumentProxy} PDFDocumentProxy */
+/** @typedef {import("../src/display/api").PDFPageProxy} PDFPageProxy */
+/** @typedef {import("./event_utils").EventBus} EventBus */
+/** @typedef {import("./interfaces").IPDFLinkService} IPDFLinkService */
+// eslint-disable-next-line max-len
+/** @typedef {import("./pdf_rendering_queue").PDFRenderingQueue} PDFRenderingQueue */
+
 import {
   getVisibleElements,
   isValidRotation,
@@ -32,7 +39,13 @@ const THUMBNAIL_SELECTED_CLASS = "selected";
  * @property {EventBus} eventBus - The application event bus.
  * @property {IPDFLinkService} linkService - The navigation/linking service.
  * @property {PDFRenderingQueue} renderingQueue - The rendering queue object.
- * @property {IL10n} l10n - Localization service.
+ * @property {Object} [pageColors] - Overwrites background and foreground colors
+ *   with user defined ones in order to improve readability in high contrast
+ *   mode.
+ * @property {AbortSignal} [abortSignal] - The AbortSignal for the window
+ *   events.
+ * @property {boolean} [enableHWA] - Enables hardware acceleration for
+ *   rendering. The default value is `false`.
  */
 
 /**
@@ -42,26 +55,31 @@ class PDFThumbnailViewer {
   /**
    * @param {PDFThumbnailViewerOptions} options
    */
-  constructor({ container, eventBus, linkService, renderingQueue, l10n }) {
+  constructor({
+    container,
+    eventBus,
+    linkService,
+    renderingQueue,
+    pageColors,
+    abortSignal,
+    enableHWA,
+  }) {
     this.container = container;
+    this.eventBus = eventBus;
     this.linkService = linkService;
     this.renderingQueue = renderingQueue;
-    this.l10n = l10n;
+    this.pageColors = pageColors || null;
+    this.enableHWA = enableHWA || false;
 
-    this.scroll = watchScroll(this.container, this._scrollUpdated.bind(this));
-    this._resetView();
-
-    eventBus._on("optionalcontentconfigchanged", () => {
-      // Ensure that the thumbnails always render with the *default* optional
-      // content configuration.
-      this._setImageDisabled = true;
-    });
+    this.scroll = watchScroll(
+      this.container,
+      this.#scrollUpdated.bind(this),
+      abortSignal
+    );
+    this.#resetView();
   }
 
-  /**
-   * @private
-   */
-  _scrollUpdated() {
+  #scrollUpdated() {
     this.renderingQueue.renderHighestPriority();
   }
 
@@ -69,10 +87,7 @@ class PDFThumbnailViewer {
     return this._thumbnails[index];
   }
 
-  /**
-   * @private
-   */
-  _getVisibleThumbs() {
+  #getVisibleThumbs() {
     return getVisibleElements({
       scrollEl: this.container,
       views: this._thumbnails,
@@ -97,7 +112,7 @@ class PDFThumbnailViewer {
       // ... and add the highlight to the new thumbnail.
       thumbnailView.div.classList.add(THUMBNAIL_SELECTED_CLASS);
     }
-    const { first, last, views } = this._getVisibleThumbs();
+    const { first, last, views } = this.#getVisibleThumbs();
 
     // If the thumbnail isn't currently visible, scroll it into view.
     if (views.length > 0) {
@@ -144,27 +159,19 @@ class PDFThumbnailViewer {
   }
 
   cleanup() {
-    for (let i = 0, ii = this._thumbnails.length; i < ii; i++) {
-      if (
-        this._thumbnails[i] &&
-        this._thumbnails[i].renderingState !== RenderingStates.FINISHED
-      ) {
-        this._thumbnails[i].reset();
+    for (const thumbnail of this._thumbnails) {
+      if (thumbnail.renderingState !== RenderingStates.FINISHED) {
+        thumbnail.reset();
       }
     }
     TempImageFactory.destroyCanvas();
   }
 
-  /**
-   * @private
-   */
-  _resetView() {
+  #resetView() {
     this._thumbnails = [];
     this._currentPageNumber = 1;
     this._pageLabels = null;
     this._pagesRotation = 0;
-    this._optionalContentConfigPromise = null;
-    this._setImageDisabled = false;
 
     // Remove the thumbnails from the DOM.
     this.container.textContent = "";
@@ -175,8 +182,8 @@ class PDFThumbnailViewer {
    */
   setDocument(pdfDocument) {
     if (this.pdfDocument) {
-      this._cancelRendering();
-      this._resetView();
+      this.#cancelRendering();
+      this.#resetView();
     }
 
     this.pdfDocument = pdfDocument;
@@ -184,56 +191,46 @@ class PDFThumbnailViewer {
       return;
     }
     const firstPagePromise = pdfDocument.getPage(1);
-    const optionalContentConfigPromise = pdfDocument.getOptionalContentConfig();
+    const optionalContentConfigPromise = pdfDocument.getOptionalContentConfig({
+      intent: "display",
+    });
 
     firstPagePromise
-    .then(firstPdfPage => {
-      this._optionalContentConfigPromise = optionalContentConfigPromise;
+      .then(firstPdfPage => {
+        const pagesCount = pdfDocument.numPages;
+        const viewport = firstPdfPage.getViewport({ scale: 1 });
 
-      const pagesCount = pdfDocument.numPages;
-      const viewport = firstPdfPage.getViewport({ scale: 1 });
-      const checkSetImageDisabled = () => {
-        return this._setImageDisabled;
-      };
+        for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
+          const thumbnail = new PDFThumbnailView({
+            container: this.container,
+            eventBus: this.eventBus,
+            id: pageNum,
+            defaultViewport: viewport.clone(),
+            optionalContentConfigPromise,
+            linkService: this.linkService,
+            renderingQueue: this.renderingQueue,
+            pageColors: this.pageColors,
+            enableHWA: this.enableHWA,
+          });
+          this._thumbnails.push(thumbnail);
+        }
+        // Set the first `pdfPage` immediately, since it's already loaded,
+        // rather than having to repeat the `PDFDocumentProxy.getPage` call in
+        // the `this.#ensurePdfPageLoaded` method before rendering can start.
+        this._thumbnails[0]?.setPdfPage(firstPdfPage);
 
-      for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
-        const thumbnail = new PDFThumbnailView({
-          container: this.container,
-          id: pageNum,
-          defaultViewport: viewport.clone(),
-          optionalContentConfigPromise,
-          linkService: this.linkService,
-          renderingQueue: this.renderingQueue,
-          checkSetImageDisabled,
-          l10n: this.l10n,
-        });
-        this._thumbnails.push(thumbnail);
-      }
-      // Set the first `pdfPage` immediately, since it's already loaded,
-      // rather than having to repeat the `PDFDocumentProxy.getPage` call in
-      // the `this.#ensurePdfPageLoaded` method before rendering can start.
-      const firstThumbnailView = this._thumbnails[0];
-      if (firstThumbnailView) {
-        firstThumbnailView.setPdfPage(firstPdfPage);
-      }
-
-      // Ensure that the current thumbnail is always highlighted on load.
-      const thumbnailView = this._thumbnails[this._currentPageNumber - 1];
-      thumbnailView.div.classList.add(THUMBNAIL_SELECTED_CLASS);
-    })
-    .catch(reason => {
-      console.error("Unable to initialize thumbnail viewer", reason);
-    });
+        // Ensure that the current thumbnail is always highlighted on load.
+        const thumbnailView = this._thumbnails[this._currentPageNumber - 1];
+        thumbnailView.div.classList.add(THUMBNAIL_SELECTED_CLASS);
+      })
+      .catch(reason => {
+        console.error("Unable to initialize thumbnail viewer", reason);
+      });
   }
 
-  /**
-   * @private
-   */
-  _cancelRendering() {
-    for (let i = 0, ii = this._thumbnails.length; i < ii; i++) {
-      if (this._thumbnails[i]) {
-        this._thumbnails[i].cancelRendering();
-      }
+  #cancelRendering() {
+    for (const thumbnail of this._thumbnails) {
+      thumbnail.cancelRendering();
     }
   }
 
@@ -290,7 +287,7 @@ class PDFThumbnailViewer {
   }
 
   forceRendering() {
-    const visibleThumbs = this._getVisibleThumbs();
+    const visibleThumbs = this.#getVisibleThumbs();
     const scrollAhead = this.#getScrollAhead(visibleThumbs);
     const thumbView = this.renderingQueue.getHighestPriority(
       visibleThumbs,

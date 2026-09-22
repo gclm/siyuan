@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - From thought to insight, with agents
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -18,31 +18,47 @@ package treenode
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
-	"path"
+	"io/fs"
+	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/88250/gulu"
 	"github.com/88250/lute"
 	"github.com/88250/lute/ast"
 	"github.com/88250/lute/parse"
-	util2 "github.com/88250/lute/util"
+	"github.com/siyuan-note/filelock"
+	"github.com/siyuan-note/logging"
 	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
 func NodeHash(node *ast.Node, tree *parse.Tree, luteEngine *lute.Lute) string {
-	ialArray := node.KramdownIAL
-	sort.Slice(ialArray, func(i, j int) bool {
-		return ialArray[i][0] < ialArray[j][0]
-	})
+	var ialArray [][]string
+	if 0 < len(node.KramdownIAL) {
+		ialArray = make([][]string, len(node.KramdownIAL))
+		copy(ialArray, node.KramdownIAL)
+		sort.Slice(ialArray, func(i, j int) bool {
+			return ialArray[i][0] < ialArray[j][0]
+		})
+	}
 	ial := parse.IAL2Tokens(ialArray)
 	var md string
 	if ast.NodeDocument != node.Type {
 		md = FormatNode(node, luteEngine)
 	}
 	hpath := tree.HPath
-	data := tree.Path + hpath + string(ial) + md
+	data := tree.Box + tree.Path + hpath + string(ial) + md
+	var parentID string
+	if nil != node.Parent {
+		parentID = node.Parent.ID
+	}
+	if h := HeadingParent(node); nil != h {
+		parentID = h.ID
+	}
+	data += parentID
 	return fmt.Sprintf("%x", sha256.Sum256(gulu.Str.ToBytes(data)))[:7]
 }
 
@@ -56,43 +72,171 @@ func TreeRoot(node *ast.Node) *ast.Node {
 }
 
 func NewTree(boxID, p, hp, title string) *parse.Tree {
-	id := strings.TrimSuffix(path.Base(p), ".sy")
-	root := &ast.Node{Type: ast.NodeDocument, ID: id}
+	id := util.GetTreeID(p)
+	root := &ast.Node{Type: ast.NodeDocument, ID: id, Spec: "1", Box: boxID, Path: p}
 	root.SetIALAttr("title", title)
 	root.SetIALAttr("id", id)
 	root.SetIALAttr("updated", util.TimeFromID(id))
-	ret := &parse.Tree{Root: root}
-	ret.Box = boxID
-	ret.Path = p
-	ret.HPath = hp
-	newPara := &ast.Node{Type: ast.NodeParagraph, ID: ast.NewNodeID()}
+	ret := &parse.Tree{Root: root, ID: id, Box: boxID, Path: p, HPath: hp}
+	ret.Root.Spec = BaseSpec
+	newPara := &ast.Node{Type: ast.NodeParagraph, ID: ast.NewNodeID(), Box: boxID, Path: p}
 	newPara.SetIALAttr("id", newPara.ID)
 	newPara.SetIALAttr("updated", util.TimeFromID(newPara.ID))
 	ret.Root.AppendChild(newPara)
 	return ret
 }
 
-func IsEmptyBlockIAL(n *ast.Node) bool {
-	if ast.NodeKramdownBlockIAL != n.Type {
-		return false
-	}
-
-	if util2.IsDocIAL(n.Tokens) {
-		return false
-	}
-
-	if nil != n.Previous {
-		if ast.NodeKramdownBlockIAL == n.Previous.Type {
-			return true
-		}
-		return false
-	}
-	return true
-}
-
 func IALStr(n *ast.Node) string {
 	if 1 > len(n.KramdownIAL) {
 		return ""
 	}
+	// 这里不能进行转义，否则会导致从数据库中读取后转换为 IAL 时解析错误
+	// 所以 Some symbols should not be escaped to avoid inaccurate searches https://github.com/siyuan-note/siyuan/issues/10185 无法被修复了
 	return string(parse.IAL2Tokens(n.KramdownIAL))
+}
+
+func RootChildIDs(rootID string) (ret []string) {
+	root := GetBlockTree(rootID)
+	if nil == root {
+		for _, encBoxID := range GetOpenedEncryptedBoxIDs() {
+			if encRoot := GetBlockTreeInBox(rootID, encBoxID); nil != encRoot {
+				root = encRoot
+				break
+			}
+		}
+	}
+	if nil == root {
+		return
+	}
+
+	ret = append(ret, rootID)
+	boxLocalPath := filepath.Join(util.DataDir, root.BoxID)
+	subFolder := filepath.Join(boxLocalPath, strings.TrimSuffix(root.Path, ".sy"))
+	if !gulu.File.IsDir(subFolder) {
+		return
+	}
+	filelock.Walk(subFolder, func(path string, d fs.DirEntry, err error) error {
+		if strings.HasSuffix(path, ".sy") {
+			name := filepath.Base(path)
+			id := strings.TrimSuffix(name, ".sy")
+			ret = append(ret, id)
+		}
+		return nil
+	})
+	return
+}
+
+func NewParagraph(id string) (ret *ast.Node) {
+	newID := id
+	if "" == newID {
+		newID = ast.NewNodeID()
+	}
+	ret = &ast.Node{ID: newID, Type: ast.NodeParagraph}
+	ret.SetIALAttr("id", newID)
+	ret.SetIALAttr("updated", newID[:14])
+	return
+}
+
+func NewSpanAnchor(id string) (ret *ast.Node) {
+	return &ast.Node{Type: ast.NodeInlineHTML, Tokens: []byte("<span id=\"" + id + "\" style=\"display: none;\"></span>")}
+}
+
+func ContainOnlyDefaultIAL(tree *parse.Tree) bool {
+	return 5 > len(tree.Root.KramdownIAL)
+}
+
+const BaseSpec = "2"
+
+var CurrentSpec = "4"
+
+var ErrSpecTooNew = fmt.Errorf("the document spec is too new")
+
+// CheckSpecJSON 在解析节点之前检查文档规范，避免未知节点被容错解析后覆盖原始内容。
+func CheckSpecJSON(data []byte) error {
+	var root struct {
+		Spec string
+	}
+	if err := json.Unmarshal(data, &root); nil != err {
+		return err
+	}
+	if err := CheckSpec(&parse.Tree{Root: &ast.Node{Spec: root.Spec}}); nil != err {
+		return err
+	}
+	return checkTableCellRichJSON(data, root.Spec)
+}
+
+func CheckSpec(tree *parse.Tree) (err error) {
+	if err = ValidateTableCellRich(tree.Root); nil != err {
+		return
+	}
+	if CurrentSpec == tree.Root.Spec || "" == tree.Root.Spec {
+		return
+	}
+
+	spec, err := strconv.Atoi(tree.Root.Spec)
+	if nil != err {
+		logging.LogErrorf("parse spec [%s] failed: %s", tree.Root.Spec, err)
+		return
+	}
+	if 1 > spec {
+		return fmt.Errorf("invalid document spec [%s]", tree.Root.Spec)
+	}
+
+	currentSpec, _ := strconv.Atoi(CurrentSpec)
+	if spec > currentSpec {
+		logging.LogErrorf("tree spec [%s] is newer than current spec [%s]", tree.Root.Spec, CurrentSpec)
+		return ErrSpecTooNew
+	}
+	return
+}
+
+func UpgradeSpec(tree *parse.Tree) (upgraded bool) {
+	oldSpec := tree.Root.Spec
+	upgradeSpec1(tree)
+	upgradeSpec2(tree)
+	if "2" == tree.Root.Spec {
+		ast.Walk(tree.Root, func(node *ast.Node, entering bool) ast.WalkStatus {
+			if entering && (ast.NodeTabs == node.Type || ast.NodeTabItem == node.Type) {
+				tree.Root.Spec = "3"
+				return ast.WalkStop
+			}
+			return ast.WalkContinue
+		})
+	}
+	if "2" == tree.Root.Spec || "3" == tree.Root.Spec {
+		ast.Walk(tree.Root, func(node *ast.Node, entering bool) ast.WalkStatus {
+			if entering && nil != node.TableCellRich {
+				tree.Root.Spec = TableCellRichDocumentSpec
+				return ast.WalkStop
+			}
+			return ast.WalkContinue
+		})
+	}
+	return oldSpec != tree.Root.Spec
+}
+
+func upgradeSpec2(tree *parse.Tree) {
+	oldSpec, err := strconv.Atoi(tree.Root.Spec)
+	if nil != err {
+		logging.LogErrorf("parse spec [%s] failed: %s", tree.Root.Spec, err)
+		return
+	}
+
+	if 2 <= oldSpec {
+		return
+	}
+
+	// 增加了 Callout
+
+	tree.Root.Spec = "2"
+}
+
+func upgradeSpec1(tree *parse.Tree) {
+	if "" != tree.Root.Spec {
+		return
+	}
+
+	parse.NestedInlines2FlattedSpans(tree, false)
+	tree.Root.Spec = "1"
+	return
 }
