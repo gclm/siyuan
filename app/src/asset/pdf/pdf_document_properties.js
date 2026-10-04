@@ -13,27 +13,28 @@
  * limitations under the License.
  */
 
-import {
-  createPromiseCapability,
-  getPdfFilenameFromUrl,
-  PDFDateString,
-} from "./pdfjs";
-import { getPageSizeInches, isPortraitOrientation } from "./ui_utils.js";
+/** @typedef {import("./event_utils.js").EventBus} EventBus */
+/** @typedef {import("./interfaces.js").IL10n} IL10n */
+/** @typedef {import("./overlay_manager.js").OverlayManager} OverlayManager */
+// eslint-disable-next-line max-len
+/** @typedef {import("../src/display/api.js").PDFDocumentProxy} PDFDocumentProxy */
 
-const DEFAULT_FIELD_CONTENT = "-";
+import { getPageSizeInches, isPortraitOrientation } from "./ui_utils.js";
+import { PDFDateString } from "./pdfjs";
 
 // See https://en.wikibooks.org/wiki/Lentis/Conversion_to_the_Metric_Standard_in_the_United_States
 const NON_METRIC_LOCALES = ["en-us", "en-lr", "my"];
 
-// Should use the format: `width x height`, in portrait orientation.
+// Should use the format: `width x height`, in portrait orientation. The names,
+// which are l10n-ids, should be lowercase.
 // See https://en.wikipedia.org/wiki/Paper_size
 const US_PAGE_NAMES = {
-  "8.5x11": "Letter",
-  "8.5x14": "Legal",
+  "8.5x11": "pdfjs-document-properties-page-size-name-letter",
+  "8.5x14": "pdfjs-document-properties-page-size-name-legal",
 };
 const METRIC_PAGE_NAMES = {
-  "297x420": "A3",
-  "210x297": "A4",
+  "297x420": "pdfjs-document-properties-page-size-name-a-three",
+  "210x297": "pdfjs-document-properties-page-size-name-a-four",
 };
 
 function getPageName(size, isPortrait, pageNames) {
@@ -45,9 +46,8 @@ function getPageName(size, isPortrait, pageNames) {
 
 /**
  * @typedef {Object} PDFDocumentPropertiesOptions
- * @property {string} overlayName - Name/identifier for the overlay.
+ * @property {HTMLDialogElement} dialog - The overlay's DOM element.
  * @property {Object} fields - Names and elements of the overlay's fields.
- * @property {HTMLDivElement} container - Div container for the overlay.
  * @property {HTMLButtonElement} closeButton - Button for closing the overlay.
  */
 
@@ -59,28 +59,27 @@ class PDFDocumentProperties {
    * @param {OverlayManager} overlayManager - Manager for the viewer overlays.
    * @param {EventBus} eventBus - The application event bus.
    * @param {IL10n} l10n - Localization service.
+   * @param {function} fileNameLookup - The function that is used to lookup
+   *   the document fileName.
    */
   constructor(
-    { overlayName, fields, container, closeButton },
+    { dialog, fields, closeButton },
     overlayManager,
     eventBus,
-    l10n
+    l10n,
+    fileNameLookup
   ) {
-    this.overlayName = overlayName;
+    this.dialog = dialog;
     this.fields = fields;
-    this.container = container;
     this.overlayManager = overlayManager;
     this.l10n = l10n;
+    this._fileNameLookup = fileNameLookup;
 
     this.#reset();
     // Bind the event listener for the Close button.
     closeButton.addEventListener("click", this.close.bind(this));
 
-    this.overlayManager.register(
-      this.overlayName,
-      this.container,
-      this.close.bind(this)
-    );
+    this.overlayManager.register(this.dialog);
 
     eventBus._on("pagechanging", evt => {
       this._currentPageNumber = evt.pageNumber;
@@ -88,8 +87,6 @@ class PDFDocumentProperties {
     eventBus._on("rotationchanging", evt => {
       this._pagesRotation = evt.pagesRotation;
     });
-
-    this._isNonMetricLocale = true; // The default viewer locale is 'en-us'.
   }
 
   /**
@@ -97,7 +94,7 @@ class PDFDocumentProperties {
    */
   async open() {
     await Promise.all([
-      this.overlayManager.open(this.overlayName),
+      this.overlayManager.open(this.dialog),
       this._dataAvailableCapability.promise,
     ]);
     const currentPageNumber = this._currentPageNumber;
@@ -118,7 +115,7 @@ class PDFDocumentProperties {
     const {
       info,
       /* metadata, */
-      contentDispositionFilename,
+      /* contentDispositionFilename, */
       contentLength,
     } = await this.pdfDocument.getMetadata();
 
@@ -130,10 +127,11 @@ class PDFDocumentProperties {
       pageSize,
       isLinearized,
     ] = await Promise.all([
-      contentDispositionFilename || getPdfFilenameFromUrl(this.url),
+      this._fileNameLookup(),
       this.#parseFileSize(contentLength),
       this.#parseDate(info.CreationDate),
       this.#parseDate(info.ModDate),
+      // eslint-disable-next-line arrow-body-style
       this.pdfDocument.getPage(currentPageNumber).then(pdfPage => {
         return this.#parsePageSize(getPageSizeInches(pdfPage), pagesRotation);
       }),
@@ -176,39 +174,35 @@ class PDFDocumentProperties {
   /**
    * Close the document properties overlay.
    */
-  close() {
-    this.overlayManager.close(this.overlayName);
+  async close() {
+    this.overlayManager.close(this.dialog);
   }
 
   /**
-   * Set a reference to the PDF document and the URL in order
-   * to populate the overlay fields with the document properties.
-   * Note that the overlay will contain no information if this method
-   * is not called.
+   * Set a reference to the PDF document in order to populate the dialog fields
+   * with the document properties. Note that the dialog will contain no
+   * information if this method is not called.
    *
    * @param {PDFDocumentProxy} pdfDocument - A reference to the PDF document.
-   * @param {string} url - The URL of the document.
    */
-  setDocument(pdfDocument, url = null) {
+  setDocument(pdfDocument) {
     if (this.pdfDocument) {
       this.#reset();
-      this.#updateUI(true);
+      this.#updateUI();
     }
     if (!pdfDocument) {
       return;
     }
     this.pdfDocument = pdfDocument;
-    this.url = url;
 
     this._dataAvailableCapability.resolve();
   }
 
   #reset() {
     this.pdfDocument = null;
-    this.url = null;
 
     this.#fieldData = null;
-    this._dataAvailableCapability = createPromiseCapability();
+    this._dataAvailableCapability = Promise.withResolvers();
     this._currentPageNumber = 1;
     this._pagesRotation = 0;
   }
@@ -216,39 +210,29 @@ class PDFDocumentProperties {
   /**
    * Always updates all of the dialog fields, to prevent inconsistent UI state.
    * NOTE: If the contents of a particular field is neither a non-empty string,
-   *       nor a number, it will fall back to `DEFAULT_FIELD_CONTENT`.
+   *       nor a number, it will fall back to "-".
    */
-  #updateUI(reset = false) {
-    if (reset || !this.#fieldData) {
-      for (const id in this.fields) {
-        this.fields[id].textContent = DEFAULT_FIELD_CONTENT;
-      }
-      return;
-    }
-    if (this.overlayManager.active !== this.overlayName) {
-      // Don't bother updating the dialog if has already been closed,
+  #updateUI() {
+    if (this.#fieldData && this.overlayManager.active !== this.dialog) {
+      // Don't bother updating the dialog if it's already been closed,
+      // unless it's being reset (i.e. `this.#fieldData === null`),
       // since it will be updated the next time `this.open` is called.
       return;
     }
     for (const id in this.fields) {
-      const content = this.#fieldData[id];
-      this.fields[id].textContent =
-        content || content === 0 ? content : DEFAULT_FIELD_CONTENT;
+      const content = this.#fieldData?.[id];
+      this.fields[id].textContent = content || content === 0 ? content : "-";
     }
   }
 
-  async #parseFileSize(fileSize = 0) {
-    const kb = fileSize / 1024,
+  async #parseFileSize(b = 0) {
+    const kb = b / 1024,
       mb = kb / 1024;
-    if (!kb) {
-      return undefined;
-    }
-    if (mb >= 1) {
-      return `${mb >= 1 && (+mb.toPrecision(
-        3)).toLocaleString()} MB ${fileSize.toLocaleString()} bytes)`
-    }
-    return `${mb < 1 && (+kb.toPrecision(
-      3)).toLocaleString()} KB (${fileSize.toLocaleString()} bytes)`
+
+    return kb
+        // NOTE
+      ? mb >= 1 ? `${mb.toPrecision(3)} MB ${b} bytes` : `${kb.toPrecision(3)} KB ${b} bytes`
+      : undefined;
   }
 
   async #parsePageSize(pageSizeInches, pagesRotation) {
@@ -262,7 +246,8 @@ class PDFDocumentProperties {
         height: pageSizeInches.width,
       };
     }
-    const isPortrait = isPortraitOrientation(pageSizeInches);
+    const isPortrait = isPortraitOrientation(pageSizeInches),
+      nonMetric = NON_METRIC_LOCALES.includes(this.l10n.getLanguage());
 
     let sizeInches = {
       width: Math.round(pageSizeInches.width * 100) / 100,
@@ -274,12 +259,12 @@ class PDFDocumentProperties {
       height: Math.round(pageSizeInches.height * 25.4 * 10) / 10,
     };
 
-    let rawName =
+    let nameId =
       getPageName(sizeInches, isPortrait, US_PAGE_NAMES) ||
       getPageName(sizeMillimeters, isPortrait, METRIC_PAGE_NAMES);
 
     if (
-      !rawName &&
+      !nameId &&
       !(
         Number.isInteger(sizeMillimeters.width) &&
         Number.isInteger(sizeMillimeters.height)
@@ -302,8 +287,8 @@ class PDFDocumentProperties {
         Math.abs(exactMillimeters.width - intMillimeters.width) < 0.1 &&
         Math.abs(exactMillimeters.height - intMillimeters.height) < 0.1
       ) {
-        rawName = getPageName(intMillimeters, isPortrait, METRIC_PAGE_NAMES);
-        if (rawName) {
+        nameId = getPageName(intMillimeters, isPortrait, METRIC_PAGE_NAMES);
+        if (nameId) {
           // Update *both* sizes, computed above, to ensure that the displayed
           // dimensions always correspond to the detected page name.
           sizeInches = {
@@ -316,32 +301,41 @@ class PDFDocumentProperties {
     }
 
     const [{ width, height }, unit, name, orientation] = await Promise.all([
-      this._isNonMetricLocale ? sizeInches : sizeMillimeters,
-      this._isNonMetricLocale
-        ? window.siyuan.languages.unitInches
-        : window.siyuan.languages.unitMillimeters,
-      rawName &&
-      window.siyuan.languages[`document_properties_page_size_name_${rawName.toLowerCase()}`],
-      window.siyuan.languages[`document_properties_page_size_orientation_${isPortrait
-        ? 'portrait'
-        : 'landscape'}`],
-    ])
-    if (name) {
-      return `${width.toLocaleString()} × ${height.toLocaleString()} ${unit} (${name}, ${orientation})`
-    }
-    return `${width.toLocaleString()} × ${height.toLocaleString()} ${unit} (${orientation})`
+      nonMetric ? sizeInches : sizeMillimeters,
+      // NOTE
+      this.l10n.get(
+        nonMetric
+          ? "unitInches"
+          : "unitMillimeters"
+      ),
+      nameId && this.l10n.get(nameId),
+      this.l10n.get(
+        isPortrait
+          ? "document_properties_page_size_orientation_portrait"
+          : "document_properties_page_size_orientation_landscape"
+      ),
+    ]);
+
+    // NOTE
+    return name ?`${width.toLocaleString()} × ${height.toLocaleString()} ${unit} (${name}, ${orientation})`:
+        `${width.toLocaleString()} × ${height.toLocaleString()} ${unit} (${orientation})`;
   }
 
   async #parseDate(inputDate) {
-    const dateObject = PDFDateString.toDateObject(inputDate);
-    if (!dateObject) {
-      return undefined;
-    }
-    return `${dateObject.toLocaleDateString()}, ${dateObject.toLocaleTimeString()}`
+    const dateObj = PDFDateString.toDateObject(inputDate);
+    return dateObj
+        // NOTE
+      ? `${dateObj.toLocaleDateString()}, ${dateObj.toLocaleTimeString()}`
+      : undefined;
   }
 
   #parseLinearization(isLinearized) {
-    return isLinearized ? 'Yes' : 'No'
+    return this.l10n.get(
+      isLinearized
+          // NOTE
+        ? "Yes"
+        : "No"
+    );
   }
 }
 

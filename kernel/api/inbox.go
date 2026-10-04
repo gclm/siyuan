@@ -1,4 +1,4 @@
-// SiYuan - Build Your Eternal Digital Garden
+// SiYuan - From thought to insight, with agents
 // Copyright (c) 2020-present, b3log.org
 //
 // This program is free software: you can redistribute it and/or modify
@@ -17,52 +17,40 @@
 package api
 
 import (
-	"net/http"
-
-	"github.com/88250/gulu"
 	"github.com/gin-gonic/gin"
+	"github.com/siyuan-note/siyuan/kernel/apicontract"
 	"github.com/siyuan-note/siyuan/kernel/model"
-	"github.com/siyuan-note/siyuan/kernel/util"
 )
 
-func removeShorthands(c *gin.Context) {
-	ret := gulu.Ret.NewResult()
-	defer c.JSON(http.StatusOK, ret)
-
-	arg, ok := util.JsonArg(c, ret)
-	if !ok {
-		return
-	}
-
-	idsArg := arg["ids"].([]interface{})
+var removeShorthands = contractHandler(apicontract.RemoveShorthands, func(c *gin.Context, request apicontract.RemoveShorthandsRequest) apicontract.Response[apicontract.Null] {
 	var ids []string
-	for _, id := range idsArg {
-		ids = append(ids, id.(string))
+	ids = append(ids, request.IDs...)
+	if err := model.RemoveCloudShorthands(ids); err != nil {
+		return apicontract.Failure[apicontract.Null](1, err.Error())
 	}
+	return apicontract.Success(apicontract.Null{})
+})
 
-	err := model.RemoveCloudShorthands(ids)
-	if nil != err {
-		ret.Code = 1
-		ret.Msg = err.Error()
-		return
+var getShorthand = contractHandler(apicontract.GetShorthand, func(c *gin.Context, request apicontract.TrimmedIDRequest) apicontract.Response[*apicontract.Shorthand] {
+	data, err := model.GetCloudShorthand(request.ID)
+	if err != nil {
+		return apicontract.Failure[*apicontract.Shorthand](1, err.Error())
 	}
-}
-
-func getShorthands(c *gin.Context) {
-	ret := gulu.Ret.NewResult()
-	defer c.JSON(http.StatusOK, ret)
-
-	arg, ok := util.JsonArg(c, ret)
-	if !ok {
-		return
+	result, err := decodeCloudInbox[apicontract.Shorthand](data)
+	if err != nil {
+		return apicontract.Failure[*apicontract.Shorthand](1, err.Error())
 	}
+	return apicontract.Success(result)
+})
 
-	page := int(arg["page"].(float64))
-	data, err := model.GetCloudShorthands(page)
-	if nil != err {
-		ret.Code = 1
-		ret.Msg = err.Error()
-		return
+var getShorthands = contractHandler(apicontract.GetShorthands, func(c *gin.Context, request apicontract.ShorthandsRequest) apicontract.Response[*apicontract.ShorthandsData] {
+	data, err := model.GetCloudShorthands(int(request.Page))
+	if err != nil {
+		return apicontract.Failure[*apicontract.ShorthandsData](1, err.Error())
 	}
-	ret.Data = data
-}
+	result, err := decodeCloudInbox[apicontract.ShorthandsData](data)
+	if err != nil {
+		return apicontract.Failure[*apicontract.ShorthandsData](1, err.Error())
+	}
+	return apicontract.Success(result)
+})

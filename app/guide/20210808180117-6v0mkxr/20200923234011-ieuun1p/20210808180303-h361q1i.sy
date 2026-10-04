@@ -1,11 +1,13 @@
 {
 	"ID": "20210808180303-h361q1i",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"icon": "1f371",
 		"id": "20210808180303-h361q1i",
 		"title": "Editor",
-		"updated": "20210808180303"
+		"type": "doc",
+		"updated": "20260920102915"
 	},
 	"Children": [
 		{
@@ -19,7 +21,8 @@
 				"Num": -1
 			},
 			"Properties": {
-				"id": "20210419175558-p7doxbn"
+				"id": "20210419175558-p7doxbn",
+				"updated": "20260809232000"
 			},
 			"Children": [
 				{
@@ -94,19 +97,21 @@
 						"Num": -1
 					},
 					"Properties": {
-						"id": "20210419175558-oorcy24"
+						"id": "20210419175558-oorcy24",
+						"updated": "20260809232000"
 					},
 					"Children": [
 						{
 							"ID": "20210419175558-7s6a7wb",
 							"Type": "NodeParagraph",
 							"Properties": {
-								"id": "20210419175558-7s6a7wb"
+								"id": "20210419175558-7s6a7wb",
+								"updated": "20260809232000"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "Content block zoom, that is, each content block can be zoomed into focus"
+									"Data": "Content block focusing, which lets you focus the editor on an individual content block"
 								}
 							]
 						}
@@ -176,12 +181,188 @@
 			]
 		},
 		{
-			"ID": "20210808180303-a0ht38y",
+			"ID": "20240508004216-2xo697q",
 			"Type": "NodeParagraph",
 			"Properties": {
-				"id": "20210808180303-a0ht38y",
-				"updated": "20210808180303"
-			}
+				"id": "20240508004216-2xo697q",
+				"updated": "20240508004216"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20200924093441-ft2rhps",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "Formatting elements"
+				}
+			]
+		},
+		{
+			"ID": "20260830213256-hfs4974",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260830213256-hfs4974",
+				"updated": "20260830213256"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20260830213256-fgl32qu",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "Select and operate content blocks"
+				}
+			]
+		},
+		{
+			"ID": "20240508004216-zyuk3yd",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240508004216-zyuk3yd",
+				"updated": "20240508004216"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20220628204454-hhxohv5",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "Optimize typography"
+				}
+			]
+		},
+		{
+			"ID": "20240508004216-4uhl2nh",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20240508004216-4uhl2nh",
+				"updated": "20260809232000"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20221016204105-qx2aq0g",
+					"TextMarkBlockRefSubtype": "d",
+					"TextMarkTextContent": "Heading and list layout"
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-4hhz1ko",
+			"Type": "NodeHeading",
+			"HeadingLevel": 2,
+			"Properties": {
+				"id": "20260920102915-4hhz1ko",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Spell Check"
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-3kq9ofr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-3kq9ofr",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Enable this feature in "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Settings"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Editor"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Spell Check"
+				},
+				{
+					"Type": "NodeText",
+					"Data": ". Misspelled words are marked with wavy underlines."
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-8dfar3l",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-8dfar3l",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Desktop app: right-click an underlined word and choose a spelling suggestion from SiYuan's menu. You can also add a correctly spelled word to the dictionary. Use a normal right-click without holding "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "."
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-kl8nygu",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-kl8nygu",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "Browser: enable spell checking and select the languages to check in your browser settings. In Chrome, hold "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Shift"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " and right-click an underlined word to open the browser's native spelling menu."
+				}
+			]
+		},
+		{
+			"ID": "20260920102915-7eun9ey",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260920102915-7eun9ey",
+				"updated": "20260920102915"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "When spell checking starts depends on the environment. After opening a document, even if the caret has been restored, you may need to click the document body and wait briefly for underlines to appear."
+				}
+			]
 		}
 	]
 }

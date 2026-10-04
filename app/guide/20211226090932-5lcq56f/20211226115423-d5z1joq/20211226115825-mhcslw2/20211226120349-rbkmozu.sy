@@ -1,10 +1,12 @@
 {
 	"ID": "20211226120349-rbkmozu",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20211226120349-rbkmozu",
-		"title": "在内容塊中遨遊",
-		"updated": "20220312233003"
+		"title": "在内容區塊中遨遊",
+		"type": "doc",
+		"updated": "20260909204559"
 	},
 	"Children": [
 		{
@@ -13,7 +15,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226120415-pn9ywnd",
-				"updated": "20211226152205"
+				"updated": "20260809160000"
 			},
 			"Children": [
 				{
@@ -43,7 +45,7 @@
 			"Properties": {
 				"fold": "0",
 				"id": "20211226120415-fqj39l7",
-				"updated": "20211228125040"
+				"updated": "20221105220040"
 			},
 			"Children": [
 				{
@@ -83,7 +85,7 @@
 					},
 					"Properties": {
 						"id": "20211226120415-e5u2lvx",
-						"updated": "20211226153430"
+						"updated": "20221105220040"
 					},
 					"Children": [
 						{
@@ -91,32 +93,23 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226120415-0k71jr7",
-								"updated": "20211226153430"
+								"updated": "20260730184353"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "通過 "
+									"Data": "通過"
 								},
 								{
-									"Type": "NodeCodeSpan",
-									"Data": "code",
-									"Children": [
-										{
-											"Type": "NodeCodeSpanOpenMarker"
-										},
-										{
-											"Type": "NodeCodeSpanContent",
-											"Data": "((id))"
-										},
-										{
-											"Type": "NodeCodeSpanCloseMarker"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "block-ref",
+									"TextMarkBlockRefID": "20211226120247-63nd8y5",
+									"TextMarkBlockRefSubtype": "s",
+									"TextMarkTextContent": "引用"
 								},
 								{
 									"Type": "NodeText",
-									"Data": " 建立的內容塊連結，用於在思源內部進行雙連"
+									"Data": "建立的內容區塊連結，用於在思源內部進行雙連"
 								}
 							]
 						}
@@ -130,12 +123,12 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226120415-oalx1x3",
-				"updated": "20211225232427"
+				"updated": "20260809232000"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "縮放聚焦"
+					"Data": "聚焦"
 				}
 			]
 		},
@@ -146,7 +139,7 @@
 			"Properties": {
 				"fold": "0",
 				"id": "20211226120415-x0dza6r",
-				"updated": "20220312233003"
+				"updated": "20260809232000"
 			},
 			"Children": [
 				{
@@ -158,7 +151,7 @@
 					},
 					"Properties": {
 						"id": "20211226120415-o9zkmbm",
-						"updated": "20220312233003"
+						"updated": "20260809232000"
 					},
 					"Children": [
 						{
@@ -166,12 +159,12 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226120415-kqz15j6",
-								"updated": "20220312233003"
+								"updated": "20260809232000"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "在塊標上右鍵下拉菜單中選擇聚焦後，編輯器會聚焦到該內容塊上"
+									"Data": "在區塊標選單中選擇聚焦後，編輯器會聚焦到該內容區塊"
 								}
 							]
 						}
@@ -213,7 +206,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226120415-akhb2fd",
-				"updated": "20211225232427"
+				"updated": "20250115164121"
 			},
 			"Children": [
 				{
@@ -227,12 +220,12 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226120415-k3bqje1",
-				"updated": "20211226152233"
+				"updated": "20260730184353"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "關系圖分為文檔級和全域。文檔的關系圖是以當前文檔塊展開，並呈現所有和該文檔有關聯的（正向連結和反向連結）內容塊；全域關系圖是所有筆記本中所有的塊和連結關系。"
+					"Data": "關系圖分為文檔級和全域。文檔的關系圖是以當前文檔區塊展開，並呈現所有和該文檔有關聯的（正向連結和反向連結）內容區塊；全域關系圖是所有筆記本中所有的區塊和連結關系。"
 				}
 			]
 		},
@@ -241,7 +234,7 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226120415-p7ccdta",
-				"updated": "20211225232427"
+				"updated": "20250115164121"
 			},
 			"Children": [
 				{
@@ -249,24 +242,13 @@
 					"Data": "按住 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "Ctrl"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "Ctrl"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " 單擊節點：跳轉到該節點。"
+					"Data": "​ 單擊節點：跳轉到該節點。"
 				}
 			]
 		},
@@ -276,7 +258,7 @@
 			"HeadingLevel": 2,
 			"Properties": {
 				"id": "20211226120415-p3ajlx2",
-				"updated": "20211226152238"
+				"updated": "20260909204559"
 			},
 			"Children": [
 				{
@@ -290,12 +272,39 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226120415-xb01abh",
-				"updated": "20211226152244"
+				"updated": "20260810212846"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "反向連結是文檔級的，列出當前文檔中內容塊被引用和被提及所在的塊。"
+					"Data": "反向連結按文檔計算，列出引用或提及目前文檔中內容區塊的區塊。是否包含子區塊由 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "編輯器"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "反向鏈接包含子區塊"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 控制。"
 				}
 			]
 		},
@@ -305,7 +314,7 @@
 			"HeadingLevel": 3,
 			"Properties": {
 				"id": "20211226120415-id98kff",
-				"updated": "20211226152249"
+				"updated": "20260810212846"
 			},
 			"Children": [
 				{
@@ -320,7 +329,7 @@
 			"ListData": {},
 			"Properties": {
 				"id": "20211226120415-b7xvx0p",
-				"updated": "20211228134731"
+				"updated": "20260810212846"
 			},
 			"Children": [
 				{
@@ -332,7 +341,7 @@
 					},
 					"Properties": {
 						"id": "20211226120415-806dm3p",
-						"updated": "20211228134731"
+						"updated": "20260810212846"
 					},
 					"Children": [
 						{
@@ -340,12 +349,12 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226120415-b4ufivw",
-								"updated": "20211228134731"
+								"updated": "20260810212846"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "滑鼠懸浮引用塊前面的標識會彈出預覽浮窗"
+									"Data": "將滑鼠懸浮在反向連結列表的來源文檔或反向連結內容的區塊標上可進行預覽"
 								}
 							]
 						}
@@ -360,7 +369,7 @@
 					},
 					"Properties": {
 						"id": "20211226120415-2yrs5sh",
-						"updated": "20211228134546"
+						"updated": "20260809232000"
 					},
 					"Children": [
 						{
@@ -368,16 +377,87 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20211226120415-xuanj0d",
-								"updated": "20211228134546"
+								"updated": "20260809232000"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "單擊反連列表中的引用塊進行跳轉"
+									"Data": "單擊來源文檔可展開上下文，再單擊上下文中的引用區塊進行跳轉"
 								}
 							]
 						}
 					]
+				}
+			]
+		},
+		{
+			"ID": "20260909204559-o4vhrdw",
+			"Type": "NodeHeading",
+			"Properties": {
+				"id": "20260909204559-o4vhrdw",
+				"updated": "20260909204559"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "篩選與摺疊"
+				}
+			],
+			"HeadingLevel": 3
+		},
+		{
+			"ID": "20260909204559-p2ldpwr",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260909204559-p2ldpwr",
+				"updated": "20260909204559"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "在底部反向連結或側欄反向連結中，打開 "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "篩選反向連結來源"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "，可以篩選來源或依區塊類型摺疊項目。這兩類設定的儲存方式不同。"
+				}
+			]
+		},
+		{
+			"ID": "20260909204559-ci181fb",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260909204559-ci181fb",
+				"updated": "20260909204559"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "日記、筆記本、排除目前文件的反向連結和排除區塊引用屬於暫時篩選，只在目前面板中生效，不會永久儲存，也不會在底部反向連結與側欄反向連結之間同步。"
+				}
+			]
+		},
+		{
+			"ID": "20260909204559-g3t1k59",
+			"Type": "NodeParagraph",
+			"Properties": {
+				"id": "20260909204559-g3t1k59",
+				"updated": "20260909204559"
+			},
+			"Children": [
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "依區塊類型摺疊"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " 的設定會被記住。例如，在文件 A 的底部反向連結中設定摺疊列表區塊，重新打開後仍會保留，文件 B 不受影響。同一份文件的底部反向連結和側欄反向連結分別記憶。檢視某個內容區塊的反向連結時，也會單獨記憶其摺疊設定。"
 				}
 			]
 		},
@@ -387,7 +467,7 @@
 			"HeadingLevel": 3,
 			"Properties": {
 				"id": "20211226120415-kqk522d",
-				"updated": "20211225232427"
+				"updated": "20260803163402"
 			},
 			"Children": [
 				{
@@ -401,32 +481,39 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211226120415-k8yvb62",
-				"updated": "20211226152312"
+				"updated": "20260803163402"
 			},
 			"Children": [
 				{
 					"Type": "NodeText",
-					"Data": "提及使用當前文檔中內容塊名稱和別名作為關鍵字進行搜索，搜索結果為包含這些關鍵字的內容塊。可以通過連結按鈕將提及轉換為連結：提及處會使用 "
+					"Data": "提及使用當前文檔中內容區塊命名、別名、引用錨文字和文檔名作為關鍵字進行搜索（可在 "
 				},
 				{
-					"Type": "NodeCodeSpan",
-					"Data": "code",
-					"Children": [
-						{
-							"Type": "NodeCodeSpanOpenMarker"
-						},
-						{
-							"Type": "NodeCodeSpanContent",
-							"Data": "((id \"內容塊名稱\"))"
-						},
-						{
-							"Type": "NodeCodeSpanCloseMarker"
-						}
-					]
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "設定"
 				},
 				{
 					"Type": "NodeText",
-					"Data": " 進行替換。"
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "搜索"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​ - "
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "kbd",
+					"TextMarkTextContent": "反連提及"
+				},
+				{
+					"Type": "NodeText",
+					"Data": " ​ 中設置搜索範圍），搜索結果為包含這些關鍵字的內容區塊。"
 				}
 			]
 		},
@@ -435,8 +522,34 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211228134547-inyam43",
-				"updated": "20211228134547"
-			}
+				"updated": "20260730184353"
+			},
+			"Children": [
+				{
+					"Type": "NodeText",
+					"Data": "​"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "tag",
+					"TextMarkTextContent": "注意"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "​：提及搜索僅會在普通文字中搜索，不會在粗體、斜體等行級元素和代碼區塊、圖表等區塊級元素中搜索，這一點和"
+				},
+				{
+					"Type": "NodeTextMark",
+					"TextMarkType": "block-ref",
+					"TextMarkBlockRefID": "20211226122825-w6wxq0c",
+					"TextMarkBlockRefSubtype": "s",
+					"TextMarkTextContent": "虛擬引用探測規則"
+				},
+				{
+					"Type": "NodeText",
+					"Data": "是相同的。"
+				}
+			]
 		}
 	]
 }

@@ -1,11 +1,12 @@
 {
 	"ID": "20210505164949-c085p1d",
+	"Spec": "2",
 	"Type": "NodeDocument",
 	"Properties": {
 		"id": "20210505164949-c085p1d",
 		"title": "Web Clipping",
 		"type": "doc",
-		"updated": "20211019235241"
+		"updated": "20260809160000"
 	},
 	"Children": [
 		{
@@ -45,7 +46,8 @@
 			"Type": "NodeHeading",
 			"HeadingLevel": 2,
 			"Properties": {
-				"id": "20210505165011-h715v6a"
+				"id": "20210505165011-h715v6a",
+				"updated": "20260803171606"
 			},
 			"Children": [
 				{
@@ -64,7 +66,7 @@
 			"ListData": {},
 			"Properties": {
 				"id": "20210505165011-7ik6g6y",
-				"updated": "20211019235222"
+				"updated": "20230621111806"
 			},
 			"Children": [
 				{
@@ -103,7 +105,7 @@
 					},
 					"Properties": {
 						"id": "20210505165011-h6wqx9o",
-						"updated": "20211019235222"
+						"updated": "20230621111806"
 					},
 					"Children": [
 						{
@@ -111,7 +113,7 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20210505165011-crzzegk",
-								"updated": "20211019235222"
+								"updated": "20230621111806"
 							},
 							"Children": [
 								{
@@ -119,30 +121,10 @@
 									"Data": "If you need to pull the pictures contained in the clipped content to the local, you can use "
 								},
 								{
-									"Type": "NodeLink",
-									"Data": "span",
-									"Children": [
-										{
-											"Type": "NodeOpenBracket"
-										},
-										{
-											"Type": "NodeLinkText",
-											"Data": "SiYuan Chome Extension"
-										},
-										{
-											"Type": "NodeCloseBracket"
-										},
-										{
-											"Type": "NodeOpenParen"
-										},
-										{
-											"Type": "NodeLinkDest",
-											"Data": "https://ld246.com/article/1629423901669"
-										},
-										{
-											"Type": "NodeCloseParen"
-										}
-									]
+									"Type": "NodeTextMark",
+									"TextMarkType": "a",
+									"TextMarkAHref": "https://liuyun.io/article/1692529862454",
+									"TextMarkTextContent": "SiYuan Chrome Extension"
 								}
 							]
 						}
@@ -156,7 +138,7 @@
 			"HeadingLevel": 3,
 			"Properties": {
 				"id": "20210531181045-0x2syfg",
-				"updated": "20210531181057"
+				"updated": "20260809160000"
 			},
 			"Children": [
 				{
@@ -173,7 +155,7 @@
 			},
 			"Properties": {
 				"id": "20210820171625-1k4iq6x",
-				"updated": "20210820171820"
+				"updated": "20260809160000"
 			},
 			"Children": [
 				{
@@ -187,7 +169,7 @@
 					},
 					"Properties": {
 						"id": "20210820171625-vjo1bcb",
-						"updated": "20210820171820"
+						"updated": "20260803171606"
 					},
 					"Children": [
 						{
@@ -195,12 +177,39 @@
 							"Type": "NodeParagraph",
 							"Properties": {
 								"id": "20210820171625-cerwawc",
-								"updated": "20210820171820"
+								"updated": "20260803171606"
 							},
 							"Children": [
 								{
 									"Type": "NodeText",
-									"Data": "Install the extension, configure the API token in the extended options (token can be viewed in SiYuan Settings - About)"
+									"Data": "Install the extension, configure the API token in the extended options (token can be viewed in SiYuan "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Settings"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "Authentication"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​ - "
+								},
+								{
+									"Type": "NodeTextMark",
+									"TextMarkType": "kbd",
+									"TextMarkTextContent": "API token"
+								},
+								{
+									"Type": "NodeText",
+									"Data": "​)"
 								}
 							]
 						}
@@ -216,14 +225,16 @@
 						"Num": 2
 					},
 					"Properties": {
-						"id": "20210820171625-0cvfa1x"
+						"id": "20210820171625-0cvfa1x",
+						"updated": "20260809160000"
 					},
 					"Children": [
 						{
 							"ID": "20210820171625-3e12m8o",
 							"Type": "NodeParagraph",
 							"Properties": {
-								"id": "20210820171625-3e12m8o"
+								"id": "20210820171625-3e12m8o",
+								"updated": "20260809160000"
 							},
 							"Children": [
 								{
@@ -271,7 +282,7 @@
 			"Type": "NodeParagraph",
 			"Properties": {
 				"id": "20211019235143-bsm6wqx",
-				"updated": "20211019235241"
+				"updated": "20260809160000"
 			},
 			"Children": [
 				{
